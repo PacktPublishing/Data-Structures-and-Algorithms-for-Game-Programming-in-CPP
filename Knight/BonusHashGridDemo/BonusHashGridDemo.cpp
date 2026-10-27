@@ -90,7 +90,7 @@ void BonusHashGridDemo::Update(float ElapsedSeconds)
 
     // Area center from MMB
     if (IsMouseButtonPressed(MOUSE_MIDDLE_BUTTON)) {
-        Ray ray = GetMouseRay(GetMousePosition(), *camera->GetCamera3D());
+        Ray ray = GetScreenToWorldRay(GetMousePosition(), *camera->GetCamera3D());
         if (std::fabs(ray.direction.y) > 1e-6f) {
             float t = -ray.position.y / ray.direction.y; // y=0
             if (t > 0.0f) {
@@ -106,7 +106,7 @@ void BonusHashGridDemo::Update(float ElapsedSeconds)
 
     // Ray casting using grid-DDA on XZ, hash lookup per visited cell, precise ray-AABB
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-        Ray ray = GetMouseRay(GetMousePosition(), *camera->GetCamera3D());
+        Ray ray = GetScreenToWorldRay(GetMousePosition(), *camera->GetCamera3D());
 
         float tStart = 0.0f;
         if (std::fabs(ray.direction.y) > 1e-6f) {

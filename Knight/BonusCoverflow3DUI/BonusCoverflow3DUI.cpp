@@ -67,7 +67,7 @@ void BonusCoverFlow3DUI::Update(float ElapsedSeconds)
 	__super::Update(ElapsedSeconds);
 
     // 1. Generate ray from mouse position
-    Ray ray = GetMouseRay(GetMousePosition(), *camera->GetCamera3D());
+    Ray ray = GetScreenToWorldRay(GetMousePosition(), *camera->GetCamera3D());
 
     int clickedLogicalIndex = -1;
     bool anyHovered = false;
