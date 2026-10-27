@@ -281,7 +281,7 @@ bool ModelComponent::SetAnimation(int AnimationIndex)
 		else
 		{
 			_PrevFrame[0] = 0;
-			_CurrentFrame[0] = _Animations[_AnimationIndex].frameCount > 1 ? 1 : 0;
+			_CurrentFrame[0] = _Animations[_AnimationIndex].keyframeCount > 1 ? 1 : 0;
 		}
 		return true;
 	}
@@ -305,7 +305,7 @@ bool ModelComponent::TransitionAnimation(int AnimationIndex, float TransitionSec
 
 		//Start playing the next animation on channel 1
 		_PrevFrame[1] = 0;
-		_CurrentFrame[1] = _Animations[_TransiteToAnimationIndex].frameCount > 1 ? 1 : 0;
+		_CurrentFrame[1] = _Animations[_TransiteToAnimationIndex].keyframeCount > 1 ? 1 : 0;
 		_InterpolationTime[1] = 0.0f;
 		return true;
 	}
@@ -358,22 +358,59 @@ int ModelComponent::GetNextFrame(float InterpolationTime, int Channel)
 {
 	if (InterpolationTime == 0.0f)
 	{
-		return (_CurrentFrame[Channel] + 1) % _Animations[_AnimationIndex].frameCount;
+		return (_CurrentFrame[Channel] + 1) % _Animations[_AnimationIndex].keyframeCount;
 	}
 	else
 	{
 		float times = InterpolationTime / _FrameDuration;
 		int step = (int)times + 1;
 		int animIndex = Channel == 0 ? _AnimationIndex : _TransiteToAnimationIndex;
-		return (_CurrentFrame[Channel] + step) % _Animations[animIndex].frameCount;
+		return (_CurrentFrame[Channel] + step) % _Animations[animIndex].keyframeCount;
 	}
 }
 
 void ModelComponent::UpdateModelAnimationWithInterpolation(float ElapsedSeconds)
 {
 	int channelCount = _TransiteToAnimationIndex < 0 ? 1 : 2;
+	float frame[2] = { 0.0f, 0.0f };
 
-	InterpolateAnimation(channelCount);
+	for (int channel = 0; channel < channelCount; ++channel)
+	{
+		float t = Clamp(_InterpolationTime[channel] / _FrameDuration, 0.0f, 1.0f);
+		if (_AnimationMode == Exponential_interpolation)
+		{
+			t *= t;
+		}
+		frame[channel] = static_cast<float>(_PrevFrame[channel]) + t;
+	}
+
+	if (channelCount == 1)
+	{
+		// Current raylib versions update the complete skeleton first, then select
+		// GPU or CPU skinning as appropriate.  The old per-vertex path below
+		// bypasses that pipeline and can leave some meshes frozen.
+		UpdateModelAnimation(_Model, _Animations[_AnimationIndex], frame[0]);
+	}
+	else
+	{
+		float transition = Clamp(_TransitionTime / _TransitionDuration, 0.0f, 1.0f);
+		if (_AnimTranistionMode == EaseInEaseOut)
+		{
+			transition = transition < 0.5f
+				? 2.0f * transition * transition
+				: 1.0f - powf(-2.0f * transition + 2.0f, 2.0f) * 0.5f;
+		}
+
+		UpdateModelAnimationEx(_Model,
+			_Animations[_AnimationIndex], frame[0],
+			_Animations[_TransiteToAnimationIndex], frame[1],
+			transition);
+	}
+
+	// Knight draws with an override lighting shader that has no bone attributes.
+	// raylib otherwise assumes GPU skinning from the model's original shader and
+	// can leave rigidly weighted meshes (notably the robot head) unchanged.
+	UpdateAnimationVertexBuffers();
 
 	for (int channel = 0; channel < channelCount; ++channel)
 	{
@@ -383,6 +420,78 @@ void ModelComponent::UpdateModelAnimationWithInterpolation(float ElapsedSeconds)
 			_PrevFrame[channel] = _CurrentFrame[channel];
 			_CurrentFrame[channel] = GetNextFrame(_InterpolationTime[channel], channel);
 			_InterpolationTime[channel] = 0.0f;
+		}
+	}
+}
+
+void ModelComponent::UpdateAnimationVertexBuffers()
+{
+	if (_Model.boneMatrices == nullptr) return;
+
+	std::vector<Matrix> normalMatrices(_Model.skeleton.boneCount);
+	for (unsigned int bone = 0; bone < _Model.skeleton.boneCount; ++bone)
+	{
+		normalMatrices[bone] = MatrixTranspose(MatrixInvert(_Model.boneMatrices[bone]));
+	}
+
+	for (int meshIndex = 0; meshIndex < _Model.meshCount; ++meshIndex)
+	{
+		Mesh& mesh = _Model.meshes[meshIndex];
+		if (mesh.vertices == nullptr || mesh.boneIndices == nullptr || mesh.boneWeights == nullptr) continue;
+
+		if (mesh.animVertices == nullptr)
+		{
+			mesh.animVertices = static_cast<float*>(MemAlloc(mesh.vertexCount * 3 * sizeof(float)));
+		}
+		if (mesh.normals != nullptr && mesh.animNormals == nullptr)
+		{
+			mesh.animNormals = static_cast<float*>(MemAlloc(mesh.vertexCount * 3 * sizeof(float)));
+		}
+		if (mesh.animVertices == nullptr) continue;
+
+		for (int vertex = 0; vertex < mesh.vertexCount; ++vertex)
+		{
+			const int valueIndex = vertex * 3;
+			const int weightIndex = vertex * 4;
+			Vector3 animatedVertex = Vector3Zero();
+			Vector3 animatedNormal = Vector3Zero();
+
+			for (int influence = 0; influence < 4; ++influence)
+			{
+				const float weight = mesh.boneWeights[weightIndex + influence];
+				if (weight <= 0.0f) continue;
+
+				const unsigned int bone = mesh.boneIndices[weightIndex + influence];
+				if (bone >= _Model.skeleton.boneCount) continue;
+
+				Vector3 position = { mesh.vertices[valueIndex], mesh.vertices[valueIndex + 1], mesh.vertices[valueIndex + 2] };
+				position = Vector3Transform(position, _Model.boneMatrices[bone]);
+				animatedVertex = Vector3Add(animatedVertex, Vector3Scale(position, weight));
+
+				if (mesh.normals != nullptr && mesh.animNormals != nullptr)
+				{
+					Vector3 normal = { mesh.normals[valueIndex], mesh.normals[valueIndex + 1], mesh.normals[valueIndex + 2] };
+					normal = Vector3Transform(normal, normalMatrices[bone]);
+					animatedNormal = Vector3Add(animatedNormal, Vector3Scale(normal, weight));
+				}
+			}
+
+			mesh.animVertices[valueIndex] = animatedVertex.x;
+			mesh.animVertices[valueIndex + 1] = animatedVertex.y;
+			mesh.animVertices[valueIndex + 2] = animatedVertex.z;
+			if (mesh.animNormals != nullptr)
+			{
+				mesh.animNormals[valueIndex] = animatedNormal.x;
+				mesh.animNormals[valueIndex + 1] = animatedNormal.y;
+				mesh.animNormals[valueIndex + 2] = animatedNormal.z;
+			}
+		}
+
+		const int bufferSize = mesh.vertexCount * 3 * sizeof(float);
+		rlUpdateVertexBuffer(mesh.vboId[0], mesh.animVertices, bufferSize, 0);
+		if (mesh.animNormals != nullptr)
+		{
+			rlUpdateVertexBuffer(mesh.vboId[2], mesh.animNormals, bufferSize, 0);
 		}
 	}
 }
@@ -403,7 +512,7 @@ void ModelComponent::InterpolateAnimation(int ChannelCount)
 	{
 		anim = _Animations[_AnimationIndex];
 
-		if (anim.frameCount <= 0 || anim.bones == nullptr || anim.framePoses == nullptr)
+		if (anim.keyframeCount <= 0 || anim.boneCount == 0 || anim.keyframePoses == nullptr)
 		{
 			return;
 		}
@@ -421,11 +530,26 @@ void ModelComponent::InterpolateAnimation(int ChannelCount)
 
 	for (int m = 0; m < _Model.meshCount; m++)
 	{
-		Mesh mesh = _Model.meshes[m];
+		Mesh& mesh = _Model.meshes[m];
 
-		if (mesh.boneIds == nullptr || mesh.boneWeights == nullptr)
+		if (mesh.boneIndices == nullptr || mesh.boneWeights == nullptr)
 		{
 			continue;		//Mesh m has no connection to bones
+		}
+
+		// raylib 5.6 allocates CPU skinning buffers lazily. This custom
+		// interpolation path must do the same before writing animated data.
+		if (mesh.animVertices == nullptr)
+		{
+			mesh.animVertices = static_cast<float*>(MemAlloc(mesh.vertexCount * 3 * sizeof(float)));
+		}
+		if (mesh.normals != nullptr && mesh.animNormals == nullptr)
+		{
+			mesh.animNormals = static_cast<float*>(MemAlloc(mesh.vertexCount * 3 * sizeof(float)));
+		}
+		if (mesh.animVertices == nullptr)
+		{
+			continue;
 		}
 
 		bool updated = false;           // Flag to check when anim vertex information is updated
@@ -458,16 +582,16 @@ void ModelComponent::InterpolateAnimation(int ChannelCount)
 			}
 
 			// Iterates over 4 bones per vertex
-			for (int j = 0; j < RAYLIB_BONES_PER_VERTEX; j++, boneCounter++)
+			for (int j = 0; j < 4; j++, boneCounter++)
 			{
 				boneWeight = mesh.boneWeights[boneCounter];
 
 				// Early stop when no transformation will be applied
 				if (boneWeight == 0.0f) continue;
 
-				boneId = mesh.boneIds[boneCounter];
-				inTranslation = _Model.bindPose[boneId].translation;
-				inRotation = _Model.bindPose[boneId].rotation;
+				boneId = mesh.boneIndices[boneCounter];
+				inTranslation = _Model.skeleton.bindPose[boneId].translation;
+				inRotation = _Model.skeleton.bindPose[boneId].rotation;
 
 				Vector3 channelOutTranslation[2];
 				Quaternion channelOutRotation[2];
@@ -483,8 +607,8 @@ void ModelComponent::InterpolateAnimation(int ChannelCount)
 					{
 						t *= t;		//Square of t for exponential interpolation
 					}
-					Transform* preFrameTransform = &(anim.framePoses[_PrevFrame[channel]][boneId]);
-					Transform* currentFrameTransform = &(anim.framePoses[_CurrentFrame[channel]][boneId]);
+					Transform* preFrameTransform = &(anim.keyframePoses[_PrevFrame[channel]][boneId]);
+					Transform* currentFrameTransform = &(anim.keyframePoses[_CurrentFrame[channel]][boneId]);
 					channelOutTranslation[channel] = Vector3Lerp(preFrameTransform->translation, currentFrameTransform->translation, t);
 					channelOutRotation[channel] = QuaternionLerp(preFrameTransform->rotation, currentFrameTransform->rotation, t);
 					channelOutScale[channel] = Vector3Lerp(preFrameTransform->scale, currentFrameTransform->scale, t);
@@ -604,7 +728,10 @@ void ModelComponent::InterpolateAnimation(int ChannelCount)
 		{
 			int size = mesh.vertexCount * 3 * sizeof(float);
 			rlUpdateVertexBuffer(mesh.vboId[0], mesh.animVertices, size, 0); // Update vertex position
-			rlUpdateVertexBuffer(mesh.vboId[2], mesh.animNormals, size, 0);  // Update vertex normals
+			if (mesh.animNormals != nullptr)
+			{
+				rlUpdateVertexBuffer(mesh.vboId[2], mesh.animNormals, size, 0); // Update vertex normals
+			}
 		}
 	}
 }

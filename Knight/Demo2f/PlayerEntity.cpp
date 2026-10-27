@@ -2,7 +2,7 @@
 
 #include "Demo2f.h"
 
-#include "raygui.h"
+#include "../../raylib/examples/core/raygui.h"
 
 #include <stdlib.h>
 

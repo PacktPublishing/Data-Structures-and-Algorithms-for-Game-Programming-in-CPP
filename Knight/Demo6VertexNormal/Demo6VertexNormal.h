@@ -2,7 +2,7 @@
 
 #include "Knight.h"   //Engine includes
 
-#include "rlights.h" //For lighting
+#include "../../raylib/examples/models/rlights.h" //For lighting
 
 class Demo6VertexNormal : public Knight
 {

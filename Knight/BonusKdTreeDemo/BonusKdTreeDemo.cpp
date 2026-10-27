@@ -49,7 +49,7 @@ void BonusKdTreeDemo::Update(float ElapsedSeconds)
 	// Click detection
 	if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) 
 	{
-		Ray ray = GetMouseRay(GetMousePosition(), *camera->GetCamera3D());
+		Ray ray = GetScreenToWorldRay(GetMousePosition(), *camera->GetCamera3D());
 
 		int bestIdx = -1;
 		float bestDist = 1e30f;

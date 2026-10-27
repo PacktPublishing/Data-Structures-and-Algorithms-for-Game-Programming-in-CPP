@@ -1,7 +1,9 @@
 #include "Demo7Particle.h"
 
+#define _CRT_SECURE_NO_WARNINGS
+#pragma warning(disable: 4996)
 #define RAYGUI_IMPLEMENTATION
-#include "raygui.h"
+#include "../../raylib/examples/core/raygui.h"
 
 // Define particle count
 #define PARTICLE_COUNT 500

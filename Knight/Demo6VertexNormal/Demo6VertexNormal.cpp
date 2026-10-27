@@ -3,7 +3,7 @@
 #include "raymath.h"
 
 #define RLIGHTS_IMPLEMENTATION
-#include "rlights.h"
+#include "../../raylib/examples/models/rlights.h"
 
 #define GLSL_VERSION            330
 

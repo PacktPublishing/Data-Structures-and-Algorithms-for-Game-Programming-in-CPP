@@ -3,7 +3,7 @@
 
 // Include the necessary headers for the UI functions of raylib
 // Check https://github.com/raysan5/raygui for more details
-#include "raygui.h"
+#include "../../raylib/examples/core/raygui.h"
 
 //Main entry point for the demo application
 int main(int argc, char* argv[])

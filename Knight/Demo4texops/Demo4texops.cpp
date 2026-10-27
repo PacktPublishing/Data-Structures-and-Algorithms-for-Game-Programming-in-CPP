@@ -2,6 +2,8 @@
 
 // Include the necessary headers for the UI functions of raylib
 // Check https://github.com/raysan5/raygui for more details
+#define _CRT_SECURE_NO_WARNINGS
+#pragma warning(disable: 4996)
 #define RAYGUI_IMPLEMENTATION
 #include "Demo4texops.h"
 

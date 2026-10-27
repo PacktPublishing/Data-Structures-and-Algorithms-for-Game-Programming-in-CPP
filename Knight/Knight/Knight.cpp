@@ -123,6 +123,11 @@ void Knight::Start()
 
 void Knight::EndGame()
 {
+	// When the native window has already received a close request, tearing down
+	// GLFW a second time can stall in the graphics driver on Windows. The OS
+	// releases the window/context as the process returns from main.
+	const bool windowCloseRequested = WindowShouldClose();
+
 	OnReleaseDefaultResources();
 
 	UnloadFont(_Font);
@@ -130,7 +135,10 @@ void Knight::EndGame()
 	delete _Scene;
 	_Scene = nullptr;
 
-	CloseWindow();
+	if (!windowCloseRequested)
+	{
+		CloseWindow();
+	}
 }
 
 void Knight::GameLoop()

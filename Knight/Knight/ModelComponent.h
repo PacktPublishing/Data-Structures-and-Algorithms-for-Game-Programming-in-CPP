@@ -142,6 +142,7 @@ protected:
 	
 	int GetNextFrame(float InterpolationTime = 0.0f, int Channel = 0);
 	void UpdateModelAnimationWithInterpolation(float ElapsedSeconds);
+	void UpdateAnimationVertexBuffers();
 	void InterpolateAnimation(int ChannelCount);
 
 	void UpdateMeshBoundingBoxes();

@@ -272,7 +272,7 @@ extern void ConvertMeshToIndexed(Mesh* mesh)
         rlUnloadVertexArray(mesh->vaoId);
         mesh->vaoId = 0;
         if (mesh->vboId != NULL)
-            for (int i = 0; i < MAX_MESH_VERTEX_BUFFERS; i++)
+            for (int i = 0; i < 9; i++) // raylib uses 9 VBO slots when GPU skinning is enabled
             {
                 rlUnloadVertexBuffer(mesh->vboId[i]);
                 mesh->vboId[i] = 0;

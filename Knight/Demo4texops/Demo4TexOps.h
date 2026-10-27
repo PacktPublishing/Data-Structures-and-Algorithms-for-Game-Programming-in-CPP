@@ -5,7 +5,7 @@
 #include "Entities.h"
 #include "LRUTextureCacheDemo.h"
 
-#include "raygui.h"
+#include "../../raylib/examples/core/raygui.h"
 
 class Demo4TexOps : public Knight
 {

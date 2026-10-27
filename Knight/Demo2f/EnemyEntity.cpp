@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 
-#include "raygui.h"
+#include "../../raylib/examples/core/raygui.h"
 
 void EnemyEntity::Create(Scene* pScene, Entity* pParent)
 {

@@ -5,8 +5,10 @@
 
 // Include the necessary headers for the UI functions of raylib
 // Check https://github.com/raysan5/raygui for more details
+#define _CRT_SECURE_NO_WARNINGS
+#pragma warning(disable: 4996)
 #define RAYGUI_IMPLEMENTATION
-#include "raygui.h"
+#include "../../raylib/examples/core/raygui.h"
 
 //Main function of the application
 int main(int argc, char* argv[])
@@ -82,8 +84,9 @@ void Demo2f::DrawGUI()
 		case YouWin:
 		{
 			Rectangle r;
+			int activeButton = 0;
 			int result = GuiMessageBox(CenterRectangle(r, 400, 400),
-				"#191#Congrate!", "You Win!", "Nice!");
+				"#191#Congrate!", "You Win!", "Nice!", &activeButton);
 			if (result > 0 || IsKeyPressed(KEY_ENTER))
 				exit(0);
 			break;
@@ -91,8 +94,9 @@ void Demo2f::DrawGUI()
 		case YouLose:
 		{
 			Rectangle r;
+			int activeButton = 0;
 			int result = GuiMessageBox(CenterRectangle(r, 400, 400),
-				"#191#Oh No!", "You Lose!", "Okay");
+				"#191#Oh No!", "You Lose!", "Okay", &activeButton);
 			if (result > 0 || IsKeyPressed(KEY_ENTER))
 				exit(0);
 			break;
