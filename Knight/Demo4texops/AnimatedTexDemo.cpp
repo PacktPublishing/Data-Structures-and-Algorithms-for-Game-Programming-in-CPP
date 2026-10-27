@@ -11,7 +11,7 @@ AnimatedTexDemo::AnimatedTexDemo()
 
 void AnimatedTexDemo::Create()
 {
-	Image art = LoadImage("../../resources/textures/lightening.png");
+	Image art = LoadImage((Knight::Instance->Config.ResourcesBasePath + "textures/lightening.png").c_str());
 	_spritesSheet = LoadTextureFromImage(art);
 	UnloadImage(art);
 	isReady = true;

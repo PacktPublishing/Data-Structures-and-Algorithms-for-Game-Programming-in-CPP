@@ -29,19 +29,19 @@ void Demo6NormalMap::Start()
 	pMainCamera = _Scene->CreateSceneObject<FlyThroughCamera>("Main Camera");
 	pMainCamera->SetUp(Vector3{ 0.0f, 1.0f, 0.0f }, 8.0f, 0, 10, 60, CAMERA_PERSPECTIVE);
 
-	diffuse = LoadTexture("../../resources/textures/stonewall.png");  // Replace with your diffuse texture path
-	normalMap = LoadTexture("../../resources/textures/stonewall_n.png"); // Replace with your normal map texture path
+	diffuse = LoadTexture((Config.ResourcesBasePath + "textures/stonewall.png").c_str());  // Replace with your diffuse texture path
+	normalMap = LoadTexture((Config.ResourcesBasePath + "textures/stonewall_n.png").c_str()); // Replace with your normal map texture path
 
 	// Load shaders
-	shader = LoadShader("../../resources/shaders/glsl330/normalmap.vs",
-		"../../resources/shaders/glsl330/normalmap.fs");
+	shader = LoadShader((Config.ResourcesBasePath + "shaders/glsl330/normalmap.vs").c_str(),
+		(Config.ResourcesBasePath + "shaders/glsl330/normalmap.fs").c_str());
 
 	_Scene->_CurrentRenderPass->Hints.pOverrideShader = &shader; // Set the shader to be used for rendering
 
 	cubeActor = _Scene->CreateSceneObject<SceneActor>("Cube");
 	cubeActor->Position = Vector3{ 3.0f, -1.0f, 0.0f };
 	ModelComponent* modelComponent = cubeActor->CreateAndAddComponent<ModelComponent>();
-	modelComponent->Load3DModel("../../resources/models/obj/well.obj", "../../resources/models/obj/well_diffuse.png");
+	modelComponent->Load3DModel((Config.ResourcesBasePath + "models/obj/well.obj").c_str(), (Config.ResourcesBasePath + "models/obj/well_diffuse.png").c_str());
 	for (int i = 0; i < modelComponent->GetModel()->materialCount; i++) {
 		modelComponent->GetModel()->materials[i].shader = shader;
 		modelComponent->GetModel()->materials[i].maps[MATERIAL_MAP_DIFFUSE].texture = diffuse;
@@ -56,7 +56,7 @@ void Demo6NormalMap::Start()
 	characterActor->Scale = Vector3{ 2.0f, 2.0f, 2.0f };
 	characterActor->Position = Vector3{ -3.0f, 0.0f, 0.0f };
 	ModelComponent* animModelComponent = characterActor->CreateAndAddComponent<ModelComponent>();
-	animModelComponent->Load3DModel("../../resources/models/m3d/suzanne.m3d");
+	animModelComponent->Load3DModel((Config.ResourcesBasePath + "models/m3d/suzanne.m3d").c_str());
 	animModelComponent->SetAnimation(10);
 	for (int i = 0; i < animModelComponent->GetModel()->materialCount; i++) {
 		animModelComponent->GetModel()->materials[i].shader = shader;
@@ -146,5 +146,5 @@ void Demo6NormalMap::DrawGUI()
 void Demo6NormalMap::OnCreateDefaultResources()
 {
 	__super::OnCreateDefaultResources();
-	_Font = LoadFontEx("../../resources/fonts/sparky.ttf", 32, 0, 0);
+	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 }

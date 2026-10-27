@@ -27,6 +27,8 @@ class Demo5MultiCams : public Knight
 		void OnCreateDefaultResources() override;
 
 		void DrawGameWorld(SceneCamera* pCam);
+
+		virtual void OnConfigKnightApp();
 };
 
 

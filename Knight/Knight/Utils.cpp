@@ -9,8 +9,16 @@
 
 extern Rectangle& CenterRectangle(Rectangle& r, int width, int height)
 {
-	r.x = (float)(SCREEN_WIDTH - width) / 2;
-	r.y = (float)(SCREEN_HEIGHT - height) / 2;
+    int w = DEFAULT_SCREEN_WIDTH;
+	int h = DEFAULT_SCREEN_HEIGHT;
+
+    if (Knight::Instance != nullptr) {
+        w = Knight::Instance->Config.WindowWidth;
+		h = Knight::Instance->Config.WindowHeight;
+    }
+
+	r.x = (float)(w - width) / 2;
+	r.y = (float)(h - height) / 2;
 	r.width = (float)width;
 	r.height = (float)height;
 

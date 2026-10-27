@@ -15,7 +15,7 @@ SceneLight::~SceneLight()
 
 void SceneLight::Create()
 {
-	shader = LoadShader("../../resources/shaders/glsl330/light_point.vs", "../../resources/shaders/glsl330/light_point.fs");
+	shader = LoadShader((Knight::Instance->Config.ResourcesBasePath + "shaders/glsl330/light_point.vs").c_str(), (Knight::Instance->Config.ResourcesBasePath + "shaders/glsl330/light_point.fs").c_str());
 
 	_Scene->_CurrentRenderPass->Hints.pOverrideShader = &shader;
 

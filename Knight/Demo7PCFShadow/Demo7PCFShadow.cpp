@@ -28,7 +28,7 @@ void Demo7PCFShadow::Start()
 	pFloor = _Scene->CreateSceneObject<SceneActor>("Floor");
 	Mesh floorMesh = GenMeshCube(32.0f, 0.1f, 32.0f);
 	ModelComponent* floorComponent = pFloor->CreateAndAddComponent<ModelComponent>();
-	floorComponent->LoadFromMesh(floorMesh, "../../resources/textures/p8.png");
+	floorComponent->LoadFromMesh(floorMesh, (Config.ResourcesBasePath + "textures/p8.png").c_str());
 	
 	pProp = _Scene->CreateSceneObject<SceneActor>("Prop");
 	pProp->Scale = Vector3{ 0.1f, 0.1f, 0.1f };
@@ -36,7 +36,7 @@ void Demo7PCFShadow::Start()
 	pProp->Rotation = Vector3{ 0,0,0 };
 	
 	ModelComponent* propModelComponent = pProp->CreateAndAddComponent<ModelComponent>();
-	propModelComponent->Load3DModel("../../resources/models/obj/plane.obj", "../../resources/models/obj/plane_diffuse.png");
+	propModelComponent->Load3DModel((Config.ResourcesBasePath + "models/obj/plane.obj").c_str(), (Config.ResourcesBasePath + "models/obj/plane_diffuse.png").c_str());
 	propModelComponent->castShadow = Component::eShadowCastingType::Shadow;
 	propModelComponent->receiveShadow = true;
 	
@@ -46,7 +46,7 @@ void Demo7PCFShadow::Start()
 	Actor->Position = Vector3{ 0.f,0.0f,0.f };
 	Actor->Rotation = Vector3{ 0,0,0 };
 	ModelComponent* animPlayerComponent = Actor->CreateAndAddComponent<ModelComponent>();
-	animPlayerComponent->Load3DModel("../../resources/models/gltf/robot.glb");
+	animPlayerComponent->Load3DModel((Config.ResourcesBasePath + "models/gltf/robot.glb").c_str());
 	animPlayerComponent->SetAnimation(0);
 	animPlayerComponent->castShadow = Component::eShadowCastingType::Shadow;
 	animPlayerComponent->receiveShadow = true;
@@ -155,7 +155,7 @@ void Demo7PCFShadow::DrawGUI()
 void Demo7PCFShadow::OnCreateDefaultResources()
 {
 	//Use a true typeface for the default font
-	_Font = LoadFontEx("../../resources/fonts/sparky.ttf", 32, 0, 0);
+	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 }
 
 void Demo7PCFShadow::OnConfigKnightApp()

@@ -12,7 +12,7 @@ void EnemyEntity::Create(Scene* pScene, Entity* pParent)
 	Actor->Scale = Vector3{ 3.0f, 5.0f, 3.0f };
 	Actor->Position = Vector3{ 0, 0.0f, 0.0f };
 	ModelComponent* animEnemyComponent = Actor->CreateAndAddComponent<ModelComponent>();
-	animEnemyComponent->Load3DModel("../../resources/models/gltf/greenman.glb");
+	animEnemyComponent->Load3DModel((Knight::Instance->Config.ResourcesBasePath + "models/gltf/greenman.glb").c_str());
 	animEnemyComponent->SetAnimation(0);
 }
 

@@ -25,7 +25,7 @@ bool PropEntity::Create(Scene* pScene, Entity* pContainer)
 	}
 
 	ModelComponent* modelComponent = _Actor->CreateAndAddComponent<ModelComponent>();
-	modelComponent->Load3DModel("../../resources/models/obj/castle.obj", "../../resources/models/obj/castle_diffuse.png");
+	modelComponent->Load3DModel((Knight::Instance->Config.ResourcesBasePath + "models/obj/castle.obj").c_str(), (Knight::Instance->Config.ResourcesBasePath + "models/obj/castle_diffuse.png").c_str());
 	modelComponent->castShadow = Component::eShadowCastingType::Shadow;
 	modelComponent->receiveShadow = true;
 

@@ -13,7 +13,7 @@ bool LitShadowRenderPass::Create(Scene* sc)
 {
 	__super::Create(sc);
 
-	shadowShader = LoadShader("../../resources/shaders/glsl330/kn-sm.vs", "../../resources/shaders/glsl330/kn-sm-pcf.fs");
+	shadowShader = LoadShader((Knight::Instance->Config.ResourcesBasePath + "shaders/glsl330/kn-sm.vs").c_str(), (Knight::Instance->Config.ResourcesBasePath + "shaders/glsl330/kn-sm-pcf.fs").c_str());
 	InitLightUniforms(shadowShader);
 
 	for (int i = 0; i < NUM_MAX_LIGHTS; ++i) {

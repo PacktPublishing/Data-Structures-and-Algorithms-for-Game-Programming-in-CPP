@@ -8,21 +8,21 @@
 //
 // This project is part of a series of bonus demos we will continue to release  
 // in the Git repository. We want to show you how we improve and refactor a larger project,  
-// transforming it from a “work-in-progress,” somewhat messy state into a better-structured project.
+// transforming it from a ?work-in-progress,? somewhat messy state into a better-structured project.
 //
 // Think of this demo like this: as you read through most chapters,  
-// you might have thought to yourself, “Why not put everything together?”  
-// So you take action in one quick step — copy/paste code, assemble it,  
+// you might have thought to yourself, ?Why not put everything together??  
+// So you take action in one quick step ? copy/paste code, assemble it,  
 // and use it as a proof of concept.
 //
 // The component code used in this sample is introduced in the book:
-// - The overall Knight application architecture — explained in Chapter 2
-// - Simulation of daylight changes — explained in Chapter 4
-// - BillboardComponent — explained in Chapter 7
-// - FollowUpCamera — explained in Chapter 5
-// - ParticleComponent — explained in Chapter 7
-// - QuadTreeTerrainComponent — explained in Chapter 7
-// - SkyboxComponent — explained in Chapter 7
+// - The overall Knight application architecture ? explained in Chapter 2
+// - Simulation of daylight changes ? explained in Chapter 4
+// - BillboardComponent ? explained in Chapter 7
+// - FollowUpCamera ? explained in Chapter 5
+// - ParticleComponent ? explained in Chapter 7
+// - QuadTreeTerrainComponent ? explained in Chapter 7
+// - SkyboxComponent ? explained in Chapter 7
 //
 // The code is meant to be a demonstration of how to use these components together, 
 // rather than a polished game. 
@@ -255,7 +255,7 @@ void BonusGameWorld01::OnCreateDefaultResources()
 	__super::OnCreateDefaultResources();
 
 	UnloadFont(_Font);
-	_Font = LoadFontEx("../../resources/fonts/sparky.ttf", 32, 0, 0);
+	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 
 	Config.ShowFPS = true; //Enable FPS display.
 	Config.EnableDefaultLight = false; //Disable default light. 	

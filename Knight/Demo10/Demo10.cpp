@@ -40,7 +40,7 @@ void Demo10::Start()
 	Player = _Scene->CreateSceneObject<SceneActor>("PlayerCharacter");
 	Player->Position = Vector3{ 0.0f, 0.0f, -10.0f };
 	AnimModelComponent = Player->CreateAndAddComponent<ModelComponent>();
-	AnimModelComponent->Load3DModel("../../resources/models/gltf/robot.glb");
+	AnimModelComponent->Load3DModel((Config.ResourcesBasePath + "models/gltf/robot.glb").c_str());
 	AnimModelComponent->SetAnimationMode(ModelComponent::Linear_interpolation);
 	AnimModelComponent->SetTransitionMode(ModelComponent::Linear);
 	PlayerCharacterFSM = new PlayerFSM(Player, AnimModelComponent);

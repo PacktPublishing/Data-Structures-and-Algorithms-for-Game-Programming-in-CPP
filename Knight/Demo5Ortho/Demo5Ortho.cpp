@@ -64,5 +64,5 @@ void Demo5Ortho::OnCreateDefaultResources()
 	__super::OnCreateDefaultResources();
 
 	UnloadFont(_Font);
-	_Font = LoadFontEx("../../resources/fonts/sparky.ttf", 32, 0, 0);
+	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 }

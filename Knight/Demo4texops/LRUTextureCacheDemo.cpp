@@ -1,14 +1,15 @@
 #pragma once
 
+#include "Knight.h"
 #include "LRUTextureCacheDemo.h"
 
 #include <vector>
 
 vector<string> texturePaths = {
-    "../../resources/textures/PokerDeckCards/12.png",
-    "../../resources/textures/PokerDeckCards/25.png",
-    "../../resources/textures/PokerDeckCards/50.png",
-    "../../resources/textures/PokerDeckCards/52.png"
+    "textures/PokerDeckCards/12.png",
+    "textures/PokerDeckCards/25.png",
+    "textures/PokerDeckCards/50.png",
+    "textures/PokerDeckCards/52.png"
 };
 
 LRUTextureCacheDemo::LRUTextureCacheDemo(int capacity) : textureCache(capacity)
@@ -26,7 +27,7 @@ void LRUTextureCacheDemo::Draw2D()
 {
     int index = ((int)GetTime()/2) % texturePaths.size();
 
-    Texture2D* texture = textureCache.GetTexture(texturePaths[index]);
+    Texture2D* texture = textureCache.GetTexture(Knight::Instance->Config.ResourcesBasePath + texturePaths[index]);
 
     // Draw the texture
     DrawTexture(*texture, SCREEN_WIDTH / 2 - texture->width / 2, SCREEN_HEIGHT / 2 - texture->height / 2, WHITE);

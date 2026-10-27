@@ -14,7 +14,7 @@ bool ShadowMapRenderPass::Create(Scene *sc)
 {
 	__super::Create(sc);
 
-	shadowShader = LoadShader("../../resources/shaders/glsl330/shadowmap.vs", "../../resources/shaders/glsl330/shadowmap-pcf.fs");
+	shadowShader = LoadShader((Knight::Instance->Config.ResourcesBasePath + "shaders/glsl330/shadowmap.vs").c_str(), (Knight::Instance->Config.ResourcesBasePath + "shaders/glsl330/shadowmap-pcf.fs").c_str());
 
 	InitRenderPassUniforms(shadowShader);
 

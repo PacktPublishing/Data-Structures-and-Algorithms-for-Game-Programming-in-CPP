@@ -30,7 +30,7 @@ void Demo53PV::Start()
 	Actor->Position = Vector3{ 0.f,0.5f,0.f };
 	Actor->Rotation = Vector3{ 0,180.0f,0 };
 	ModelComponent* animPlayerComponent = Actor->CreateAndAddComponent<ModelComponent>();
-	animPlayerComponent->Load3DModel("../../resources/models/gltf/robot.glb");
+	animPlayerComponent->Load3DModel((Config.ResourcesBasePath + "models/gltf/robot.glb").c_str());
 	animPlayerComponent->SetAnimation(6);
 
 	ChaseCamera->SetUp(Actor, 45.0f, 5.0f, CAMERA_PERSPECTIVE);
@@ -91,5 +91,5 @@ void Demo53PV::DrawGUI()
 void Demo53PV::OnCreateDefaultResources()
 {
 	__super::OnCreateDefaultResources();
-	_Font = LoadFontEx("../../resources/fonts/sparky.ttf", 32, 0, 0);
+	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 }

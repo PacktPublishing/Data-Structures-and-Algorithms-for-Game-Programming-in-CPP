@@ -39,7 +39,7 @@ void Demo3d::Start()
 		}
 
 		//Load card image
-		sprintf_s(imageFile, IMAGE_FILENAME_BUFFER_SIZE, "../../resources/textures/PokerDeckCards/%d.png", i);
+		sprintf_s(imageFile, IMAGE_FILENAME_BUFFER_SIZE, (Config.ResourcesBasePath + "textures/PokerDeckCards/%d.png").c_str(), i);
 		if (FileExists(imageFile))
 		{
 			CardImages[i] = LoadTexture(imageFile);

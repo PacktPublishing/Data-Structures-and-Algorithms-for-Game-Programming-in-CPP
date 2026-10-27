@@ -21,7 +21,7 @@ bool PlayerEntity::Create(Scene* pScene, Entity *pTerrain)
 	ModelComponent* animPlayerComponent = _Actor->CreateAndAddComponent<ModelComponent>();
 	animPlayerComponent->castShadow = Component::eShadowCastingType::Shadow;
 	animPlayerComponent->receiveShadow = true;
-	animPlayerComponent->Load3DModel("../../resources/models/gltf/robot.glb");
+	animPlayerComponent->Load3DModel((Knight::Instance->Config.ResourcesBasePath + "models/gltf/robot.glb").c_str());
 	animPlayerComponent->SetAnimationMode(ModelComponent::eAnimMode::Linear_interpolation);
 	animPlayerComponent->SetAnimation(6);
 
@@ -33,7 +33,7 @@ bool PlayerEntity::Create(Scene* pScene, Entity *pTerrain)
 
 	//spacial particle effect for blasting magic
 	pAttackEffect = pFireballActor->CreateAndAddComponent<MagicAttackEffect>();
-	pAttackEffect->CreateFromFile("../../resources/textures/flash00.png", 20, Vector3{ 0.0f,0.0f,0.0f }, WHITE, Vector3{ 0,0,0 });
+	pAttackEffect->CreateFromFile((Knight::Instance->Config.ResourcesBasePath + "textures/flash00.png").c_str(), 20, Vector3{ 0.0f,0.0f,0.0f }, WHITE, Vector3{ 0,0,0 });
 
 	return true;
 }

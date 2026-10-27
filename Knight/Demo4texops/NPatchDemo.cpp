@@ -11,7 +11,7 @@ NPatchDemo::NPatchDemo()
 
 void NPatchDemo::Create()
 {
-	Image art = LoadImage("../../resources/textures/uibkgd.png");
+	Image art = LoadImage((Knight::Instance->Config.ResourcesBasePath + "textures/uibkgd.png").c_str());
 	_npatchTex = LoadTextureFromImage(art);
 	UnloadImage(art);
 

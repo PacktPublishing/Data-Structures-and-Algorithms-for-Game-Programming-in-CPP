@@ -137,5 +137,5 @@ void Demo2f::Log(const std::string& message) {
 void Demo2f::OnCreateDefaultResources()
 {
 	__super::OnCreateDefaultResources();
-	_Font = LoadFontEx("../../resources/fonts/sparky.ttf", 32, 0, 0);
+	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 }

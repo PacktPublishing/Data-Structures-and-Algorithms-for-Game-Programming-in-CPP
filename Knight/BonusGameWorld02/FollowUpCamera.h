@@ -1,3 +1,4 @@
+//Same FollowUpCamera as in the Demo53PV project
 #pragma once
 
 #include "SceneObject.h"

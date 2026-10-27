@@ -40,12 +40,12 @@ void Demo7Particle::Start()
 	Actor->Position = Vector3{ 0.f,0.5f,0.f };
 	Actor->Rotation = Vector3{ 0,0,0 };
 	ModelComponent* animPlayerComponent = Actor->CreateAndAddComponent<ModelComponent>();
-	animPlayerComponent->Load3DModel("../../resources/models/gltf/robot.glb");
+	animPlayerComponent->Load3DModel((Config.ResourcesBasePath + "models/gltf/robot.glb").c_str());
 	animPlayerComponent->SetAnimation(6);
 
 	// Set up particle system
 	pParticle = Actor->CreateAndAddComponent<ParticleComponent>();
-	pParticle->CreateFromFile("../../resources/textures/glow.png", PARTICLE_COUNT, fountainOrigin, Color{ 255, 150, 50, 255 }, Vector3{0,0,0});
+	pParticle->CreateFromFile((Config.ResourcesBasePath + "textures/glow.png").c_str(), PARTICLE_COUNT, fountainOrigin, Color{ 255, 150, 50, 255 }, Vector3{0,0,0});
 
 }
 
@@ -83,5 +83,5 @@ void Demo7Particle::DrawFrame()
 void Demo7Particle::OnCreateDefaultResources()
 {
 	__super::OnCreateDefaultResources();
-	_Font = LoadFontEx("../../resources/fonts/sparky.ttf", 32, 0, 0);
+	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 }

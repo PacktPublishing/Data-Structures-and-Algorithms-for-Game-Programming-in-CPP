@@ -88,5 +88,5 @@ void Demo2a::OnCreateDefaultResources()
 {
 	__super::OnCreateDefaultResources();
 	//Loads a better TrueType font to display text information on the screen
-	_Font = LoadFontEx("../../resources/fonts/sparky.ttf", 32, 0, 0);
+	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 }

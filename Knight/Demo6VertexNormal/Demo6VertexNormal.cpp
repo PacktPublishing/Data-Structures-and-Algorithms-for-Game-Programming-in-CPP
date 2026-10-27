@@ -31,8 +31,8 @@ void Demo6VertexNormal::Start()
 
 	SetConfigFlags(FLAG_MSAA_4X_HINT);  // Enable Multi Sampling Anti Aliasing 4x (if available)
 
-	shader = LoadShader(TextFormat("../../resources/shaders/glsl%i/lighting.vs", GLSL_VERSION),
-		TextFormat("../../resources/shaders/glsl%i/lighting.fs", GLSL_VERSION));
+	shader = LoadShader(TextFormat((Config.ResourcesBasePath + "shaders/glsl%i/lighting.vs").c_str(), GLSL_VERSION),
+		TextFormat((Config.ResourcesBasePath + "shaders/glsl%i/lighting.fs").c_str(), GLSL_VERSION));
 
 	_Scene->_CurrentRenderPass->Hints.pOverrideShader = &shader;
 
@@ -56,7 +56,7 @@ void Demo6VertexNormal::Start()
 	FNActor->Rotation = Vector3{ 0,0,0 };
 	ModelComponent* FNPlayerModel = FNActor->CreateAndAddComponent<ModelComponent>();
 	FNPlayerModel->_AlwaysSmoothNormal = false;
-	FNPlayerModel->Load3DModel("../../resources/models/gltf/robot.glb");
+	FNPlayerModel->Load3DModel((Config.ResourcesBasePath + "models/gltf/robot.glb").c_str());
 	FNPlayerModel->SetAnimation(6);
 	for (int i = 0; i < FNPlayerModel->GetModel()->materialCount; i++) {
 		FNPlayerModel->GetModel()->materials[i].shader = shader;
@@ -67,7 +67,7 @@ void Demo6VertexNormal::Start()
 	VNActor->Position = Vector3{ -3.0f,0.0f,0.f };
 	VNActor->Rotation = Vector3{ 0,0,0 };
 	ModelComponent* VNPlayerModel = VNActor->CreateAndAddComponent<ModelComponent>();
-	VNPlayerModel->Load3DModel("../../resources/models/gltf/robot.glb");
+	VNPlayerModel->Load3DModel((Config.ResourcesBasePath + "models/gltf/robot.glb").c_str());
 	VNPlayerModel->SetAnimation(6);
 	for (int i = 0; i < VNPlayerModel->GetModel()->materialCount; i++) {
 		VNPlayerModel->GetModel()->materials[i].shader = shader;
@@ -120,7 +120,7 @@ void Demo6VertexNormal::DrawGUI()
 void Demo6VertexNormal::OnCreateDefaultResources()
 {
 	__super::OnCreateDefaultResources();
-	_Font = LoadFontEx("../../resources/fonts/sparky.ttf", 32, 0, 0);
+	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 }
 
 Vector3 Demo6VertexNormal::RotateAroudnY(const Vector3& v, float degrees)

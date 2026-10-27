@@ -90,5 +90,5 @@ void Demo2b::OnCreateDefaultResources()
 	__super::OnCreateDefaultResources();
 
 	//Replace defaut low resolution font with a TrueType font for the demo
-	_Font = LoadFontEx("../../resources/fonts/sparky.ttf", 32, 0, 0);
+	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 }

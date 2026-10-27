@@ -32,7 +32,7 @@ void Demo7HMap::Start()
 	pTerrain->Scale = Vector3{ 1,1,1 };
 	HMapTerrainModelComponent* heightMap = pTerrain->CreateAndAddComponent<HMapTerrainModelComponent>();
 	Vector3 terrainDimension = Vector3{32,8,32};
-	bool success = heightMap->CreateFromFile(terrainDimension, Vector2{ 8,8 }, "../../resources/textures/heightmap.png", "../../resources/textures/terrain_map.png");
+	bool success = heightMap->CreateFromFile(terrainDimension, Vector2{ 8,8 }, (Config.ResourcesBasePath + "textures/heightmap.png").c_str(), (Config.ResourcesBasePath + "textures/terrain_map.png").c_str());
 
 	UnloadImage(image);             // Unload heightmap image from RAM, already uploaded to VRAM
 }
@@ -62,5 +62,5 @@ void Demo7HMap::DrawGUI()
 void Demo7HMap::OnCreateDefaultResources()
 {
 	__super::OnCreateDefaultResources();
-	_Font = LoadFontEx("../../resources/fonts/sparky.ttf", 32, 0, 0);
+	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 }

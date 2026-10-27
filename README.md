@@ -19,6 +19,50 @@ Zhenyu George Li, Charles Shih-I Yeh</p>
 </p>
 
 <details open> 
+  <summary><h2>March 2026 update</summary>
+<p>
+<ul>
+  <li>Replace hardcoded resource path with a configurable base laoding path to all resources. Check Demo1.cs for details.</li>
+  <li>Minor update to allow application to set different application resolution.</li> 
+  <li>Supporting of non-Windows platform(s) is on its way.</li>
+</ul>
+</p>
+</details>
+
+<details open> 
+  <summary><h2>December 2025 update - new 'Coverflow' 3D UI sample and mini sample cookbook!</summary>
+<p>
+  We've released a new sample to demonstrate how to implement Coverflow style 3D UI. This project demonstrates how to use <i>recyclable-list</i> to display and scroll with a large amount of data with limited number of visual elements. In this example you scroll with 1000 poker cards but only 31 of them are visible at the same time. This sameple is best tried after you finish reading of Chapter 4 of the book. 
+</p>
+</details>
+
+<details open> 
+  <summary><h2>November 2025 update - new match-three game sample and mini sample cookbook!</summary>
+<p>
+  We've released a new Match-three game sample. This project demonstrates how Match-3 puzzles—such as Candy Crush or Bejeweled—are deceptively simple on the surface.
+Yet behind every falling candy lies a tight combination of bit manipulation, heuristic search, flood-fill algorithms, and state machines.    
+<ul>
+  <li>How to identify horizontal/vertical/cross shape/T-shape matches of candies.</li> 
+  <li>Use heuristic search to find best matches among all available matches.</li>
+  <li>Implement memory-efficient grid representation using bit-board manipulation.</li>
+  <li>Use flood-fill algorithm to identify connected candies.</li>
+  <li>Implement game state management using finite state machine (FSM).</li>
+</ul>
+</p>
+</details>
+
+<details open> 
+  <summary><h2>Thanksgiving(Canada) 2025 update - new sparse hash grid sample and mini sample cookbook!</summary>
+<p>
+  We've released a new sparse hash grid sample that demonstrates how to performe spatial query of near-by objects when you have thousands objects on the terrain. We've also included a new mini-cookbooks that explain the logic behind the code in detail.    
+ </p>    
+<ul>
+  <li>A new <i>BonusHashGridDemo</i> sample project demonstrates how to use K-d tree to speed up spatial queries of large amount objects.</li> 
+  <li>A 14-page mini e-booklet <b>BonusHashGridDemo_MiniCookBook.pdf</b> is provided under <i>BonusFreeBooklets/SampleMiniCookbooks/</i> folder to explain how the algorithm works.</li>
+</ul>
+</details>
+
+<details open> 
   <summary><h2>October 2025 update - new K-d tree sample and mini sample cookbook!</summary>
 <p>
   We've released a new K-d tree sample that demonstrates how to performe spatial query of near-by objects when you have hundreds/thousands objects on the terrain. We've also included a new mini-cookbooks that explain the logic behind the code in detail.    

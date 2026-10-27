@@ -9,7 +9,7 @@ bool TerrainEntity::Create(Scene* pScene, Entity* pContainer)
 	_Terrain = _Actor->CreateAndAddComponent<QuadTreeTerrainComponent>();
 	_Terrain->receiveShadow = true;
 	_Terrain->castShadow = Component::eShadowCastingType::Shadow;
-	bool success = _Terrain->CreateFromFile(Vector3{ 512,16,512 }, Vector2{ 1,1 }, "../../resources/textures/heightmap.png", "../../resources/textures/terrain_map.png");	
+	bool success = _Terrain->CreateFromFile(Vector3{ 512,16,512 }, Vector2{ 1,1 }, (Knight::Instance->Config.ResourcesBasePath + "textures/heightmap.png").c_str(), (Knight::Instance->Config.ResourcesBasePath + "textures/terrain_map.png").c_str());	
 
 	if (!success)
 	{
@@ -18,8 +18,8 @@ bool TerrainEntity::Create(Scene* pScene, Entity* pContainer)
 	}
 
 	//Load a texture as billboard image
-	treeImage = LoadTexture("../../resources/textures/p15-2.png");    // Our tree billboard texture
-	robotImage = LoadTexture("../../resources/textures/p13.png");    // Our robot billboard texture
+	treeImage = LoadTexture((Knight::Instance->Config.ResourcesBasePath + "textures/p15-2.png").c_str());    // Our tree billboard texture
+	robotImage = LoadTexture((Knight::Instance->Config.ResourcesBasePath + "textures/p13.png").c_str());    // Our robot billboard texture
 	// Create a random device and seed the Mersenne Twister engine
 	random_device rd;
 	mt19937 gen(rd());
@@ -69,7 +69,7 @@ bool TerrainEntity::Create(Scene* pScene, Entity* pContainer)
 		pParticleActor->Position = Vector3{ randomTerrainRange(gen),0, randomTerrainRange(gen) };
 		pParticleActor->Position.y = _Terrain->GetTerrainY(pParticleActor->Position.x, pParticleActor->Position.z) + 0.5f; // Set height based on terrain
 		ParticleComponent* pParticle = pParticleActor->CreateAndAddComponent<ParticleComponent>();
-		pParticle->CreateFromFile("../../resources/textures/flash00.png", 300, Vector3{ 0,0,0 }, Color{ (unsigned char)randomTerrainRange(gen), (unsigned char)randomTerrainRange(gen) , (unsigned char)randomTerrainRange(gen), 255 }, Vector3{ 0,0,0 });
+		pParticle->CreateFromFile((Knight::Instance->Config.ResourcesBasePath + "textures/flash00.png").c_str(), 300, Vector3{ 0,0,0 }, Color{ (unsigned char)randomTerrainRange(gen), (unsigned char)randomTerrainRange(gen) , (unsigned char)randomTerrainRange(gen), 255 }, Vector3{ 0,0,0 });
 	}
 
 	//create a skybox under main camera actor
@@ -78,7 +78,7 @@ bool TerrainEntity::Create(Scene* pScene, Entity* pContainer)
 	pSkybox->renderQueue = Component::eRenderQueueType::Background;
 	pSkybox->castShadow = Component::eShadowCastingType::NoShadow;
 	pSkybox->receiveShadow = false;
-	pSkybox->CreateFromFile("../../resources/textures/skybox2.png", CUBEMAP_LAYOUT_CROSS_FOUR_BY_THREE, 5.0f, false);
+	pSkybox->CreateFromFile((Knight::Instance->Config.ResourcesBasePath + "textures/skybox2.png").c_str(), CUBEMAP_LAYOUT_CROSS_FOUR_BY_THREE, 5.0f, false);
 
 	return true;
 }

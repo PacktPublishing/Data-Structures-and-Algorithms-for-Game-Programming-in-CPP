@@ -22,12 +22,18 @@
 #include "LitShadowRenderPass.h"
 #include "KnightUtils.h"
 
+#include <string>
+
 struct KnightConfig
 {
 	bool ShowFPS = false;
 	bool ShowDebugInfo = false;
 	bool EnableDefaultLight = true;
 	bool EnableDefaultRenderPasses = true;
+	int WindowWidth = DEFAULT_SCREEN_WIDTH;   //use default window width if not set by user
+	int WindowHeight = DEFAULT_SCREEN_HEIGHT;    //use default window height if not set by user
+	string WindowTitle = DEFAULT_APP_TITLE;
+	string ResourcesBasePath = RESOURCE_ROOT_PATH;
 };
 
 struct ComparePriorityDescending
@@ -69,8 +75,11 @@ protected:
 	virtual void DrawFrame();
 	virtual void DrawGUI();
 
+	virtual void ApplyAppConfig();
+
 	void DrawFPS(int x, int y);
 
+	
 
 protected:
 	Font _Font;

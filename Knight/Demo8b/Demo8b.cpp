@@ -44,7 +44,7 @@ void Demo8b::Start()
 	Character->Position = Vector3 { 0.0f, 0.0f, 0.0f };
 	Character->Rotation.y = 180.0f;
 	AnimModelComponent = Character->CreateAndAddComponent<ModelComponent>();
-	AnimModelComponent->Load3DModel("../../resources/models/gltf/robot.glb");
+	AnimModelComponent->Load3DModel((Config.ResourcesBasePath + "models/gltf/robot.glb").c_str());
 	AnimModelComponent->SetAnimation(AnimationStates[CurrentAnimIndex]);   //Set animation 4-idle
 	AnimModelComponent->SetAnimationMode(ModelComponent::eAnimMode::Linear_interpolation);
 }
@@ -138,7 +138,7 @@ void Demo8b::DrawGUI()
 void Demo8b::OnCreateDefaultResources()
 {
 	__super::OnCreateDefaultResources();
-	_Font = LoadFontEx("../../resources/fonts/sparky.ttf", 32, 0, 0);
+	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 
 	//Set the default light data
 	_Scene->Lights[0].enabled = true;

@@ -30,9 +30,9 @@ void Demo4ss::Start()
 
 	Config.ShowFPS = true;
 
-	background = LoadTexture("../../resources/textures/p10.png");
-	midground = LoadTexture("../../resources/textures/p11.png");
-	foreground = LoadTexture("../../resources/textures/p12.png");
+	background = LoadTexture((Config.ResourcesBasePath + "textures/p10.png").c_str());
+	midground = LoadTexture((Config.ResourcesBasePath + "textures/p11.png").c_str());
+	foreground = LoadTexture((Config.ResourcesBasePath + "textures/p12.png").c_str());
 }
 
 // Unload resources used by the game
@@ -90,5 +90,5 @@ void Demo4ss::DrawGUI()
 void Demo4ss::OnCreateDefaultResources()
 {
 	__super::OnCreateDefaultResources();
-	_Font = LoadFontEx("../../resources/fonts/sparky.ttf", 32, 0, 0);
+	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 }

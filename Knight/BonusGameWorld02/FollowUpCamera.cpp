@@ -1,3 +1,4 @@
+//Implementation of a third-person follow-up camera that tracks a player character in a 3D scene.
 #include "Knight.h"
 #include "FollowUpCamera.h"
 

@@ -14,7 +14,7 @@ bool DepthRenderPass::Create(Scene* sc)
 {
 	__super::Create(sc);
 
-	depthShader = LoadShader("../../resources/shaders/glsl330/kn-lit-depth.vs", "../../resources/shaders/glsl330/shadow_depth.fs");
+	depthShader = LoadShader((Knight::Instance->Config.ResourcesBasePath + "shaders/glsl330/kn-lit-depth.vs").c_str(), (Knight::Instance->Config.ResourcesBasePath + "shaders/glsl330/shadow_depth.fs").c_str());
 	alphaTestLoc = GetShaderLocation(depthShader, "alphaTest");
 
 	Hints.pOverrideShader = &depthShader;

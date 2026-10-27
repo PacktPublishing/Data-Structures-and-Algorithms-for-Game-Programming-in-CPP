@@ -29,7 +29,7 @@ void Demo5TrkCam::Start()
 	Actor->Position = Vector3{ -10.f,0.15f,0.f };
 	Actor->Rotation = Vector3{ 0,90,0 };
 	ModelComponent* animPlayerComponent = Actor->CreateAndAddComponent<ModelComponent>();
-	animPlayerComponent->Load3DModel("../../resources/models/gltf/robot.glb");
+	animPlayerComponent->Load3DModel((Config.ResourcesBasePath + "models/gltf/robot.glb").c_str());
 	animPlayerComponent->SetAnimation(6);
 
 	OnRailCamera->SetUp(Actor, 45.0f, CAMERA_PERSPECTIVE);
@@ -86,5 +86,5 @@ void Demo5TrkCam::DrawGUI()
 void Demo5TrkCam::OnCreateDefaultResources()
 {
 	__super::OnCreateDefaultResources();
-	_Font = LoadFontEx("../../resources/fonts/sparky.ttf", 32, 0, 0);
+	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 }

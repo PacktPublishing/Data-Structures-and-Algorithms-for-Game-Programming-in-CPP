@@ -59,7 +59,7 @@ ColorBlendingDemo::ColorBlendingDemo()
 
 void ColorBlendingDemo::Create()
 {
-	Image art = LoadImage("../../resources/textures/lake.png");
+	Image art = LoadImage((Knight::Instance->Config.ResourcesBasePath + "textures/lake.png").c_str());
 	texture = LoadTextureFromImage(art);
 	UnloadImage(art);
 	isReady = true;

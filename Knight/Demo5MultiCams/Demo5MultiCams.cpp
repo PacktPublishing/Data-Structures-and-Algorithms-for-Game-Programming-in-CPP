@@ -32,7 +32,7 @@ void Demo5MultiCams::Start()
 	Actor->Position = Vector3{ 0.f,0.1f,0.f };
 	Actor->Rotation = Vector3{ 0,90,0 };
 	ModelComponent* animPlayerComponent = Actor->CreateAndAddComponent<ModelComponent>();
-	animPlayerComponent->Load3DModel("../../resources/models/gltf/robot.glb");
+	animPlayerComponent->Load3DModel((Config.ResourcesBasePath + "models/gltf/robot.glb").c_str());
 	animPlayerComponent->SetAnimation(6);
 	Actor->AddComponent(animPlayerComponent);
 
@@ -145,6 +145,11 @@ void Demo5MultiCams::DrawGameWorld(SceneCamera *pCam)
 void Demo5MultiCams::OnCreateDefaultResources()
 {
 	__super::OnCreateDefaultResources();
-	_Font = LoadFontEx("../../resources/fonts/sparky.ttf", 32, 0, 0);
+	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 
+}
+
+void Demo5MultiCams::OnConfigKnightApp()
+{
+	Config.WindowTitle = "Demo 5 - Multiple Cameras";
 }
