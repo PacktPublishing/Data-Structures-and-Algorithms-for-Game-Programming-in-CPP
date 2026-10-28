@@ -24,7 +24,7 @@ bool ShadowMapRenderPass::Create(Scene *sc)
 {
 	__super::Create(sc);
 
-	shadowShader = LoadShader((Knight::Instance->Config.ResourcesBasePath + "shaders/glsl330/shadowmap.vs").c_str(), (Knight::Instance->Config.ResourcesBasePath + "shaders/glsl330/kn-lit4-sm-pcf.fs").c_str());
+	shadowShader = LoadShader((Knight::Instance->Config.ResourcesBasePath + KNIGHT_SHADER_DIRECTORY "shadowmap.vs").c_str(), (Knight::Instance->Config.ResourcesBasePath + KNIGHT_SHADER_DIRECTORY "kn-lit4-sm-pcf.fs").c_str());
 	InitRenderPassUniforms(shadowShader);
 
 	Hints.pOverrideShader = &shadowShader;

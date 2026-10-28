@@ -12,7 +12,7 @@ bool ParticleComponent::CreateFromFile(const char* path, int maxp, Vector3 v, Co
 {
     Texture2D particleTexture = { 0 };
 
-    particleTexture = LoadTexture(path);
+    particleTexture = LoadTextureForPlatform(path);
     if (particleTexture.width == 0 && particleTexture.height == 0)
         return false;
     maxParticles = maxp;

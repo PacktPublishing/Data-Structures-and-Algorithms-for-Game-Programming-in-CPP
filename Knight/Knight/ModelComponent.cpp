@@ -156,37 +156,37 @@ void ModelComponent::LoadMaterialTextures(int idx,
 {
 	if (DiffuseMapPath)
 	{
-		_Texture2DMaps[MATERIAL_MAP_DIFFUSE] = LoadTexture(DiffuseMapPath);
+		_Texture2DMaps[MATERIAL_MAP_DIFFUSE] = LoadTextureForPlatform(DiffuseMapPath);
 		_LoadState |= DiffuseMap;
 		_Model.materials[idx].maps[MATERIAL_MAP_DIFFUSE].texture = _Texture2DMaps[MATERIAL_MAP_DIFFUSE];
 	}
 	if (SpecularMapPath)
 	{
-		_Texture2DMaps[MATERIAL_MAP_SPECULAR] = LoadTexture(SpecularMapPath);
+		_Texture2DMaps[MATERIAL_MAP_SPECULAR] = LoadTextureForPlatform(SpecularMapPath);
 		_LoadState |= SpecularMap;
 		_Model.materials[idx].maps[MATERIAL_MAP_SPECULAR].texture = _Texture2DMaps[MATERIAL_MAP_SPECULAR];
 	}
 	if (NormalMapPath)
 	{
-		_Texture2DMaps[MATERIAL_MAP_NORMAL] = LoadTexture(NormalMapPath);
+		_Texture2DMaps[MATERIAL_MAP_NORMAL] = LoadTextureForPlatform(NormalMapPath);
 		_LoadState |= NormalMap;
 		_Model.materials[idx].maps[MATERIAL_MAP_NORMAL].texture = _Texture2DMaps[MATERIAL_MAP_NORMAL];
 	}
 	if (MetalicMapPath)
 	{
-		_Texture2DMaps[MATERIAL_MAP_METALNESS] = LoadTexture(MetalicMapPath);
+		_Texture2DMaps[MATERIAL_MAP_METALNESS] = LoadTextureForPlatform(MetalicMapPath);
 		_LoadState |= MetalicMap;
 		_Model.materials[idx].maps[MATERIAL_MAP_SPECULAR].texture = _Texture2DMaps[MATERIAL_MAP_METALNESS];
 	}
 	if (RoughnessMapPath)
 	{
-		_Texture2DMaps[MATERIAL_MAP_ROUGHNESS] = LoadTexture(RoughnessMapPath);
+		_Texture2DMaps[MATERIAL_MAP_ROUGHNESS] = LoadTextureForPlatform(RoughnessMapPath);
 		_LoadState |= RoughnessMap;
 		_Model.materials[idx].maps[MATERIAL_MAP_SPECULAR].texture = _Texture2DMaps[MATERIAL_MAP_ROUGHNESS];
 	}
 	if (HeightMapPath)
 	{
-		_Texture2DMaps[MATERIAL_MAP_HEIGHT] = LoadTexture(HeightMapPath);
+		_Texture2DMaps[MATERIAL_MAP_HEIGHT] = LoadTextureForPlatform(HeightMapPath);
 		_LoadState |= HeightMap;
 		_Model.materials[idx].maps[MATERIAL_MAP_SPECULAR].texture = _Texture2DMaps[MATERIAL_MAP_HEIGHT];
 	}

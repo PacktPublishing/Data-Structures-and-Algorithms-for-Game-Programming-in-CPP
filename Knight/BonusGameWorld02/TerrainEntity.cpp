@@ -18,8 +18,8 @@ bool TerrainEntity::Create(Scene* pScene, Entity* pContainer)
 	}
 
 	//Load a texture as billboard image
-	treeImage = LoadTexture((Knight::Instance->Config.ResourcesBasePath + "textures/p15-2.png").c_str());    // Our tree billboard texture
-	robotImage = LoadTexture((Knight::Instance->Config.ResourcesBasePath + "textures/p13.png").c_str());    // Our robot billboard texture
+	treeImage = LoadTextureForPlatform((Knight::Instance->Config.ResourcesBasePath + "textures/P15-2.png").c_str());    // Our tree billboard texture
+	robotImage = LoadTextureForPlatform((Knight::Instance->Config.ResourcesBasePath + "textures/P13.png").c_str());    // Our robot billboard texture
 	// Create a random device and seed the Mersenne Twister engine
 	random_device rd;
 	mt19937 gen(rd());

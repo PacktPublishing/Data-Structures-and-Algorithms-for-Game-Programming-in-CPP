@@ -21,7 +21,7 @@ bool SkyboxComponent::CreateFromFile(const char* pSkyboxTexFilePath, CubemapLayo
 
 	// Load skybox shader and set required locations
 	// NOTE: Some locations are automatically set at shader loading
-	skybox.materials[0].shader = LoadShader((Knight::Instance->Config.ResourcesBasePath + "shaders/glsl330/skybox.vs").c_str(), (Knight::Instance->Config.ResourcesBasePath + "shaders/glsl330/skybox.fs").c_str());
+	skybox.materials[0].shader = LoadShader((Knight::Instance->Config.ResourcesBasePath + KNIGHT_SHADER_DIRECTORY "skybox.vs").c_str(), (Knight::Instance->Config.ResourcesBasePath + KNIGHT_SHADER_DIRECTORY "skybox.fs").c_str());
 
 	int val1[1] = { MATERIAL_MAP_CUBEMAP };
 	SetShaderValue(skybox.materials[0].shader, GetShaderLocation(skybox.materials[0].shader, "environmentMap"), val1, SHADER_UNIFORM_INT);
@@ -30,7 +30,7 @@ bool SkyboxComponent::CreateFromFile(const char* pSkyboxTexFilePath, CubemapLayo
 	SetShaderValue(skybox.materials[0].shader, GetShaderLocation(skybox.materials[0].shader, "vflipped"), val2, SHADER_UNIFORM_INT);
 
 	// Load cubemap shader and setup required shader locations
-	shdrCubemap = LoadShader((Knight::Instance->Config.ResourcesBasePath + "shaders/glsl330/cubemap.vs").c_str(), (Knight::Instance->Config.ResourcesBasePath + "shaders/glsl330/cubemap.fs").c_str());
+	shdrCubemap = LoadShader((Knight::Instance->Config.ResourcesBasePath + KNIGHT_SHADER_DIRECTORY "cubemap.vs").c_str(), (Knight::Instance->Config.ResourcesBasePath + KNIGHT_SHADER_DIRECTORY "cubemap.fs").c_str());
 
 	int val3[1] = { 0 };
 	SetShaderValue(shdrCubemap, GetShaderLocation(shdrCubemap, "equirectangularMap"), val3, SHADER_UNIFORM_INT);

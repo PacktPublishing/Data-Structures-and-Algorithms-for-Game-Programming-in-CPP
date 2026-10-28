@@ -29,12 +29,12 @@ void Demo6NormalMap::Start()
 	pMainCamera = _Scene->CreateSceneObject<FlyThroughCamera>("Main Camera");
 	pMainCamera->SetUp(Vector3{ 0.0f, 1.0f, 0.0f }, 8.0f, 0, 10, 60, CAMERA_PERSPECTIVE);
 
-	diffuse = LoadTexture((Config.ResourcesBasePath + "textures/stonewall.png").c_str());  // Replace with your diffuse texture path
-	normalMap = LoadTexture((Config.ResourcesBasePath + "textures/stonewall_n.png").c_str()); // Replace with your normal map texture path
+	diffuse = LoadTextureForPlatform((Config.ResourcesBasePath + "textures/stonewall.png").c_str());  // Replace with your diffuse texture path
+	normalMap = LoadTextureForPlatform((Config.ResourcesBasePath + "textures/stonewall_n.png").c_str()); // Replace with your normal map texture path
 
 	// Load shaders
-	shader = LoadShader((Config.ResourcesBasePath + "shaders/glsl330/normalmap.vs").c_str(),
-		(Config.ResourcesBasePath + "shaders/glsl330/normalmap.fs").c_str());
+	shader = LoadShader((Config.ResourcesBasePath + KNIGHT_SHADER_DIRECTORY "normalmap.vs").c_str(),
+		(Config.ResourcesBasePath + KNIGHT_SHADER_DIRECTORY "normalmap.fs").c_str());
 
 	_Scene->_CurrentRenderPass->Hints.pOverrideShader = &shader; // Set the shader to be used for rendering
 

@@ -1,4 +1,5 @@
 #include "QuadTreeTerrainComponent.h"
+#include "KnightUtils.h"
 
 QuadTreeTerrainComponent::QuadTreeTerrainComponent()
 {
@@ -36,7 +37,7 @@ bool QuadTreeTerrainComponent::CreateFromFile(Vector3 terrainDimension, Vector2 
 
     // Load terrain texture
     if (FileExists(pTerrainTexurePath)) {
-        terrainTexture = LoadTexture(pTerrainTexurePath);
+        terrainTexture = LoadTextureForPlatform(pTerrainTexurePath);
         if (terrainTexture.id != 0) {
             SetTextureFilter(terrainTexture, TEXTURE_FILTER_TRILINEAR); // Optional: for smoother look
         }

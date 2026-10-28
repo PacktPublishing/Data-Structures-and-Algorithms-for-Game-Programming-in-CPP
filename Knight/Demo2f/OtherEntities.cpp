@@ -20,7 +20,7 @@ void TerrainEntity::Create(Scene* pScene, Entity* pParent)
 	ModelComponent* animEnemyComponent = Actor->CreateAndAddComponent<ModelComponent>();
 	animEnemyComponent->Load3DModel((Knight::Instance->Config.ResourcesBasePath + "models/obj/bridge.obj").c_str());
 	Image image = LoadImage((Knight::Instance->Config.ResourcesBasePath + "models/obj/bridge_diffuse.png").c_str());
-	Texture2D tex = LoadTextureFromImage(image);
+	Texture2D tex = LoadTextureFromImageForPlatform(image, "Demo2f generated image");
 	UnloadImage(image);
 	animEnemyComponent->GetModel()->materials[0].maps[0].texture = tex;
 }

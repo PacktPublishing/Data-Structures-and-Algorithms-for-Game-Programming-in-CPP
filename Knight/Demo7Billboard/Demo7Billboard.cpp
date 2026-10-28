@@ -37,7 +37,7 @@ void Demo7Billboard::Start()
 	animEnemyComponent->Load3DModel((Config.ResourcesBasePath + "models/obj/bridge.obj").c_str(), (Config.ResourcesBasePath + "models/obj/bridge_diffuse.png").c_str());
 
 	//Load a texture as billboard image
-	billboardImage = LoadTexture((Config.ResourcesBasePath + "textures/p15-1.png").c_str());    // Our billboard texture
+	billboardImage = LoadTextureForPlatform((Config.ResourcesBasePath + "textures/P15-1.png").c_str());    // Our billboard texture
 
 	// Create a random device and seed the Mersenne Twister engine
 	std::random_device rd;

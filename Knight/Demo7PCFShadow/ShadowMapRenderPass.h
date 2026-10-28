@@ -31,5 +31,6 @@ class ShadowMapRenderPass : public SceneRenderPass
 		int ambientLoc = -1;		
 		int lightVPLoc = -1;
 		int shadowMapLoc = -1;
+		int receiveShadowLoc = -1;
 
 };

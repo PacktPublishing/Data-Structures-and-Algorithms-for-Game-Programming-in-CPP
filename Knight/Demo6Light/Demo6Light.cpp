@@ -5,7 +5,7 @@
 #define RLIGHTS_IMPLEMENTATION
 #include "../../raylib/examples/models/rlights.h"
 
-#define GLSL_VERSION            330
+#define GLSL_VERSION            KNIGHT_GLSL_VERSION
 
 #include <cmath>
 
@@ -68,7 +68,7 @@ void Demo6Light::Start()
 	ModelComponent* animEnemyComponent = pTerrain->CreateAndAddComponent<ModelComponent>();
 	animEnemyComponent->Load3DModel((Config.ResourcesBasePath + "models/obj/bridge.obj").c_str());
 	Image image = LoadImage((Config.ResourcesBasePath + "models/obj/bridge_diffuse.png").c_str());
-	Texture2D tex = LoadTextureFromImage(image);
+	Texture2D tex = LoadTextureFromImageForPlatform(image, "Demo6Light generated image");
 	UnloadImage(image);
 	animEnemyComponent->GetModel()->materials[0].maps[0].texture = tex;
 	animEnemyComponent->GetModel()->materials[0].shader = shader;

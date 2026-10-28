@@ -7,17 +7,17 @@ RNGStreams gRng;
 bool Match3GameSession::Create()
 {
     //load chip textures
-    chipTextures[0] = LoadTexture((Knight::Instance->Config.ResourcesBasePath + "textures/chip-blue.png").c_str());
-    chipTextures[1] = LoadTexture((Knight::Instance->Config.ResourcesBasePath + "textures/chip-red.png").c_str());
-    chipTextures[2] = LoadTexture((Knight::Instance->Config.ResourcesBasePath + "textures/chip-orange.png").c_str());
-    chipTextures[3] = LoadTexture((Knight::Instance->Config.ResourcesBasePath + "textures/chip-green.png").c_str());
-    chipTextures[4] = LoadTexture((Knight::Instance->Config.ResourcesBasePath + "textures/chip-purple.png").c_str());
+    chipTextures[0] = LoadTextureForPlatform((Knight::Instance->Config.ResourcesBasePath + "textures/chip-blue.png").c_str());
+    chipTextures[1] = LoadTextureForPlatform((Knight::Instance->Config.ResourcesBasePath + "textures/chip-red.png").c_str());
+    chipTextures[2] = LoadTextureForPlatform((Knight::Instance->Config.ResourcesBasePath + "textures/chip-orange.png").c_str());
+    chipTextures[3] = LoadTextureForPlatform((Knight::Instance->Config.ResourcesBasePath + "textures/chip-green.png").c_str());
+    chipTextures[4] = LoadTextureForPlatform((Knight::Instance->Config.ResourcesBasePath + "textures/chip-purple.png").c_str());
 
-    chipTextures[10] = LoadTexture((Knight::Instance->Config.ResourcesBasePath + "textures/chip-crossbomb.png").c_str());
-    chipTextures[11] = LoadTexture((Knight::Instance->Config.ResourcesBasePath + "textures/chip-rocketbomb.png").c_str());
+    chipTextures[10] = LoadTextureForPlatform((Knight::Instance->Config.ResourcesBasePath + "textures/chip-crossbomb.png").c_str());
+    chipTextures[11] = LoadTextureForPlatform((Knight::Instance->Config.ResourcesBasePath + "textures/chip-rocketbomb.png").c_str());
 
-    bkgd = LoadTexture((Knight::Instance->Config.ResourcesBasePath + "textures/halloween.png").c_str());
-    missile = LoadTexture((Knight::Instance->Config.ResourcesBasePath + "textures/flash00.png").c_str());
+    bkgd = LoadTextureForPlatform((Knight::Instance->Config.ResourcesBasePath + "textures/halloween.png").c_str());
+    missile = LoadTextureForPlatform((Knight::Instance->Config.ResourcesBasePath + "textures/flash00.png").c_str());
 
     bd.FillNoMatches();
     bd.FindAnyMoveHeuristic(hintA, hintB, &hintScore);

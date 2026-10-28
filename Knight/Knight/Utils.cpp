@@ -8,6 +8,61 @@
 #include <algorithm> // Required for std::min and std::max
 #include <cstring>
 
+namespace
+{
+    bool IsPowerOfTwo(int value)
+    {
+        return value > 0 && (value & (value - 1)) == 0;
+    }
+
+    int NextPowerOfTwo(int value)
+    {
+        int result = 1;
+        while (result < value) result *= 2;
+        return result;
+    }
+}
+
+Texture2D LoadTextureFromImageForPlatform(Image image, const char* debugName)
+{
+#if defined(PLATFORM_WEB)
+    if (image.data != nullptr && (!IsPowerOfTwo(image.width) || !IsPowerOfTwo(image.height)))
+    {
+        const int resizedWidth = NextPowerOfTwo(image.width);
+        const int resizedHeight = NextPowerOfTwo(image.height);
+        const char* textureName = (debugName != nullptr) ? debugName : "<generated image>";
+
+        TraceLog(LOG_WARNING,
+            "TEXTURE: [%s] Resized for WebGL 1 from %dx%d to %dx%d (power-of-two requirement)",
+            textureName, image.width, image.height, resizedWidth, resizedHeight);
+
+        Image resizedImage = ImageCopy(image);
+        ImageResize(&resizedImage, resizedWidth, resizedHeight);
+        Texture2D texture = LoadTextureFromImage(resizedImage);
+        UnloadImage(resizedImage);
+        return texture;
+    }
+#else
+    (void)debugName;
+#endif
+
+    return LoadTextureFromImage(image);
+}
+
+Texture2D LoadTextureForPlatform(const char* fileName)
+{
+#if defined(PLATFORM_WEB)
+    Image image = LoadImage(fileName);
+    if (image.data == nullptr) return Texture2D{};
+
+    Texture2D texture = LoadTextureFromImageForPlatform(image, fileName);
+    UnloadImage(image);
+    return texture;
+#else
+    return LoadTexture(fileName);
+#endif
+}
+
 extern Rectangle& CenterRectangle(Rectangle& r, int width, int height)
 {
     int w = DEFAULT_SCREEN_WIDTH;

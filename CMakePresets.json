@@ -1,0 +1,85 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 25, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "vs2022",
+      "displayName": "Windows Visual Studio 2022 x64",
+      "inherits": "base",
+      "generator": "Visual Studio 17 2022",
+      "architecture": "x64"
+    },
+    {
+      "name": "vs2026",
+      "displayName": "Windows Visual Studio 2026 x64",
+      "inherits": "base",
+      "generator": "Visual Studio 18 2026",
+      "architecture": "x64"
+    },
+    {
+      "name": "ninja-debug",
+      "displayName": "VS Code Ninja Debug",
+      "inherits": "base",
+      "generator": "Ninja",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "ninja-release",
+      "displayName": "VS Code Ninja Release",
+      "inherits": "base",
+      "generator": "Ninja",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    },
+    {
+      "name": "xcode",
+      "displayName": "macOS Xcode",
+      "inherits": "base",
+      "generator": "Xcode"
+    },
+    {
+      "name": "macos-ninja-debug",
+      "displayName": "macOS VS Code Ninja Debug",
+      "inherits": "ninja-debug"
+    },
+    {
+      "name": "web-debug",
+      "displayName": "Web Emscripten Debug",
+      "inherits": "base",
+      "generator": "Ninja",
+      "toolchainFile": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "KNIGHT_BUILD_ALL_GAMES": "OFF",
+        "KNIGHT_GAME": "Demo1"
+      }
+    },
+    {
+      "name": "web-release",
+      "displayName": "Web Emscripten Release",
+      "inherits": "web-debug",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "vs2022-debug", "configurePreset": "vs2022", "configuration": "Debug" },
+    { "name": "vs2022-release", "configurePreset": "vs2022", "configuration": "Release" },
+    { "name": "vs2026-debug", "configurePreset": "vs2026", "configuration": "Debug" },
+    { "name": "vs2026-release", "configurePreset": "vs2026", "configuration": "Release" },
+    { "name": "ninja-debug", "configurePreset": "ninja-debug" },
+    { "name": "ninja-release", "configurePreset": "ninja-release" },
+    { "name": "xcode-debug", "configurePreset": "xcode", "configuration": "Debug" },
+    { "name": "xcode-release", "configurePreset": "xcode", "configuration": "Release" },
+    { "name": "macos-ninja-debug", "configurePreset": "macos-ninja-debug" },
+    { "name": "web-debug", "configurePreset": "web-debug" },
+    { "name": "web-release", "configurePreset": "web-release" }
+  ]
+}
+

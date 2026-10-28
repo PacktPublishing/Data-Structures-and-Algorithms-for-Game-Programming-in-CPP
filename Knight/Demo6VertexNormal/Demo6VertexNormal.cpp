@@ -5,7 +5,7 @@
 #define RLIGHTS_IMPLEMENTATION
 #include "../../raylib/examples/models/rlights.h"
 
-#define GLSL_VERSION            330
+#define GLSL_VERSION            KNIGHT_GLSL_VERSION
 
 #include <cmath>
 

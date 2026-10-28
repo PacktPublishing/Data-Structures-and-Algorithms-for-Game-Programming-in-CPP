@@ -6,6 +6,10 @@
 #include "Knight.h"
 #include "rlgl.h"
 
+#if defined(PLATFORM_WEB)
+#include <emscripten/emscripten.h>
+#endif
+
 Knight* Knight::Instance = nullptr;
 
 Knight::Knight()
@@ -147,6 +151,47 @@ void Knight::EndGame()
 
 void Knight::GameLoop()
 {
+#if defined(PLATFORM_WEB)
+	emscripten_set_main_loop_arg([](void* userData)
+	{
+		Knight* app = static_cast<Knight*>(userData);
+		if (app->_shouldExitGameLoop)
+		{
+			emscripten_cancel_main_loop();
+			app->EndGame();
+			return;
+		}
+
+		app->Update(GetFrameTime());
+		app->DrawOffscreen();
+
+		if (IsKeyPressed(KEY_ENTER))
+		{
+			TakeScreenshot("screenshot.png");
+		}
+
+		BeginDrawing();
+		ClearBackground(DARKGRAY);
+		SceneCamera* cameraActor = app->_Scene->GetMainCameraActor();
+		if (cameraActor)
+		{
+			BeginMode3D(*cameraActor->GetCamera3D());
+			app->DrawFrame();
+			EndMode3D();
+		}
+		else
+		{
+			app->DrawFrame();
+		}
+
+		app->DrawGUI();
+		if (app->Config.ShowFPS)
+		{
+			app->DrawFPS(10, 10);
+		}
+		EndDrawing();
+	}, this, 0, true);
+#else
 	while (!WindowShouldClose() && (!_shouldExitGameLoop))
 	{	
 		Update(GetFrameTime());
@@ -182,6 +227,7 @@ void Knight::GameLoop()
 	}
 
 	EndGame();
+#endif
 }
 
 void Knight::Update(float ElapsedSeconds)

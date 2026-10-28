@@ -28,7 +28,8 @@ void Demo7PCFShadow::Start()
 	pFloor = _Scene->CreateSceneObject<SceneActor>("Floor");
 	Mesh floorMesh = GenMeshCube(32.0f, 0.1f, 32.0f);
 	ModelComponent* floorComponent = pFloor->CreateAndAddComponent<ModelComponent>();
-	floorComponent->LoadFromMesh(floorMesh, (Config.ResourcesBasePath + "textures/p8.png").c_str());
+	floorComponent->LoadFromMesh(floorMesh, (Config.ResourcesBasePath + "textures/P8.png").c_str());
+	floorComponent->receiveShadow = true;
 	
 	pProp = _Scene->CreateSceneObject<SceneActor>("Prop");
 	pProp->Scale = Vector3{ 0.1f, 0.1f, 0.1f };
