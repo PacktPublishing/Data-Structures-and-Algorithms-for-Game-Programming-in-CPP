@@ -23,7 +23,10 @@ Zhenyu George Li, Charles Shih-I Yeh</p>
 <p>
 <ul>
   <li>Raylib upgrade to latest (6.2)</li>
-  <li>Fix breaking changes of Raylib APIs</li> 
+  <li>API breaking changes in the Sample codes are all fixed.</li>
+  <li>Fix a Lit shader uniform issue</li>
+  <li>Fix breaking changes of Raylib APIs</li>
+  <li>Both CMake/CMake-build branch are working in progress. Do not use it yet.</li>
 </ul>
 </p>
 </details>
