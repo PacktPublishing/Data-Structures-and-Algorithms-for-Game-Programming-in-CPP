@@ -10,7 +10,10 @@
 
 #define TARGET_FPS 60
 
-#define RESOURCE_ROOT_PATH "../../resources/"
+#ifndef KNIGHT_RESOURCE_ROOT_PATH
+#define KNIGHT_RESOURCE_ROOT_PATH "../../resources/"
+#endif
+#define RESOURCE_ROOT_PATH KNIGHT_RESOURCE_ROOT_PATH
 
 #define MAX_SCENE_OBJECT_NAME	32
 #define SCENE_ROOT_NAME "Scene Root"

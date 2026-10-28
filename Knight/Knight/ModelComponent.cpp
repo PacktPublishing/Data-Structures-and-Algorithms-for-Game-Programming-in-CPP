@@ -202,7 +202,7 @@ void ModelComponent::LoadFromMesh(Mesh mesh,
 	const char* CubeMapPath,
 	const char* EmissionMapPath,
 	const char* OcclusionMapPath,
-	Color Color)
+	Color color)
 {
 	_Model = LoadModelFromMesh(mesh);
 	_LoadState |= Loaded_Model;
@@ -230,7 +230,7 @@ void ModelComponent::Load3DModel(const char* ModelPath,
 	const char* CubeMapPath,
 	const char* EmissionMapPath,
 	const char* OcclusionMapPath,
-	Color Color)
+	Color color)
 {
 	if (!FileExists(ModelPath))
 	{
@@ -259,7 +259,7 @@ void ModelComponent::Load3DModel(const char* ModelPath,
 		EmissionMapPath,
 		OcclusionMapPath);
 
-	_Color = Color;
+	_Color = color;
 	if (_Model.meshCount > 0)
 	{
 		UpdateMeshBoundingBoxes();

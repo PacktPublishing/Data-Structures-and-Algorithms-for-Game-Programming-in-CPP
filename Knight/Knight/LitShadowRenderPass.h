@@ -1,8 +1,9 @@
 #pragma once
 
-#include "Knight.h"
+#include "LitRenderPass.h"
+#include "LitDepthRenderPass.h"
 
-class LitShadowRenderPass : public SceneRenderPass
+class LitShadowRenderPass : public LitRenderPass
 {
 public:
 

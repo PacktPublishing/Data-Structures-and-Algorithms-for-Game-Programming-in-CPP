@@ -14,7 +14,7 @@ bool LitShadowRenderPass::Create(Scene* sc)
 	__super::Create(sc);
 
 	shadowShader = LoadShader((Knight::Instance->Config.ResourcesBasePath + "shaders/glsl330/kn-sm.vs").c_str(), (Knight::Instance->Config.ResourcesBasePath + "shaders/glsl330/kn-sm-pcf.fs").c_str());
-	InitLightUniforms(shadowShader);
+	InitRenderPassUniforms(shadowShader);
 
 	for (int i = 0; i < NUM_MAX_LIGHTS; ++i) {
 		ShadowMapsLocs[i] = GetShaderLocation(shadowShader, TextFormat("shadowMaps[%d]", i));

@@ -48,7 +48,12 @@ void LitRenderPass::UpdateLightData(const Shader& shader)
 
 		if (pLightData->dirty != false)
 		{
-			SetShaderValue(shader, _SceneLightData[i].enabledLoc, &pLightData->enabled, SHADER_UNIFORM_INT);
+			// GLSL bool/int uniforms are uploaded as 32-bit integers. LightData::enabled
+			// is a one-byte C++ bool, so passing its address made SetShaderValue read
+			// adjacent padding bytes. In MSVC Debug builds those bytes can be non-zero,
+			// producing a value other than 1 and disabling the light in kn_lit.fs.
+			const int lightEnabled = pLightData->enabled ? 1 : 0;
+			SetShaderValue(shader, _SceneLightData[i].enabledLoc, &lightEnabled, SHADER_UNIFORM_INT);
 			if (!pLightData->enabled)
 			{
 				//if the light get disabled, there is no need to update the rest of the light data

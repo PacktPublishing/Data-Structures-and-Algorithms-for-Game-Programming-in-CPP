@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <config.h>
 #include <algorithm> // Required for std::min and std::max
+#include <cstring>
 
 extern Rectangle& CenterRectangle(Rectangle& r, int width, int height)
 {
