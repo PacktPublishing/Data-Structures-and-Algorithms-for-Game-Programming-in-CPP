@@ -13,11 +13,11 @@ SceneTransitionDemo::SceneTransitionDemo()
 void SceneTransitionDemo::Create()
 {
 	Image art1 = LoadImage((Knight::Instance->Config.ResourcesBasePath + "textures/mga1.png").c_str());
-	scene1 = LoadTextureFromImage(art1);
+	scene1 = LoadTextureFromImageForPlatform(art1, "SceneTransitionDemo scene 1");
 	UnloadImage(art1);
 
 	Image art2 = LoadImage((Knight::Instance->Config.ResourcesBasePath + "textures/mga2.png").c_str());
-	scene2 = LoadTextureFromImage(art2);
+	scene2 = LoadTextureFromImageForPlatform(art2, "SceneTransitionDemo scene 2");
 	UnloadImage(art2);
 
 	isReady = true;

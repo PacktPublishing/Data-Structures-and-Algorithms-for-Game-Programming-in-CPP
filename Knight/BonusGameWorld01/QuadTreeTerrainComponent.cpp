@@ -38,7 +38,7 @@ bool QuadTreeTerrainComponent::CreateFromFile(Vector3 dimension, Vector2 texTile
 
     // Load terrain texture
     if (FileExists(pTerrainTexurePath)) {
-        terrainTexture = LoadTexture(pTerrainTexurePath);
+        terrainTexture = LoadTextureForPlatform(pTerrainTexurePath);
         if (terrainTexture.id != 0) {
             SetTextureFilter(terrainTexture, TEXTURE_FILTER_TRILINEAR); // Optional: for smoother look
         }

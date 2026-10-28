@@ -40,4 +40,11 @@ extern float PointToBoxDistanceSqr(Vector3 p, BoundingBox box);
 
 extern bool IsBoundingBoxValid(BoundingBox box);
 
+// Load a 2D texture using dimensions supported by the current platform.
+// WebGL 1 requires power-of-two dimensions for repeated textures, so Web
+// builds resize to the next larger power of two before uploading. Other
+// platforms use raylib's normal texture upload path without modification.
+extern Texture2D LoadTextureForPlatform(const char* fileName);
+extern Texture2D LoadTextureFromImageForPlatform(Image image, const char* debugName = nullptr);
+
 //End of KnightUtils.h

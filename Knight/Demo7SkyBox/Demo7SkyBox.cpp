@@ -28,7 +28,7 @@ void Demo7Skybox::Start()
 
 	//pSkyBox = new SkyboxComponent();
 	pSkyBox = pMainCamera->CreateAndAddComponent<SkyboxComponent>();
-	pSkyBox->CreateFromFile("../../resources/textures/skybox2.png", CUBEMAP_LAYOUT_CROSS_FOUR_BY_THREE, 20.0f, false);
+	pSkyBox->CreateFromFile((Config.ResourcesBasePath + "textures/skybox2.png").c_str(), CUBEMAP_LAYOUT_CROSS_FOUR_BY_THREE, 20.0f, false);
 
 	//Place player
 	Actor = _Scene->CreateSceneObject<SceneActor>("Player");
@@ -36,7 +36,7 @@ void Demo7Skybox::Start()
 	Actor->Position = Vector3{ 0.f,0.0f,0.f };
 	Actor->Rotation = Vector3{ 0,0,0 };
 	ModelComponent* animPlayerComponent = Actor->CreateAndAddComponent<ModelComponent>();
-	animPlayerComponent->Load3DModel("../../resources/models/gltf/robot.glb");
+	animPlayerComponent->Load3DModel((Config.ResourcesBasePath + "models/gltf/robot.glb").c_str());
 	animPlayerComponent->SetAnimation(6);
 }
 
@@ -157,5 +157,5 @@ void Demo7Skybox::OnCreateDefaultResources()
 	__super::OnCreateDefaultResources();
 
 	UnloadFont(_Font);
-	_Font = LoadFontEx("../../resources/fonts/sparky.ttf", 32, 0, 0);
+	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 }

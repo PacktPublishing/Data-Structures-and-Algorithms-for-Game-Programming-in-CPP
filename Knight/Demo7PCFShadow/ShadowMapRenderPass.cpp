@@ -14,7 +14,7 @@ bool ShadowMapRenderPass::Create(Scene *sc)
 {
 	__super::Create(sc);
 
-	shadowShader = LoadShader((Knight::Instance->Config.ResourcesBasePath + "shaders/glsl330/shadowmap.vs").c_str(), (Knight::Instance->Config.ResourcesBasePath + "shaders/glsl330/shadowmap-pcf.fs").c_str());
+	shadowShader = LoadShader((Knight::Instance->Config.ResourcesBasePath + KNIGHT_SHADER_DIRECTORY "shadowmap.vs").c_str(), (Knight::Instance->Config.ResourcesBasePath + KNIGHT_SHADER_DIRECTORY "shadowmap-pcf.fs").c_str());
 
 	InitRenderPassUniforms(shadowShader);
 
@@ -24,6 +24,7 @@ bool ShadowMapRenderPass::Create(Scene *sc)
 	ambientLoc = GetShaderLocation(shadowShader, "ambient");
 	lightVPLoc = GetShaderLocation(shadowShader, "lightVP");
 	shadowMapLoc = GetShaderLocation(shadowShader, "shadowMap");
+	receiveShadowLoc = GetShaderLocation(shadowShader, "receiveShadow");
 
 	Hints.pOverrideShader = &shadowShader;
 
@@ -111,6 +112,8 @@ void ShadowMapRenderPass::Render()
 	//render background first
 	vector<RenderContext>::iterator bk = pScene->_RenderQueue.Background.begin();
 	while (bk != pScene->_RenderQueue.Background.end()) {
+		int receiveShadow = bk->pComponent->receiveShadow ? 1 : 0;
+		SetShaderValue(shadowShader, receiveShadowLoc, &receiveShadow, SHADER_UNIFORM_INT);
 		bk->pComponent->Draw(&Hints);
 		++bk;
 	}
@@ -118,6 +121,8 @@ void ShadowMapRenderPass::Render()
 	//render opauqe geometry from nearest to farest
 	multiset<RenderContext, CompareDistanceAscending>::iterator opaque = pScene->_RenderQueue.Geometry.begin();
 	while (opaque != pScene->_RenderQueue.Geometry.end()) {
+		int receiveShadow = opaque->pComponent->receiveShadow ? 1 : 0;
+		SetShaderValue(shadowShader, receiveShadowLoc, &receiveShadow, SHADER_UNIFORM_INT);
 		opaque->pComponent->Draw(&Hints);
 		++opaque;
 	}
@@ -128,6 +133,8 @@ void ShadowMapRenderPass::Render()
 		rlDisableDepthMask();
 		rlDisableBackfaceCulling();
 		BeginBlendMode(alpha->pComponent->blendingMode);
+		int receiveShadow = alpha->pComponent->receiveShadow ? 1 : 0;
+		SetShaderValue(shadowShader, receiveShadowLoc, &receiveShadow, SHADER_UNIFORM_INT);
 		alpha->pComponent->Draw(&Hints);
 		EndBlendMode();
 		rlEnableDepthMask();
@@ -138,6 +145,8 @@ void ShadowMapRenderPass::Render()
 	//render overlay first
 	vector<RenderContext>::iterator overlay = pScene->_RenderQueue.Overlay.begin();
 	while (overlay != pScene->_RenderQueue.Overlay.end()) {
+		int receiveShadow = overlay->pComponent->receiveShadow ? 1 : 0;
+		SetShaderValue(shadowShader, receiveShadowLoc, &receiveShadow, SHADER_UNIFORM_INT);
 		overlay->pComponent->Draw(&Hints);
 		++overlay;
 	}	

@@ -42,7 +42,7 @@ void Demo3d::Start()
 		sprintf_s(imageFile, IMAGE_FILENAME_BUFFER_SIZE, (Config.ResourcesBasePath + "textures/PokerDeckCards/%d.png").c_str(), i);
 		if (FileExists(imageFile))
 		{
-			CardImages[i] = LoadTexture(imageFile);
+			CardImages[i] = LoadTextureForPlatform(imageFile);
 		}
 	}
 }

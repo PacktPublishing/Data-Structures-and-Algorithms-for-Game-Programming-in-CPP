@@ -102,7 +102,7 @@ public:
         }
 
         // Not in cache: load a new texture from file
-        Texture2D tex = LoadTexture(path.c_str());
+        Texture2D tex = LoadTextureForPlatform(path.c_str());
 
         // Evict if needed
         if (m_list.size() >= m_capacity)

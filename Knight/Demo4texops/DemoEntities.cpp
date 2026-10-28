@@ -16,7 +16,7 @@ SimpleDrawTextureDemo::SimpleDrawTextureDemo()  // Initialize texture to default
 void SimpleDrawTextureDemo::Create()
 {
 	Image art = LoadImage((Knight::Instance->Config.ResourcesBasePath + "textures/demoart.png").c_str());
-	texture = LoadTextureFromImage(art);
+	texture = LoadTextureFromImageForPlatform(art, "DemoEntities artwork");
 	UnloadImage(art);
 	isReady = true;
 }
@@ -42,11 +42,11 @@ CompressTextureDemo::CompressTextureDemo()
 void CompressTextureDemo::Create()
 {
 	Image art_org = LoadImage((Knight::Instance->Config.ResourcesBasePath + "textures/demoart.png").c_str());
-	original = LoadTextureFromImage(art_org);
+	original = LoadTextureFromImageForPlatform(art_org, "DemoEntities original artwork");
 	UnloadImage(art_org);
 
 	Image art_cmp = LoadImage((Knight::Instance->Config.ResourcesBasePath + "textures/demoart.dds").c_str());
-	compressed = LoadTextureFromImage(art_cmp);
+	compressed = LoadTextureFromImageForPlatform(art_cmp, "DemoEntities compressed artwork");
 	UnloadImage(art_cmp);
 
 	isReady = true;
@@ -78,7 +78,7 @@ DrawPartialRotateDemo::DrawPartialRotateDemo()
 void DrawPartialRotateDemo::Create()
 {
 	Image art = LoadImage((Knight::Instance->Config.ResourcesBasePath + "textures/demoart.png").c_str());
-	texture = LoadTextureFromImage(art);
+	texture = LoadTextureFromImageForPlatform(art, "DemoEntities generated artwork");
 	UnloadImage(art);
 	isReady = true;
 }

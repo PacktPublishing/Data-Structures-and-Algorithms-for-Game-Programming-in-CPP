@@ -12,7 +12,7 @@ AnimatedTexDemo::AnimatedTexDemo()
 void AnimatedTexDemo::Create()
 {
 	Image art = LoadImage((Knight::Instance->Config.ResourcesBasePath + "textures/lightening.png").c_str());
-	_spritesSheet = LoadTextureFromImage(art);
+	_spritesSheet = LoadTextureFromImageForPlatform(art, "AnimatedTexDemo sprite sheet");
 	UnloadImage(art);
 	isReady = true;
 }

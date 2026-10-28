@@ -12,7 +12,7 @@ NPatchDemo::NPatchDemo()
 void NPatchDemo::Create()
 {
 	Image art = LoadImage((Knight::Instance->Config.ResourcesBasePath + "textures/uibkgd.png").c_str());
-	_npatchTex = LoadTextureFromImage(art);
+	_npatchTex = LoadTextureFromImageForPlatform(art, "NPatchDemo texture");
 	UnloadImage(art);
 
 	Rectangle r = { 0.0f, 0.0f, 2048.0f, 512.0f };

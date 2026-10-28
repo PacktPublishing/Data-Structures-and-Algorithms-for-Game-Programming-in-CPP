@@ -7,7 +7,9 @@ bool ForwardRenderPass::Create(Scene* sc)
 	__super::Create(sc);
 
 	//default forward rendering pipeline use simple lighting model
-	LightShader = LoadShader((Knight::Instance->Config.ResourcesBasePath + "shaders/glsl330/kn_lit.vs").c_str(), (Knight::Instance->Config.ResourcesBasePath + "shaders/glsl330/kn_lit.fs").c_str());
+	LightShader = LoadShader(
+		(Knight::Instance->Config.ResourcesBasePath + KNIGHT_SHADER_DIRECTORY "kn_lit.vs").c_str(),
+		(Knight::Instance->Config.ResourcesBasePath + KNIGHT_SHADER_DIRECTORY "kn_lit.fs").c_str());
 	//initialize light uniform locations
 	InitRenderPassUniforms(LightShader);
 

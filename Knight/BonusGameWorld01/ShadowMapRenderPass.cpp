@@ -15,7 +15,7 @@ bool ShadowMapRenderPass::Create(Scene *sc)
 {
 	__super::Create(sc);
 
-	shadowShader = LoadShader((Knight::Instance->Config.ResourcesBasePath + "shaders/glsl330/shadowmap.vs").c_str(), (Knight::Instance->Config.ResourcesBasePath + "shaders/glsl330/kn-lit-sm-pcf.fs").c_str());
+	shadowShader = LoadShader((Knight::Instance->Config.ResourcesBasePath + KNIGHT_SHADER_DIRECTORY "shadowmap.vs").c_str(), (Knight::Instance->Config.ResourcesBasePath + KNIGHT_SHADER_DIRECTORY "kn-lit-sm-pcf.fs").c_str());
 	lightDirLoc = GetShaderLocation(shadowShader, "lightDir");
 	lightColLoc = GetShaderLocation(shadowShader, "lightColor");
 	shadowShader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(shadowShader, "viewPos");

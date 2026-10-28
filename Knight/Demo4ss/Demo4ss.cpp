@@ -30,9 +30,9 @@ void Demo4ss::Start()
 
 	Config.ShowFPS = true;
 
-	background = LoadTexture((Config.ResourcesBasePath + "textures/p10.png").c_str());
-	midground = LoadTexture((Config.ResourcesBasePath + "textures/p11.png").c_str());
-	foreground = LoadTexture((Config.ResourcesBasePath + "textures/p12.png").c_str());
+	background = LoadTextureForPlatform((Config.ResourcesBasePath + "textures/P10.png").c_str());
+	midground = LoadTextureForPlatform((Config.ResourcesBasePath + "textures/P11.png").c_str());
+	foreground = LoadTextureForPlatform((Config.ResourcesBasePath + "textures/P12.png").c_str());
 }
 
 // Unload resources used by the game

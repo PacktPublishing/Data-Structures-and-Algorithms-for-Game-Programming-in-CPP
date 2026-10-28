@@ -30,7 +30,7 @@ void Demo4iso::Start()
 	__super::Start();
 
 	Image image = LoadImage((Config.ResourcesBasePath + "textures/seasons_tiles.png").c_str());     // Loaded in CPU memory (RAM)
-	_mapTiles = LoadTextureFromImage(image);          // Image converted to texture, GPU memory (VRAM)
+	_mapTiles = LoadTextureFromImageForPlatform(image, "Demo4iso tile map");          // Image converted to texture, GPU memory (VRAM)
 	UnloadImage(image);   // Once image has been converted to texture and uploaded to VRAM, it can be unloaded from RAM
 }
 

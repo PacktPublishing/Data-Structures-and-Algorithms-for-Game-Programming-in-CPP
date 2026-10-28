@@ -249,7 +249,7 @@ void BonusGameWorld02::OnCreateDefaultResources()
 	__super::OnCreateDefaultResources();
 
 	UnloadFont(_Font);
-	_Font = LoadFontEx("../../resources/fonts/sparky.ttf", 32, 0, 0);
+	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 
 	Config.ShowFPS = true; //Enable FPS display.
 	Config.EnableDefaultLight = false; //Disable default light. 	

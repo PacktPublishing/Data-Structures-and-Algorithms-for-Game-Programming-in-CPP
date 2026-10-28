@@ -10,11 +10,11 @@ GlowDemo::GlowDemo()
 void GlowDemo::Create()
 {
 	Image art1 = LoadImage((Knight::Instance->Config.ResourcesBasePath + "textures/mga1.png").c_str());
-	background = LoadTextureFromImage(art1);
+	background = LoadTextureFromImageForPlatform(art1, "GlowDemo background");
 	UnloadImage(art1);
 
 	Image art2 = LoadImage((Knight::Instance->Config.ResourcesBasePath + "textures/glow.png").c_str());
-	glow = LoadTextureFromImage(art2);
+	glow = LoadTextureFromImageForPlatform(art2, "GlowDemo glow");
 	UnloadImage(art2);
 
 	isReady = true;

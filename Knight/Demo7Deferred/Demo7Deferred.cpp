@@ -1,6 +1,7 @@
 #include "raylib.h"
 #include "rlgl.h"
 #include "Defs.h"
+#include "KnightUtils.h"
 #include <string>
 
 RenderTexture2D LoadRenderTextureEx(int width, int height);
@@ -27,8 +28,8 @@ int main() {
     const std::string resourcesBasePath = RESOURCE_ROOT_PATH;
 
     // Load shaders
-    Shader geometryShader = LoadShader((resourcesBasePath + "shaders/glsl330/def_geometry.vs").c_str(), (resourcesBasePath + "shaders/glsl330/def_geometry.fs").c_str());
-    Shader lightingShader = LoadShader((resourcesBasePath + "shaders/glsl330/def_lighting.vs").c_str(), (resourcesBasePath + "shaders/glsl330/def_lighting.fs").c_str());
+    Shader geometryShader = LoadShader((resourcesBasePath + KNIGHT_SHADER_DIRECTORY "def_geometry.vs").c_str(), (resourcesBasePath + KNIGHT_SHADER_DIRECTORY "def_geometry.fs").c_str());
+    Shader lightingShader = LoadShader((resourcesBasePath + KNIGHT_SHADER_DIRECTORY "def_lighting.vs").c_str(), (resourcesBasePath + KNIGHT_SHADER_DIRECTORY "def_lighting.fs").c_str());
 
     // Configure lighting shader uniforms
     Vector3 lightPosition = { 2.0f, 4.0f, 2.0f };
@@ -53,7 +54,7 @@ int main() {
 
     // Create scene objects
     Model model = LoadModelFromMesh(GenMeshCube(1.0f, 1.0f, 1.0f));
-    Texture2D texture = LoadTexture((resourcesBasePath + "models/obj/wall_diffuse.png").c_str());
+    Texture2D texture = LoadTextureForPlatform((resourcesBasePath + "models/obj/wall_diffuse.png").c_str());
     model.materials[0].maps[MATERIAL_MAP_ALBEDO].texture = texture;
 
     SetTargetFPS(60);

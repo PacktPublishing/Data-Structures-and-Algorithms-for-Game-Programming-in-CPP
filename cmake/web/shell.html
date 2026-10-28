@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>Knight</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #111; color: #eee; }
+    body { display: grid; place-items: center; font-family: system-ui, sans-serif; }
+    canvas { max-width: 100%; max-height: 100%; }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+  <script>var Module = { canvas: document.getElementById('canvas') };</script>
+  {{{ SCRIPT }}}
+</body>
+</html>

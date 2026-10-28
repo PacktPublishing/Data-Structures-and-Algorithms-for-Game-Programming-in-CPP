@@ -4,7 +4,7 @@
 bool HMapTerrainModelComponent::CreateFromFile(Vector3 terrainDimension, Vector2 texTileSize, const char* pHightmapFilePath, const char* pTerrainTexurePath)
 {
 	hightMapImage = LoadImage(pHightmapFilePath);     // Load heightmap image (RAM)
-	Texture2D texture = LoadTextureFromImage(hightMapImage);        // Convert image to texture (VRAM)
+	Texture2D texture = LoadTextureFromImageForPlatform(hightMapImage, "Demo7HMap height map");        // Convert image to texture (VRAM)
 	if (texture.width == 0) {
 		printf("[Error] Unable to load terrrain height map from path %s!\n", pHightmapFilePath);
 		return false;
@@ -19,7 +19,7 @@ bool HMapTerrainModelComponent::CreateFromFile(Vector3 terrainDimension, Vector2
 	if (pTerrainTexurePath == NULL)
 		model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture; // Set map diffuse texture
 	else
-		model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = LoadTexture(pTerrainTexurePath);
+		model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = LoadTextureForPlatform(pTerrainTexurePath);
 
 	return true;
 }

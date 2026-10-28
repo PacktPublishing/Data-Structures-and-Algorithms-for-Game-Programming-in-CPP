@@ -42,7 +42,7 @@ public:
             NumMiss++;
 
         // Texture not in cache, need to load it
-        Texture2D texture = LoadTexture(filePath.c_str());
+        Texture2D texture = LoadTextureForPlatform(filePath.c_str());
         if (texture.id == 0) {
             printf("Failed to load texture:%s\n", filePath.c_str());
             return nullptr;

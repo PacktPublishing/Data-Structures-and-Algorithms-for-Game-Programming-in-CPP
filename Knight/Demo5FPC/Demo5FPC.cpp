@@ -29,7 +29,7 @@ void Demo5FPC::Start()
 	SceneActor* pFloor = _Scene->CreateSceneObject<SceneActor>("Floor");
 	Mesh floorMesh = GenMeshCube(32.0f, 0.1f, 32.0f);
 	ModelComponent* floorComponent = pFloor->CreateAndAddComponent<ModelComponent>();
-	floorComponent->LoadFromMesh(floorMesh, (Config.ResourcesBasePath + "textures/p8.png").c_str());
+	floorComponent->LoadFromMesh(floorMesh, (Config.ResourcesBasePath + "textures/P8.png").c_str());
 
 	SceneActor* pWall1 = _Scene->CreateSceneObject<SceneActor>("Wall01");
 	pWall1->Position = Vector3{ 16.0f, 0.0f, 0.0f };
