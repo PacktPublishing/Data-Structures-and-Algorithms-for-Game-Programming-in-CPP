@@ -67,6 +67,10 @@ function(knight_add_game game_name)
     if(ANDROID)
         add_library(${game_name} SHARED ${game_sources})
         set_target_properties(${game_name} PROPERTIES OUTPUT_NAME main)
+        # NativeActivity looks up this entry point dynamically. Keep the
+        # native_app_glue object from being discarded from static raylib.
+        target_link_options(${game_name} PRIVATE
+            "LINKER:-u,ANativeActivity_onCreate")
     else()
         add_executable(${game_name} ${game_sources})
     endif()

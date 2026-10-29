@@ -232,10 +232,15 @@ void ModelComponent::Load3DModel(const char* ModelPath,
 	const char* OcclusionMapPath,
 	Color color)
 {
+	// Android resources are packaged inside the APK and are not visible to
+	// access()/FileExists(). raylib's model loaders use the APK-aware fopen
+	// wrapper, so let them open the asset directly on that platform.
+#if !defined(PLATFORM_ANDROID)
 	if (!FileExists(ModelPath))
 	{
 		return;
 	}
+#endif
 
 	_Model = LoadModel(ModelPath);
 	_LoadState |= Loaded_Model;

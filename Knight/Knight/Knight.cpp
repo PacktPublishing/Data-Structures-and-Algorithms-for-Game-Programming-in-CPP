@@ -196,6 +196,16 @@ void Knight::GameLoop()
 	{	
 		Update(GetFrameTime());
 
+#if defined(PLATFORM_ANDROID)
+		// raylib maps Android's Back button to KEY_BACK and consumes the OS
+		// event. Treat it like Escape so NativeActivity can shut down cleanly.
+		if (IsKeyPressed(KEY_BACK) || IsKeyPressed(KEY_ESCAPE))
+		{
+			ExitGameLoop();
+			continue;
+		}
+#endif
+
 		DrawOffscreen();
 
 		if (IsKeyPressed(KEY_ENTER))
