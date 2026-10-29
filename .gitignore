@@ -9,7 +9,9 @@ Knight/.vs
 out/
 .vscode/.cmake/
 android/.gradle/
+android/.idea/
 android/local.properties
+android/app/.cxx/
 android/app/build/
 
 #Ignore files
