@@ -23,7 +23,7 @@ void main() {
     vec4 color = texel*((colDiffuse + vec4(vec3(specular), 1.0))*vec4(lightColor.rgb*diffuse, 1.0));
     vec4 lightSpace = lightVP*vec4(fragPosition, 1.0);
     vec3 projected = lightSpace.xyz/lightSpace.w*0.5 + 0.5;
-    float bias = max(0.0002*(1.0 - dot(normal, lightVector)), 0.00002) + 0.00001;
+    float bias = max(0.001*(1.0 - dot(normal, lightVector)), 0.0005) + 0.00005;
     float shadow = 0.0;
     vec2 texelSize = vec2(1.0/float(shadowMapResolution));
     for (int x = -1; x <= 1; x++) for (int y = -1; y <= 1; y++)
