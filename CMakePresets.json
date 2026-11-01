@@ -29,14 +29,21 @@
       "displayName": "VS Code Ninja Debug",
       "inherits": "base",
       "generator": "Ninja",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_MSVC_DEBUG_INFORMATION_FORMAT": "Embedded",
+        "KNIGHT_BUILD_ALL_GAMES": "ON"
+      }
     },
     {
       "name": "ninja-release",
       "displayName": "VS Code Ninja Release",
       "inherits": "base",
       "generator": "Ninja",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "KNIGHT_BUILD_ALL_GAMES": "ON"
+      }
     },
     {
       "name": "xcode",

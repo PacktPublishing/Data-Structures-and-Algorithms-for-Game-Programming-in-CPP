@@ -40,8 +40,43 @@ void Match3GameSession::Update(float dtReal)
     if (state == Idle) {
 
         Vector2 mp = GetMousePosition();
+        bool pointerPressed = IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
+        bool pointerReleased = IsMouseButtonReleased(MOUSE_LEFT_BUTTON);
 
-        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+#if defined(PLATFORM_ANDROID)
+        // raylib can emulate mouse input from touch on Android. Read touch
+        // explicitly and suppress the emulated mouse event while a gesture is
+        // active, otherwise a single swipe may be handled twice.
+        const int touchCount = GetTouchPointCount();
+        pointerPressed = false;
+        pointerReleased = false;
+
+        if (touchCount > 0)
+        {
+            mp = GetTouchPosition(0);
+            lastTouchPos = mp;
+
+            if (!touchActive)
+            {
+                touchActive = true;
+                pointerPressed = true;
+            }
+        }
+        else if (touchActive)
+        {
+            touchActive = false;
+            mp = lastTouchPos;
+            pointerReleased = true;
+        }
+        else
+        {
+            // Keep support for a physical mouse connected to an Android device.
+            pointerPressed = IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
+            pointerReleased = IsMouseButtonReleased(MOUSE_LEFT_BUTTON);
+        }
+#endif
+
+        if (pointerPressed)
         {
             dragStart = screenToCell(mp);
             if (bd.InBounds(dragStart.r, dragStart.c))
@@ -52,7 +87,7 @@ void Match3GameSession::Update(float dtReal)
             }
         }
 
-        if (dragging && IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
+        if (dragging && pointerReleased)
         {
             Vector2 rel = Vector2{ mp.x - dragStartPos.x, mp.y - dragStartPos.y };
             Vec2i end = screenToCell(mp);

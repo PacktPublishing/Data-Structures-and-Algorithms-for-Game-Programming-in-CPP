@@ -36,6 +36,8 @@ public:
         dragStart = Vec2i{ -1,-1 };
         dragStartPos = { 0,0 };
         dragging = false;
+        touchActive = false;
+        lastTouchPos = { 0,0 };
         clearAnimTime = 0.f;
         waveTime = 0.f;
         waveOriginR = -1;
@@ -74,6 +76,11 @@ protected:
     Vec2i dragStart; 
     Vector2 dragStartPos; 
     bool dragging;
+
+    // Primary touch tracking is kept separate from raylib's mouse emulation so
+    // one finger gesture cannot be processed twice on Android.
+    bool touchActive;
+    Vector2 lastTouchPos;
 
     // Clear-anim (mask)
     std::vector<std::vector<bool>> mark;
