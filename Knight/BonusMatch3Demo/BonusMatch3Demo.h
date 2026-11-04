@@ -20,6 +20,7 @@ protected:
 
 private:
 	void OnCreateDefaultResources() override;
+	void OnConfigureInput() override;
 
 };
 

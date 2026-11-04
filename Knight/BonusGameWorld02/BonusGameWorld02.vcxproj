@@ -138,6 +138,7 @@
     <ClCompile Include="DepthRenderPass.cpp" />
     <ClCompile Include="FollowUpCamera.cpp" />
     <ClCompile Include="FSM.cpp" />
+    <ClCompile Include="InputConfig.cpp" />
     <ClCompile Include="LoDDepthRenderPass.cpp" />
     <ClCompile Include="LoDShadowMapRenderPass.cpp" />
     <ClCompile Include="MagcAttackEffect.cpp" />

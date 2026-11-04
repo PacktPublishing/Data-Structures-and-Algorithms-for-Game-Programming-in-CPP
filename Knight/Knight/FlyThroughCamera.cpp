@@ -45,19 +45,19 @@ bool FlyThroughCamera::Update(float ElapsedSeconds)
         -sinf(yaw)
     };
 
-    if (IsKeyDown(KEY_UP)) {
+    if (Knight::Instance->Input.IsKeyDown(KEY_UP)) {
         _Camera.target.x -= forward.x * moveSpeed;
         _Camera.target.z -= forward.z * moveSpeed;
     }
-    if (IsKeyDown(KEY_DOWN)) {
+    if (Knight::Instance->Input.IsKeyDown(KEY_DOWN)) {
         _Camera.target.x += forward.x * moveSpeed;
         _Camera.target.z += forward.z * moveSpeed;
     }
-    if (IsKeyDown(KEY_RIGHT)) {
+    if (Knight::Instance->Input.IsKeyDown(KEY_RIGHT)) {
         _Camera.target.x += right.x * moveSpeed;
         _Camera.target.z += right.z * moveSpeed;
     }
-    if (IsKeyDown(KEY_LEFT)) {
+    if (Knight::Instance->Input.IsKeyDown(KEY_LEFT)) {
         _Camera.target.x -= right.x * moveSpeed;
         _Camera.target.z -= right.z * moveSpeed;
     }

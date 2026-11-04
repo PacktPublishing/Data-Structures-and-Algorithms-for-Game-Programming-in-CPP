@@ -47,3 +47,10 @@ void BonusMatch3Demo::OnCreateDefaultResources()
     _Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 }
 
+void BonusMatch3Demo::OnConfigureInput()
+{
+    // Match-3 uses direct board gestures, so directional overlays would cover
+    // playable cells and consume touches intended for the board.
+    Input.SetVirtualControlsVisible(false);
+}
+

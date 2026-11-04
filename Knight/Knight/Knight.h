@@ -21,6 +21,7 @@
 #include "LitDepthRenderPass.h"
 #include "LitShadowRenderPass.h"
 #include "KnightUtils.h"
+#include "InputSystem.h"
 
 #include <string>
 
@@ -60,6 +61,7 @@ public:
 	void SaveScreenshot(const char* fileName);
 
 	KnightConfig Config;
+	InputSystem Input;
 
 	static Knight* Instance;
 
@@ -101,5 +103,6 @@ protected:
 	virtual void AfterReleaseDefaultResources();
 	// Called to configure the Knight application, such as title, rendering settings.
 	virtual void OnConfigKnightApp();
+	virtual void OnConfigureInput();
 };
 

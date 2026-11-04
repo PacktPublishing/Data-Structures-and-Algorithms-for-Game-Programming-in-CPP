@@ -1,4 +1,5 @@
 #include "OrthogonalCamera.h"
+#include "Knight.h"
 #include "Scene.h"
 
 OrthogonalCamera::OrthogonalCamera(Scene* Scene, const char* Name, bool IsMainCamera)
@@ -39,10 +40,10 @@ bool OrthogonalCamera::Update(float ElapsedSeconds)
     _Camera.position.y = cameraZoom + cameraVerticalOffset;
 
     // Panning with arrow keys
-    if (IsKeyDown(KEY_UP)) _Camera.target.z -= panSpeed;
-    if (IsKeyDown(KEY_DOWN)) _Camera.target.z += panSpeed;
-    if (IsKeyDown(KEY_LEFT)) _Camera.target.x -= panSpeed;
-    if (IsKeyDown(KEY_RIGHT)) _Camera.target.x += panSpeed;
+    if (Knight::Instance->Input.IsKeyDown(KEY_UP)) _Camera.target.z -= panSpeed;
+    if (Knight::Instance->Input.IsKeyDown(KEY_DOWN)) _Camera.target.z += panSpeed;
+    if (Knight::Instance->Input.IsKeyDown(KEY_LEFT)) _Camera.target.x -= panSpeed;
+    if (Knight::Instance->Input.IsKeyDown(KEY_RIGHT)) _Camera.target.x += panSpeed;
 
     // Rotate the camera around the player when right mouse button is held
     if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {

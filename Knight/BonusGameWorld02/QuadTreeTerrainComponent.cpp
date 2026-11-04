@@ -45,15 +45,10 @@ bool QuadTreeTerrainComponent::CreateFromFile(Vector3 dimension, Vector2 texTile
 	tilingFactor.y = HeightMapDepth / texTileSize.y;
 
     // Load terrain texture
-    if (FileExists(pTerrainTexurePath)) {
-        terrainTexture = LoadTextureForPlatform(pTerrainTexurePath);
-        if (terrainTexture.id != 0) {
-            SetTextureFilter(terrainTexture, TEXTURE_FILTER_TRILINEAR); // Optional: for smoother look
-            SetTextureWrap(terrainTexture, TEXTURE_WRAP_REPEAT);
-        }
-    }
-    else {
-        terrainTexture.id = 0; // Ensure it's marked as invalid
+    terrainTexture = LoadTextureForPlatform(pTerrainTexurePath);
+    if (terrainTexture.id != 0) {
+        SetTextureFilter(terrainTexture, TEXTURE_FILTER_TRILINEAR); // Optional: for smoother look
+        SetTextureWrap(terrainTexture, TEXTURE_WRAP_REPEAT);
     }
 
     // Define the overall bounds of the terrain in world space, using loaded dimensions
@@ -221,10 +216,6 @@ bool QuadTreeTerrainComponent::LoadHeightmapFromImage(const char* fileName)
 {
     vector<unsigned int> outIndices;
 	vector<Vector3> outVertices; 
-
-    if (!FileExists(fileName)) {
-        return false;
-    }
 
     Image image = LoadImage(fileName);
     if (image.data == nullptr) { // Check if image loading failed

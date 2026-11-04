@@ -22,10 +22,10 @@ android {
             cmake {
                 arguments += listOf(
                     "-DKNIGHT_BUILD_ALL_GAMES=OFF",
-                    "-DKNIGHT_GAME=BonusMatch3Demo",
+                    "-DKNIGHT_GAME=BonusGameWorld02",
                     "-DANDROID_STL=c++_shared"
                 )
-                targets += "BonusMatch3Demo"
+                targets += "BonusGameWorld02"
             }
         }
     }

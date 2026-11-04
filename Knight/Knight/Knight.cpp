@@ -120,6 +120,7 @@ void Knight::Start()
 
 	InitWindow(Config.WindowWidth, Config.WindowHeight, Config.WindowTitle.c_str());
 	SetTargetFPS(TARGET_FPS);
+	OnConfigureInput();
 
 	_Scene = new Scene();
 
@@ -162,6 +163,7 @@ void Knight::GameLoop()
 			return;
 		}
 
+		app->Input.BeginFrame();
 		app->Update(GetFrameTime());
 		app->DrawOffscreen();
 
@@ -185,6 +187,7 @@ void Knight::GameLoop()
 		}
 
 		app->DrawGUI();
+		app->Input.DrawOverlay();
 		if (app->Config.ShowFPS)
 		{
 			app->DrawFPS(10, 10);
@@ -194,6 +197,7 @@ void Knight::GameLoop()
 #else
 	while (!WindowShouldClose() && (!_shouldExitGameLoop))
 	{	
+		Input.BeginFrame();
 		Update(GetFrameTime());
 
 #if defined(PLATFORM_ANDROID)
@@ -227,6 +231,7 @@ void Knight::GameLoop()
 		}
 
 		DrawGUI();
+		Input.DrawOverlay();
 
 		if (Config.ShowFPS)
 		{
@@ -301,6 +306,10 @@ void Knight::OnConfigKnightApp()
 	Config.WindowHeight = DEFAULT_SCREEN_HEIGHT;
 	Config.WindowTitle = DEFAULT_APP_TITLE;
 	Config.ResourcesBasePath = RESOURCE_ROOT_PATH;
+}
+
+void Knight::OnConfigureInput()
+{
 }
 
 void Knight::ApplyAppConfig()

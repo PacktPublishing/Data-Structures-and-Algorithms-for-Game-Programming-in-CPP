@@ -60,5 +60,6 @@ protected:
 	void DrawOffscreen() override;
 	void DrawFrame() override;
 	void DrawGUI() override;
+	void OnConfigureInput() override;
 };
 

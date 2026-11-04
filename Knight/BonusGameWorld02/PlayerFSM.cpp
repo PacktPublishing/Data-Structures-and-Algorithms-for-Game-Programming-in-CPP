@@ -50,29 +50,29 @@ void PlayerIdleState::Enter(FSM* FiniteStateMachine)
 
 void PlayerIdleState::Update(FSM* FiniteStateMachine, float DeltaTime)
 {
-    if (IsKeyPressed(KEY_SPACE))
+    if (Knight::Instance->Input.IsKeyPressed(KEY_SPACE))
     {
         FiniteStateMachine->SetState(PlayerFSM::ATTACK);
         return;
     }
 
     SceneActor* character = FiniteStateMachine->GetCharacter();
-    if (IsKeyDown(KEY_A))
+    if (Knight::Instance->Input.IsKeyDown(KEY_A))
     {
         FiniteStateMachine->TurnLeft(DeltaTime);
         FiniteStateMachine->SetState(PlayerFSM::WALK);
     }
-    if (IsKeyDown(KEY_W))
+    if (Knight::Instance->Input.IsKeyDown(KEY_W))
     {
         FiniteStateMachine->MoveForward(DeltaTime);
         FiniteStateMachine->SetState(PlayerFSM::WALK);
     }
-    if (IsKeyDown(KEY_D))
+    if (Knight::Instance->Input.IsKeyDown(KEY_D))
     {
         FiniteStateMachine->TurnRight(DeltaTime);
         FiniteStateMachine->SetState(PlayerFSM::WALK);
     }
-    if (IsKeyDown(KEY_S))
+    if (Knight::Instance->Input.IsKeyDown(KEY_S))
     {
         FiniteStateMachine->MoveBackward(DeltaTime);
         FiniteStateMachine->SetState(PlayerFSM::WALK);
@@ -86,7 +86,7 @@ void PlayerWalkState::Enter(FSM* FiniteStateMachine)
 
 void PlayerWalkState::Update(FSM* FiniteStateMachine, float DeltaTime)
 {
-    if (IsKeyPressed(KEY_SPACE))
+    if (Knight::Instance->Input.IsKeyPressed(KEY_SPACE))
     {
         FiniteStateMachine->SetState(PlayerFSM::ATTACK);        
         return;
@@ -94,22 +94,22 @@ void PlayerWalkState::Update(FSM* FiniteStateMachine, float DeltaTime)
 
     SceneActor* character = FiniteStateMachine->GetCharacter();
 	bool isIdle = true;
-    if (IsKeyDown(KEY_A))
+    if (Knight::Instance->Input.IsKeyDown(KEY_A))
     {
 		FiniteStateMachine->TurnLeft(DeltaTime);
 		isIdle = false;
     }
-    if (IsKeyDown(KEY_W))
+    if (Knight::Instance->Input.IsKeyDown(KEY_W))
     {
 		FiniteStateMachine->MoveForward(DeltaTime);
         isIdle = false;
     }
-    if (IsKeyDown(KEY_D))
+    if (Knight::Instance->Input.IsKeyDown(KEY_D))
     {
 		FiniteStateMachine->TurnRight(DeltaTime);
         isIdle = false;
     }
-    if (IsKeyDown(KEY_S))
+    if (Knight::Instance->Input.IsKeyDown(KEY_S))
     {
 		FiniteStateMachine->MoveBackward(DeltaTime);
         isIdle = false;
