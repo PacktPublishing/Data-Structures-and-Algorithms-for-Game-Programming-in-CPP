@@ -2,7 +2,12 @@
 
 void BonusGameWorld02::OnConfigureInput()
 {
+#if defined(PLATFORM_ANDROID)
     Input.SetVirtualControlsVisible(true);
+#else
+    Input.SetVirtualControlsVisible(false);
+#endif
+
     InputAction attack = Input.RegisterAction("Attack");
     Input.BindKey(attack, KEY_SPACE);
     Input.AddTouchButton(attack, "ATTACK", TouchButtonAnchor::TopRight, 0);

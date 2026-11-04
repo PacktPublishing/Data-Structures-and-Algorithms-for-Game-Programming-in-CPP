@@ -1,14 +1,14 @@
-#version 330
+#version 100
 
 // Attributes from the buffer (position, velocity, lifetime)
-in vec3 vertexPosition;
-in vec3 vertexVelocity;
-in float vertexLifetime;
+attribute vec3 vertexPosition;
+attribute vec3 vertexVelocity;
+attribute float vertexLifetime;
 
 // Uniform for time passed since start
 uniform float time;
 
-out float lifetime;  // Pass lifetime to fragment shader
+varying float lifetime;  // Pass lifetime to fragment shader
 
 void main() {
     // Update position based on velocity and time (simple motion with gravity)

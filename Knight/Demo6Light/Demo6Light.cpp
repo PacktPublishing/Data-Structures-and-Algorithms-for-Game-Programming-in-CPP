@@ -31,8 +31,8 @@ void Demo6Light::Start()
 
 	SetConfigFlags(FLAG_MSAA_4X_HINT);  // Enable Multi Sampling Anti Aliasing 4x (if available)
 
-	shader = LoadShader(TextFormat((Config.ResourcesBasePath + "shaders/glsl%i/lighting.vs").c_str(), GLSL_VERSION),
-		TextFormat((Config.ResourcesBasePath + "shaders/glsl%i/lighting.fs").c_str(), GLSL_VERSION));
+	shader = LoadShader((Config.ResourcesBasePath + KNIGHT_SHADER_DIRECTORY "lighting.vs").c_str(),
+		(Config.ResourcesBasePath + KNIGHT_SHADER_DIRECTORY "lighting.fs").c_str());
 
 	_Scene->_CurrentRenderPass->Hints.pOverrideShader = &shader;
 

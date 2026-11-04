@@ -18,6 +18,11 @@ uniform Light lights[MAX_LIGHTS];
 uniform vec4 ambient;
 uniform vec3 viewPos;
 uniform float materialShininess;
+uniform vec3 lightDir;
+uniform mat4 lightVP;
+uniform sampler2D shadowMap;
+uniform int shadowMapResolution;
+uniform int receiveShadow;
 void main() {
     vec4 texel = texture2D(texture0, fragTexCoord);
     if (alphaTest > 0 && texel.a < 0.51) discard;
@@ -37,6 +42,25 @@ void main() {
         }
         lightSum += lights[i].color.rgb*diffuse*attenuation;
         if (diffuse > 0.0) specularSum += vec3(pow(max(dot(normal, normalize(direction + viewD)), 0.0), materialShininess));
+
+        if (receiveShadow == 1 && i == 0 && lights[i].type == LIGHT_DIRECTIONAL) {
+            vec3 shadowLight = -lightDir;
+            vec4 lightSpace = lightVP*vec4(fragPosition, 1.0);
+            vec3 projected = lightSpace.xyz/lightSpace.w*0.5 + 0.5;
+            float bias = max(0.001*(1.0 - dot(normal, shadowLight)), 0.0005) + 0.00005;
+            float shadow = 0.0;
+            vec2 texelSize = vec2(1.0/float(shadowMapResolution));
+
+            for (int x = -1; x <= 1; x++) {
+                for (int y = -1; y <= 1; y++) {
+                    float mapDepth = texture2D(shadowMap,
+                        projected.xy + texelSize*vec2(float(x), float(y))).r;
+                    if (projected.z - bias > mapDepth) shadow += 1.0;
+                }
+            }
+
+            lightSum = mix(lightSum, lightSum*ambient.rgb, shadow/9.0);
+        }
     }
     gl_FragColor = texel*((colDiffuse + vec4(specularSum, 1.0))*vec4(lightSum, 1.0) + ambient*colDiffuse);
 }

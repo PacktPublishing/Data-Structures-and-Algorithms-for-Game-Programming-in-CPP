@@ -8,7 +8,7 @@ namespace
     constexpr float DPadSize = 240.0f;
     constexpr float ControlMargin = 28.0f;
     constexpr float ButtonSize = 88.0f;
-    constexpr float ButtonGap = 14.0f;
+    constexpr float ButtonPadding = 20.0f;
 
     bool PointInRectangle(Vector2 point, Rectangle rectangle)
     {
@@ -260,7 +260,7 @@ Rectangle InputSystem::ButtonBounds(const TouchButton& button) const
 {
     const float width = static_cast<float>(GetScreenWidth());
     const float height = static_cast<float>(GetScreenHeight());
-    const float stride = ButtonSize + ButtonGap;
+    const float stride = ButtonSize + ButtonPadding;
     const int column = button.slot % 3;
     const int row = button.slot / 3;
 

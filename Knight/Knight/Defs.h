@@ -16,7 +16,7 @@
 #define RESOURCE_ROOT_PATH KNIGHT_RESOURCE_ROOT_PATH
 
 #if defined(PLATFORM_WEB) || defined(PLATFORM_ANDROID)
-#define KNIGHT_SHADER_DIRECTORY "shaders/glsl100/"
+#define KNIGHT_SHADER_DIRECTORY "shaders/gles200/"
 #define KNIGHT_GLSL_VERSION 100
 #else
 #define KNIGHT_SHADER_DIRECTORY "shaders/glsl330/"
