@@ -214,6 +214,20 @@ void InputSystem::BeginFrame()
         captures.clear();
 
     UpdatePrimaryPointer();
+    UpdateSecondaryPointer();
+}
+
+void InputSystem::UpdateSecondaryPointer()
+{
+#if defined(PLATFORM_ANDROID)
+    secondaryPointer = primaryPointer;
+#else
+    secondaryPointer.position = GetMousePosition();
+    secondaryPointer.delta = GetMouseDelta();
+    secondaryPointer.pressed = IsMouseButtonPressed(MOUSE_BUTTON_RIGHT);
+    secondaryPointer.down = IsMouseButtonDown(MOUSE_BUTTON_RIGHT);
+    secondaryPointer.released = IsMouseButtonReleased(MOUSE_BUTTON_RIGHT);
+#endif
 }
 
 void InputSystem::UpdateLayout()

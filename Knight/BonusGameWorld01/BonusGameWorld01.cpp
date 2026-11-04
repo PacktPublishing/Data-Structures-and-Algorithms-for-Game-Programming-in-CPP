@@ -126,33 +126,33 @@ void BonusGameWorld01::Update(float ElapsedSeconds)
 
 	//These are the controls for moving the light direction.
 	//Solely for debugging purpose.
-	if (IsKeyDown(KEY_J))
+	if (Input.IsKeyDown(KEY_J))
 	{
 		sceneLight->lightDir.x += cameraSpeed * 60.0f * ElapsedSeconds;
 	}
 
-	if (IsKeyDown(KEY_K))
+	if (Input.IsKeyDown(KEY_K))
 	{
 		if (sceneLight->lightDir.x > -0.6f)
 			sceneLight->lightDir.x -= cameraSpeed * 60.0f * ElapsedSeconds;
 	}
 
-	if (IsKeyDown(KEY_I))
+	if (Input.IsKeyDown(KEY_I))
 	{
 		sceneLight->lightDir.z += cameraSpeed * 60.0f * ElapsedSeconds;
 	}
 
-	if (IsKeyDown(KEY_M))
+	if (Input.IsKeyDown(KEY_M))
 	{
 		sceneLight->lightDir.z -= cameraSpeed * 60.0f * ElapsedSeconds;
 	}
 
-	if (IsKeyDown(KEY_O))
+	if (Input.IsKeyDown(KEY_O))
 	{
 		sceneLight->lightDir.y += cameraSpeed * 60.0f * ElapsedSeconds;
 	}
 
-	if (IsKeyDown(KEY_P))
+	if (Input.IsKeyDown(KEY_P))
 	{
 		sceneLight->lightDir.y -= cameraSpeed * 60.0f * ElapsedSeconds;
 	} 

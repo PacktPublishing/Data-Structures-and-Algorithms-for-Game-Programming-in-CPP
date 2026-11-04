@@ -60,6 +60,10 @@ public:
     bool Released(InputAction action) const;
     Vector2 Axis(InputAxis2D axis) const;
     const PointerState& PrimaryPointer() const { return primaryPointer; }
+    // Desktop: right mouse button. Touch platforms: the same uncaptured touch
+    // used by PrimaryPointer. Cameras can therefore support drag-to-orbit
+    // without platform checks in gameplay code.
+    const PointerState& SecondaryPointer() const { return secondaryPointer; }
 
     // Compatibility queries make existing raylib call sites easy to migrate.
     // They also include keys emitted by virtual D-pads and buttons.
@@ -117,6 +121,7 @@ private:
     void UpdateLayout();
     void UpdateTouches();
     void UpdatePrimaryPointer();
+    void UpdateSecondaryPointer();
     void UpdateDPad(Vector2 position, bool leftPad);
     void SetVirtualKey(int key, bool down);
     Rectangle ButtonBounds(const TouchButton& button) const;
@@ -141,6 +146,7 @@ private:
     Rectangle rightDPadBounds = { 0, 0, 0, 0 };
     bool virtualControlsVisible;
     PointerState primaryPointer;
+    PointerState secondaryPointer;
     int primaryTouchId = -1;
     Vector2 lastPointerPosition = { 0, 0 };
 };
