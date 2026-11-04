@@ -8,12 +8,50 @@
   <style>
     html, body { margin: 0; height: 100%; background: #111; color: #eee; }
     body { display: grid; place-items: center; font-family: system-ui, sans-serif; }
-    canvas { max-width: 100%; max-height: 100%; }
+    canvas { max-width: 100%; max-height: 100%; outline: none; }
+    #focus-hint {
+      position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+      padding: 8px 16px; border-radius: 999px; background: rgba(0, 0, 0, 0.75);
+      font-size: 14px; pointer-events: none; display: none;
+    }
   </style>
 </head>
 <body>
-  <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
-  <script>var Module = { canvas: document.getElementById('canvas') };</script>
+  <canvas id="canvas" tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
+  <div id="focus-hint">Click the game to use the keyboard</div>
+  <script>
+    var Module = { canvas: document.getElementById('canvas') };
+
+    (function () {
+      var canvas = Module.canvas;
+      var hint = document.getElementById('focus-hint');
+
+      // Keyboard events only reach the game while the page has focus (for
+      // example when embedded in an iframe). Show a hint until it does.
+      function updateHint() {
+        hint.style.display = document.hasFocus() ? 'none' : 'block';
+      }
+      window.addEventListener('focus', updateHint);
+      window.addEventListener('blur', updateHint);
+      canvas.addEventListener('pointerdown', function () {
+        canvas.focus();
+        updateHint();
+      });
+      updateHint();
+
+      // Game keys must not scroll the page.
+      var gameKeys = [' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+        'PageUp', 'PageDown', 'Home', 'End'];
+      window.addEventListener('keydown', function (event) {
+        if (gameKeys.indexOf(event.key) >= 0) event.preventDefault();
+      });
+
+      // The mouse wheel zooms cameras; it must not scroll the page.
+      canvas.addEventListener('wheel', function (event) {
+        event.preventDefault();
+      }, { passive: false });
+    })();
+  </script>
   {{{ SCRIPT }}}
 </body>
 </html>

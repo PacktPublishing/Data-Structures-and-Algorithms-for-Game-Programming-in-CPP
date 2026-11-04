@@ -22,7 +22,7 @@ void PlayerEntity::Update(float elaspedTime)
 {
 	if (rechargeTime >= attackCooldown) 
 	{
-		if (IsKeyPressed(KEY_SPACE) && _target != NULL && _target->HP > 0)
+		if (KnightInput().IsKeyPressed(KEY_SPACE) && _target != NULL && _target->HP > 0)
 			DoAttack();
 	}
 	else {

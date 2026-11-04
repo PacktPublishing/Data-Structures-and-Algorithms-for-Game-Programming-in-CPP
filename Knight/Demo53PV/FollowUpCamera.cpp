@@ -18,7 +18,7 @@ bool FollowUpCamera::Update(float ElapsedSeconds)
 
     // Adjust camera distance with mouse wheel
     if (processMouseInput)
-        cameraDistance -= GetMouseWheelMove();
+        cameraDistance -= KnightInput().WheelMove();
     if (cameraDistance < 2.0f) cameraDistance = 2.0f; // Minimum distance
     if (cameraDistance > 10.0f) cameraDistance = 10.0f; // Maximum distance
 

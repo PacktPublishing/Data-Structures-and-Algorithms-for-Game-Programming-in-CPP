@@ -35,12 +35,26 @@ enum class TouchButtonAnchor
     BottomRight
 };
 
+// Which physical input the platform provides. Chosen once at startup:
+// Android uses Touch; desktop and browser builds use KeyboardMouse and never
+// read touch input or show the on-screen controls.
+enum class InputProfile
+{
+    KeyboardMouse,
+    Touch
+};
+
 // Central input service. Keyboard and virtual controls are merged into the
 // same action state, so gameplay code does not need platform conditionals.
 class InputSystem
 {
 public:
     InputSystem();
+
+    InputProfile Profile() const { return profile; }
+    // Override the platform default, e.g. to try the touch layout on desktop
+    // (raylib reports the left mouse button as touch point 0 there).
+    void SetProfile(InputProfile newProfile);
 
     void BeginFrame();
     void DrawOverlay() const;
@@ -64,6 +78,8 @@ public:
     // used by PrimaryPointer. Cameras can therefore support drag-to-orbit
     // without platform checks in gameplay code.
     const PointerState& SecondaryPointer() const { return secondaryPointer; }
+    // Mouse wheel movement this frame. Always 0 on the Touch profile.
+    float WheelMove() const;
 
     // Compatibility queries make existing raylib call sites easy to migrate.
     // They also include keys emitted by virtual D-pads and buttons.
@@ -71,6 +87,7 @@ public:
     bool IsKeyPressed(int key) const;
     bool IsKeyReleased(int key) const;
 
+    // Has no effect on the KeyboardMouse profile.
     void SetVirtualControlsVisible(bool visible);
     bool VirtualControlsVisible() const { return virtualControlsVisible; }
     int TouchButtonCount() const { return static_cast<int>(buttons.size()); }
@@ -124,13 +141,13 @@ private:
     void UpdatePrimaryPointer();
     void UpdateSecondaryPointer();
     void UpdateDPad(Vector2 position, bool leftPad);
-    void SetVirtualKey(int key, bool down);
+    void PressVirtualKey(int key);
+    void ResetPointers();
     Rectangle ButtonBounds(const TouchButton& button) const;
     bool IsTouchPresent(int touchId, Vector2* position = nullptr) const;
     bool IsTouchCaptured(int touchId) const;
     int FindTouchIndexById(int touchId) const;
     bool ActionVirtualDown(InputAction action) const;
-    bool IsDirectionalKey(int key) const;
 
     std::vector<ActionDefinition> actions;
     std::vector<AxisDefinition> axes;
@@ -145,6 +162,7 @@ private:
 
     Rectangle leftDPadBounds = { 0, 0, 0, 0 };
     Rectangle rightDPadBounds = { 0, 0, 0, 0 };
+    InputProfile profile;
     bool virtualControlsVisible;
     PointerState primaryPointer;
     PointerState secondaryPointer;

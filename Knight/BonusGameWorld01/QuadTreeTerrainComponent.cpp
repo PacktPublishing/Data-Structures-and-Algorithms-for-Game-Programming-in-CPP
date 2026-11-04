@@ -1,5 +1,6 @@
 #include "QuadTreeTerrainComponent.h"
 #include "KnightUtils.h"
+#include "Knight.h"
 
 QuadTreeTerrainComponent::QuadTreeTerrainComponent()
 {
@@ -64,7 +65,7 @@ void QuadTreeTerrainComponent::Update(float ElapsedSeconds, RenderHints* pRH)
 {
 	__super::Update(ElapsedSeconds, pRH); // Call base class update  
 
-    if (IsKeyPressed(KEY_B)) {
+    if (KnightInput().IsKeyPressed(KEY_B)) {
         DebugShowBounds = !DebugShowBounds; // Toggle bounding box visibility
     }
 }

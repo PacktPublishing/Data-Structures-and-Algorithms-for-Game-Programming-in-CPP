@@ -18,16 +18,22 @@ namespace
 
 InputSystem::InputSystem()
 {
-    // Samples opt in after registering the controls they actually use. This
-    // avoids showing an overlay that has not yet been wired to legacy input.
 #if defined(PLATFORM_ANDROID)
-    virtualControlsVisible = true;
+    profile = InputProfile::Touch;
 #else
-    virtualControlsVisible = false;
+    profile = InputProfile::KeyboardMouse;
 #endif
+    virtualControlsVisible = profile == InputProfile::Touch;
 
     moveAxis = RegisterAxis2D("Move", KEY_W, KEY_S, KEY_A, KEY_D);
     secondaryAxis = RegisterAxis2D("Secondary", KEY_I, KEY_K, KEY_J, KEY_M);
+}
+
+void InputSystem::SetProfile(InputProfile newProfile)
+{
+    profile = newProfile;
+    SetVirtualControlsVisible(profile == InputProfile::Touch);
+    ResetPointers();
 }
 
 void InputSystem::Reset()
@@ -38,9 +44,23 @@ void InputSystem::Reset()
     captures.clear();
     virtualKeys.clear();
     previousVirtualKeys.clear();
+    ResetPointers();
 
     moveAxis = RegisterAxis2D("Move", KEY_W, KEY_S, KEY_A, KEY_D);
     secondaryAxis = RegisterAxis2D("Secondary", KEY_I, KEY_K, KEY_J, KEY_M);
+}
+
+void InputSystem::ResetPointers()
+{
+    primaryPointer = PointerState{};
+    secondaryPointer = PointerState{};
+    primaryTouchId = -1;
+    lastPointerPosition = Vector2{ 0, 0 };
+}
+
+float InputSystem::WheelMove() const
+{
+    return profile == InputProfile::KeyboardMouse ? GetMouseWheelMove() : 0.0f;
 }
 
 InputAction InputSystem::RegisterAction(const char* name)
@@ -194,8 +214,8 @@ bool InputSystem::IsKeyReleased(int key) const
 
 void InputSystem::SetVirtualControlsVisible(bool visible)
 {
-    virtualControlsVisible = visible;
-    if (!visible)
+    virtualControlsVisible = visible && profile == InputProfile::Touch;
+    if (!virtualControlsVisible)
     {
         captures.clear();
         virtualKeys.clear();
@@ -223,15 +243,17 @@ void InputSystem::BeginFrame()
 
 void InputSystem::UpdateSecondaryPointer()
 {
-#if defined(PLATFORM_ANDROID)
-    secondaryPointer = primaryPointer;
-#else
+    if (profile == InputProfile::Touch)
+    {
+        secondaryPointer = primaryPointer;
+        return;
+    }
+
     secondaryPointer.position = GetMousePosition();
     secondaryPointer.delta = GetMouseDelta();
     secondaryPointer.pressed = IsMouseButtonPressed(MOUSE_BUTTON_RIGHT);
     secondaryPointer.down = IsMouseButtonDown(MOUSE_BUTTON_RIGHT);
     secondaryPointer.released = IsMouseButtonReleased(MOUSE_BUTTON_RIGHT);
-#endif
 }
 
 void InputSystem::UpdateLayout()
@@ -313,7 +335,17 @@ void InputSystem::UpdatePrimaryPointer()
     primaryPointer.released = false;
     primaryPointer.delta = Vector2{ 0, 0 };
 
-#if defined(PLATFORM_ANDROID)
+    if (profile == InputProfile::KeyboardMouse)
+    {
+        primaryPointer.position = GetMousePosition();
+        primaryPointer.delta = GetMouseDelta();
+        primaryPointer.pressed = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+        primaryPointer.down = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
+        primaryPointer.released = IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
+        lastPointerPosition = primaryPointer.position;
+        return;
+    }
+
     Vector2 position;
     if (primaryTouchId >= 0 && IsTouchPresent(primaryTouchId, &position) &&
         !IsTouchCaptured(primaryTouchId))
@@ -354,14 +386,6 @@ void InputSystem::UpdatePrimaryPointer()
     }
 
     primaryPointer.down = false;
-#else
-    primaryPointer.position = GetMousePosition();
-    primaryPointer.delta = GetMouseDelta();
-    primaryPointer.pressed = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
-    primaryPointer.down = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
-    primaryPointer.released = IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
-    lastPointerPosition = primaryPointer.position;
-#endif
 }
 
 void InputSystem::UpdateTouches()
@@ -387,7 +411,7 @@ void InputSystem::UpdateTouches()
         {
             const TouchButton& button = buttons[captures[i].index];
             for (int key : actions[button.action.id].keys)
-                SetVirtualKey(key, true);
+                PressVirtualKey(key);
         }
     }
 
@@ -413,7 +437,7 @@ void InputSystem::UpdateTouches()
                 captures.push_back(TouchCapture{
                     touchId, CapturedControlType::Button, buttonIndex });
                 for (int key : actions[buttons[buttonIndex].action.id].keys)
-                    SetVirtualKey(key, true);
+                    PressVirtualKey(key);
                 captured = true;
                 break;
             }
@@ -447,35 +471,42 @@ void InputSystem::UpdateDPad(Vector2 position, bool leftPad)
     const float dy = position.y - center.y;
     const float deadZone = bounds.width * 0.14f;
 
-    if (std::fabs(dx) < deadZone && std::fabs(dy) < deadZone)
+    const float absX = std::fabs(dx);
+    const float absY = std::fabs(dy);
+    if (absX * absX + absY * absY < deadZone * deadZone)
         return;
 
-    if (std::fabs(dx) > std::fabs(dy))
+    // Eight 45-degree sectors: a direction is active unless the finger is
+    // more than 67.5 degrees away from it (tan(22.5) ~= 0.4142).
+    constexpr float DiagonalRatio = 0.4142f;
+    const bool horizontal = absX >= absY * DiagonalRatio;
+    const bool vertical = absY >= absX * DiagonalRatio;
+
+    if (horizontal)
     {
         if (leftPad)
         {
-            SetVirtualKey(dx < 0 ? KEY_A : KEY_D, true);
-            SetVirtualKey(dx < 0 ? KEY_LEFT : KEY_RIGHT, true);
+            PressVirtualKey(dx < 0 ? KEY_A : KEY_D);
+            PressVirtualKey(dx < 0 ? KEY_LEFT : KEY_RIGHT);
         }
         else
-            SetVirtualKey(dx < 0 ? KEY_J : KEY_M, true);
+            PressVirtualKey(dx < 0 ? KEY_J : KEY_M);
     }
-    else
+    if (vertical)
     {
         if (leftPad)
         {
-            SetVirtualKey(dy < 0 ? KEY_W : KEY_S, true);
-            SetVirtualKey(dy < 0 ? KEY_UP : KEY_DOWN, true);
+            PressVirtualKey(dy < 0 ? KEY_W : KEY_S);
+            PressVirtualKey(dy < 0 ? KEY_UP : KEY_DOWN);
         }
         else
-            SetVirtualKey(dy < 0 ? KEY_I : KEY_K, true);
+            PressVirtualKey(dy < 0 ? KEY_I : KEY_K);
     }
 }
 
-void InputSystem::SetVirtualKey(int key, bool down)
+void InputSystem::PressVirtualKey(int key)
 {
-    if (down)
-        virtualKeys[key] = true;
+    virtualKeys[key] = true;
 }
 
 bool InputSystem::ActionVirtualDown(InputAction action) const
@@ -486,13 +517,6 @@ bool InputSystem::ActionVirtualDown(InputAction action) const
             return true;
     }
     return false;
-}
-
-bool InputSystem::IsDirectionalKey(int key) const
-{
-    return key == KEY_W || key == KEY_A || key == KEY_S || key == KEY_D ||
-        key == KEY_I || key == KEY_J || key == KEY_K || key == KEY_M ||
-        key == KEY_UP || key == KEY_DOWN || key == KEY_LEFT || key == KEY_RIGHT;
 }
 
 void InputSystem::DrawOverlay() const

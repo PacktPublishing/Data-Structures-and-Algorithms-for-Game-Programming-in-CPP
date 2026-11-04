@@ -178,7 +178,7 @@ void Knight::GameLoop()
 		app->Update(GetFrameTime());
 		app->DrawOffscreen();
 
-		if (IsKeyPressed(KEY_ENTER))
+		if (app->Input.IsKeyPressed(KEY_ENTER))
 		{
 			TakeScreenshot("screenshot.png");
 		}

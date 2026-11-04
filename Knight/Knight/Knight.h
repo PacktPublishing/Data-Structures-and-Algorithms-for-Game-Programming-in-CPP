@@ -82,6 +82,7 @@ protected:
 	bool IsMouseButtonReleased(int button) const;
 	Vector2 GetMousePosition() const { return Input.PrimaryPointer().position; }
 	Vector2 GetMouseDelta() const { return Input.SecondaryPointer().delta; }
+	float GetMouseWheelMove() const { return Input.WheelMove(); }
 
 	virtual void Update(float ElapsedSeconds);
 	virtual void DrawOffscreen();
@@ -116,4 +117,8 @@ protected:
 	virtual void OnConfigKnightApp();
 	virtual void OnConfigureInput();
 };
+
+// Input access for code outside Knight-derived classes (components, FSM
+// states, cameras), where raylib-style names would bypass InputSystem.
+inline InputSystem& KnightInput() { return Knight::Instance->Input; }
 
