@@ -73,6 +73,7 @@ public:
 
     void SetVirtualControlsVisible(bool visible);
     bool VirtualControlsVisible() const { return virtualControlsVisible; }
+    int TouchButtonCount() const { return static_cast<int>(buttons.size()); }
 
     InputAxis2D MoveAxis() const { return moveAxis; }
     InputAxis2D SecondaryAxis() const { return secondaryAxis; }

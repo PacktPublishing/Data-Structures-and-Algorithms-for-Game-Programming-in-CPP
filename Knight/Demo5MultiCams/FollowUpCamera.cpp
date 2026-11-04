@@ -25,9 +25,10 @@ bool FollowUpCamera::Update(float ElapsedSeconds)
     _Camera.target = TargetActor->Position; // Always focus on the player
 
     // Rotate the camera around the player when right mouse button is held
-    if (processMouseInput && IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-        mCameraHorizontalAngleShift += GetMouseDelta().x * 0.01f;
-        mCameraVerticalOffset += GetMouseDelta().y * 0.01f;
+    const PointerState& lookPointer = Knight::Instance->Input.SecondaryPointer();
+    if (processMouseInput && lookPointer.down) {
+        mCameraHorizontalAngleShift += lookPointer.delta.x * 0.01f;
+        mCameraVerticalOffset += lookPointer.delta.y * 0.01f;
     }
 
 	__super::Update(ElapsedSeconds);

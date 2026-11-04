@@ -51,10 +51,6 @@ public:
 	LoDDepthRenderPass* pDepthRenderer = nullptr;
 
 protected:
-	// Route legacy unqualified key queries through the cross-platform input
-	// service without rewriting this sample's legacy-encoded source file.
-	bool IsKeyDown(int key) const { return Input.IsKeyDown(key); }
-
 	void OnCreateDefaultResources() override;
 
 	void Update(float ElapsedSeconds) override;

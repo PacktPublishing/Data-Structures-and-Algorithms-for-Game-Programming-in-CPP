@@ -72,6 +72,17 @@ public:
 	float _OffscreenRenderTime = 0.0f;
 
 protected:
+	// Legacy sample compatibility. Unqualified raylib-style input calls in
+	// Knight-derived games resolve here and automatically include touch input.
+	bool IsKeyDown(int key) const { return Input.IsKeyDown(key); }
+	bool IsKeyPressed(int key) const { return Input.IsKeyPressed(key); }
+	bool IsKeyReleased(int key) const { return Input.IsKeyReleased(key); }
+	bool IsMouseButtonDown(int button) const;
+	bool IsMouseButtonPressed(int button) const;
+	bool IsMouseButtonReleased(int button) const;
+	Vector2 GetMousePosition() const { return Input.PrimaryPointer().position; }
+	Vector2 GetMouseDelta() const { return Input.SecondaryPointer().delta; }
+
 	virtual void Update(float ElapsedSeconds);
 	virtual void DrawOffscreen();
 	virtual void DrawFrame();

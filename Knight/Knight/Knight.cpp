@@ -122,6 +122,17 @@ void Knight::Start()
 	SetTargetFPS(TARGET_FPS);
 	OnConfigureInput();
 
+#if defined(PLATFORM_ANDROID)
+	// Give legacy samples a usable primary action until they provide a
+	// sample-specific command layout. Explicit layouts always win.
+	if (Input.TouchButtonCount() == 0)
+	{
+		InputAction action = Input.RegisterAction("Primary Action");
+		Input.BindKey(action, KEY_SPACE);
+		Input.AddTouchButton(action, "ACTION", TouchButtonAnchor::TopRight, 0);
+	}
+#endif
+
 	_Scene = new Scene();
 
 	//Allow user to create default resources, such as font, shaders, textures, etc.
@@ -310,6 +321,33 @@ void Knight::OnConfigKnightApp()
 
 void Knight::OnConfigureInput()
 {
+}
+
+bool Knight::IsMouseButtonDown(int button) const
+{
+	if (button == MOUSE_BUTTON_LEFT)
+		return Input.PrimaryPointer().down;
+	if (button == MOUSE_BUTTON_RIGHT)
+		return Input.SecondaryPointer().down;
+	return ::IsMouseButtonDown(button);
+}
+
+bool Knight::IsMouseButtonPressed(int button) const
+{
+	if (button == MOUSE_BUTTON_LEFT)
+		return Input.PrimaryPointer().pressed;
+	if (button == MOUSE_BUTTON_RIGHT)
+		return Input.SecondaryPointer().pressed;
+	return ::IsMouseButtonPressed(button);
+}
+
+bool Knight::IsMouseButtonReleased(int button) const
+{
+	if (button == MOUSE_BUTTON_LEFT)
+		return Input.PrimaryPointer().released;
+	if (button == MOUSE_BUTTON_RIGHT)
+		return Input.SecondaryPointer().released;
+	return ::IsMouseButtonReleased(button);
 }
 
 void Knight::ApplyAppConfig()

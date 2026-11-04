@@ -23,15 +23,16 @@ bool TopDownCamera::Update(float ElapsedSeconds)
     _Camera.position.y = cameraZoom + mCameraVerticalOffset ;
 
     // Pan camera with arrow keys
-    if (IsKeyDown(KEY_UP)) _Camera.target.z -= cameraPanSpeed;
-    if (IsKeyDown(KEY_DOWN)) _Camera.target.z += cameraPanSpeed;
-    if (IsKeyDown(KEY_LEFT)) _Camera.target.x -= cameraPanSpeed;
-    if (IsKeyDown(KEY_RIGHT)) _Camera.target.x += cameraPanSpeed;
+    if (Knight::Instance->Input.IsKeyDown(KEY_UP)) _Camera.target.z -= cameraPanSpeed;
+    if (Knight::Instance->Input.IsKeyDown(KEY_DOWN)) _Camera.target.z += cameraPanSpeed;
+    if (Knight::Instance->Input.IsKeyDown(KEY_LEFT)) _Camera.target.x -= cameraPanSpeed;
+    if (Knight::Instance->Input.IsKeyDown(KEY_RIGHT)) _Camera.target.x += cameraPanSpeed;
 
     // Rotate the camera around the player when right mouse button is held
-    if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-        mCameraHorizontalAngleShift += GetMouseDelta().x * 0.01f;
-        mCameraVerticalOffset += GetMouseDelta().y * 0.01f;
+    const PointerState& lookPointer = Knight::Instance->Input.SecondaryPointer();
+    if (lookPointer.down) {
+        mCameraHorizontalAngleShift += lookPointer.delta.x * 0.01f;
+        mCameraVerticalOffset += lookPointer.delta.y * 0.01f;
     }
 
     return true;

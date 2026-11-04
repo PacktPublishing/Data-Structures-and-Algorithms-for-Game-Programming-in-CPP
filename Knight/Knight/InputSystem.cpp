@@ -20,7 +20,11 @@ InputSystem::InputSystem()
 {
     // Samples opt in after registering the controls they actually use. This
     // avoids showing an overlay that has not yet been wired to legacy input.
+#if defined(PLATFORM_ANDROID)
+    virtualControlsVisible = true;
+#else
     virtualControlsVisible = false;
+#endif
 
     moveAxis = RegisterAxis2D("Move", KEY_W, KEY_S, KEY_A, KEY_D);
     secondaryAxis = RegisterAxis2D("Secondary", KEY_I, KEY_K, KEY_J, KEY_M);

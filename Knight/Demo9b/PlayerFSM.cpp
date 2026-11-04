@@ -26,29 +26,29 @@ void PlayerIdleState::Enter(FSM* FiniteStateMachine)
 
 void PlayerIdleState::Update(FSM* FiniteStateMachine, float DeltaTime)
 {
-    if (IsKeyPressed(KEY_SPACE))
+    if (Knight::Instance->Input.IsKeyPressed(KEY_SPACE))
     {
         FiniteStateMachine->SetState(PlayerFSM::ATTACK);
         return;
     }
 
     SceneActor* character = FiniteStateMachine->GetCharacter();
-    if (IsKeyDown(KEY_A))
+    if (Knight::Instance->Input.IsKeyDown(KEY_A))
     {
         character->Rotation.y = 90.0f;
         FiniteStateMachine->SetState(PlayerFSM::WALK);
     }
-    else if (IsKeyDown(KEY_W))
+    else if (Knight::Instance->Input.IsKeyDown(KEY_W))
     {
         character->Rotation.y = 0.0f;
         FiniteStateMachine->SetState(PlayerFSM::WALK);
     }
-    else if (IsKeyDown(KEY_D))
+    else if (Knight::Instance->Input.IsKeyDown(KEY_D))
     {
         character->Rotation.y = -90.0f;
         FiniteStateMachine->SetState(PlayerFSM::WALK);
     }
-    else if (IsKeyDown(KEY_S))
+    else if (Knight::Instance->Input.IsKeyDown(KEY_S))
     {
         character->Rotation.y = 180.0f;
         FiniteStateMachine->SetState(PlayerFSM::WALK);
@@ -62,7 +62,7 @@ void PlayerWalkState::Enter(FSM* FiniteStateMachine)
 
 void PlayerWalkState::Update(FSM* FiniteStateMachine, float DeltaTime)
 {
-    if (IsKeyPressed(KEY_SPACE))
+    if (Knight::Instance->Input.IsKeyPressed(KEY_SPACE))
     {
         FiniteStateMachine->SetState(PlayerFSM::ATTACK);
         return;
@@ -70,22 +70,22 @@ void PlayerWalkState::Update(FSM* FiniteStateMachine, float DeltaTime)
 
     float walkSpeed = 3.0f;
     SceneActor* character = FiniteStateMachine->GetCharacter();
-    if (IsKeyDown(KEY_A))
+    if (Knight::Instance->Input.IsKeyDown(KEY_A))
     {
         character->Rotation.y = 90.0f;
         character->Position.x += walkSpeed * DeltaTime;
     }
-    else if (IsKeyDown(KEY_W))
+    else if (Knight::Instance->Input.IsKeyDown(KEY_W))
     {
         character->Rotation.y = 0.0f;
         character->Position.z += walkSpeed * DeltaTime;
     }
-    else if (IsKeyDown(KEY_D))
+    else if (Knight::Instance->Input.IsKeyDown(KEY_D))
     {
         character->Rotation.y = -90.0f;
         character->Position.x -= walkSpeed * DeltaTime;
     }
-    else if (IsKeyDown(KEY_S))
+    else if (Knight::Instance->Input.IsKeyDown(KEY_S))
     {
         character->Rotation.y = 180.0f;
         character->Position.z -= walkSpeed * DeltaTime;
