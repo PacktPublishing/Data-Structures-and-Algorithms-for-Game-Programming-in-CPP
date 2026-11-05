@@ -133,6 +133,16 @@ else()
     knight_add_game(${KNIGHT_GAME})
 endif()
 
+if(KNIGHT_BUILD_TESTS AND NOT ANDROID AND NOT EMSCRIPTEN)
+    # Runs InputSystem against a scripted backend; no window or GPU needed.
+    add_executable(knight_input_tests Tests/InputSystemTests.cpp)
+    target_link_libraries(knight_input_tests PRIVATE Knight::Framework)
+    set_target_properties(knight_input_tests PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin"
+        FOLDER "Tests")
+    add_test(NAME knight_input_tests COMMAND knight_input_tests)
+endif()
+
 if(NOT ANDROID)
     install(DIRECTORY "${PROJECT_SOURCE_DIR}/resources"
         DESTINATION .

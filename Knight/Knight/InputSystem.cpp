@@ -2,38 +2,109 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
+#include <cstring>
+#include <utility>
 
 namespace
 {
-    constexpr float DPadSize = 240.0f;
-    constexpr float ControlMargin = 28.0f;
-    constexpr float ButtonSize = 88.0f;
-    constexpr float ButtonPadding = 20.0f;
+    // Control sizes in density-independent pixels (1 dp = 1 px at 160 dpi),
+    // so controls have the same physical size on every screen.
+    constexpr float PadSizeDp = 130.0f;
+    constexpr float ControlMarginDp = 16.0f;
+    constexpr float ButtonSizeDp = 56.0f;
+    constexpr float ButtonPaddingDp = 12.0f;
+    // On small or low-density screens a pad never takes more than this share
+    // of the screen's short side; every other control shrinks with it.
+    constexpr float MaxPadShare = 0.42f;
+    // Dead zone at the center of a pad, as a fraction of the pad's size.
+    constexpr float PadDeadZone = 0.14f;
+    // Floating pads can be grabbed anywhere below this fraction of the height.
+    constexpr float FloatingZoneTop = 0.35f;
+
+    constexpr double LongPressSeconds = 0.5;
+    constexpr float LongPressSlopDp = 12.0f;
+    // Spreading two fingers by the screen's short side zooms this many wheel
+    // notches.
+    constexpr float PinchNotchesPerShortSide = 10.0f;
 
     bool PointInRectangle(Vector2 point, Rectangle rectangle)
     {
         return CheckCollisionPointRec(point, rectangle);
     }
+
+    float Distance(Vector2 a, Vector2 b)
+    {
+        const float dx = b.x - a.x;
+        const float dy = b.y - a.y;
+        return std::sqrt(dx * dx + dy * dy);
+    }
+
+    RaylibInputBackend raylibBackend;
+
+    // Short on-screen label for a key code; letters and digits only.
+    std::string KeyLabel(int key)
+    {
+        if ((key >= KEY_A && key <= KEY_Z) || (key >= KEY_ZERO && key <= KEY_NINE))
+            return std::string(1, static_cast<char>(key));
+        return std::string();
+    }
 }
 
 InputSystem::InputSystem()
+    : backend(&raylibBackend)
 {
 #if defined(PLATFORM_ANDROID)
     profile = InputProfile::Touch;
 #else
     profile = InputProfile::KeyboardMouse;
+    // Set KNIGHT_INPUT_PROFILE=touch to preview the Android controls on
+    // desktop with the mouse standing in for one finger.
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable: 4996) // getenv is fine for a read-only lookup
+#endif
+    const char* forcedProfile = std::getenv("KNIGHT_INPUT_PROFILE");
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
+    if (forcedProfile && std::strcmp(forcedProfile, "touch") == 0)
+        profile = InputProfile::Touch;
 #endif
     virtualControlsVisible = profile == InputProfile::Touch;
 
+    RegisterDefaults();
+}
+
+void InputSystem::RegisterDefaults()
+{
     moveAxis = RegisterAxis2D("Move", KEY_W, KEY_S, KEY_A, KEY_D);
+    BindAxisKeys(moveAxis, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT);
+    BindAxisTouchPad(moveAxis, TouchPad::Left);
+
     secondaryAxis = RegisterAxis2D("Secondary", KEY_I, KEY_K, KEY_J, KEY_M);
+    BindAxisTouchPad(secondaryAxis, TouchPad::Right);
+
+    backAction = RegisterAction("Back");
+    BindKey(backAction, KEY_BACK);
+}
+
+void InputSystem::SetBackend(const InputBackend* newBackend)
+{
+    backend = newBackend ? newBackend : &raylibBackend;
+    ResetTouchState();
+}
+
+float InputSystem::ShortSide() const
+{
+    return static_cast<float>(std::min(backend->ScreenWidth(), backend->ScreenHeight()));
 }
 
 void InputSystem::SetProfile(InputProfile newProfile)
 {
     profile = newProfile;
     SetVirtualControlsVisible(profile == InputProfile::Touch);
-    ResetPointers();
+    ResetTouchState();
 }
 
 void InputSystem::Reset()
@@ -41,26 +112,44 @@ void InputSystem::Reset()
     actions.clear();
     axes.clear();
     buttons.clear();
-    captures.clear();
+    actionDown.clear();
+    previousActionDown.clear();
+    for (PadState& pad : pads)
+        pad = PadState{};
     virtualKeys.clear();
     previousVirtualKeys.clear();
-    ResetPointers();
+    ResetTouchState();
 
-    moveAxis = RegisterAxis2D("Move", KEY_W, KEY_S, KEY_A, KEY_D);
-    secondaryAxis = RegisterAxis2D("Secondary", KEY_I, KEY_K, KEY_J, KEY_M);
+    RegisterDefaults();
 }
 
-void InputSystem::ResetPointers()
+void InputSystem::ResetTouchState()
 {
+    captures.clear();
+    for (TouchButton& button : buttons)
+        button.touchId = -1;
+    for (PadState& pad : pads)
+    {
+        pad.touchId = -1;
+        pad.value = Vector2{ 0, 0 };
+    }
+
     primaryPointer = PointerState{};
     secondaryPointer = PointerState{};
     primaryTouchId = -1;
     lastPointerPosition = Vector2{ 0, 0 };
+
+    zoomDelta = 0.0f;
+    panDelta = Vector2{ 0, 0 };
+    pinchTouchIds[0] = pinchTouchIds[1] = -1;
+    waitForAllFingersUp = false;
+    longPressCancelled = false;
+    longPressFired = false;
 }
 
 float InputSystem::WheelMove() const
 {
-    return profile == InputProfile::KeyboardMouse ? GetMouseWheelMove() : 0.0f;
+    return profile == InputProfile::KeyboardMouse ? backend->MouseWheelMove() : 0.0f;
 }
 
 InputAction InputSystem::RegisterAction(const char* name)
@@ -72,12 +161,29 @@ InputAction InputSystem::RegisterAction(const char* name)
     }
 
     actions.push_back(ActionDefinition{ name ? name : "", {} });
+    actionDown.push_back(false);
+    previousActionDown.push_back(false);
     return InputAction{ static_cast<int>(actions.size()) - 1 };
+}
+
+InputAction InputSystem::FindAction(const char* name) const
+{
+    for (int i = 0; i < static_cast<int>(actions.size()); ++i)
+    {
+        if (actions[i].name == name)
+            return InputAction{ i };
+    }
+    return InputAction{};
+}
+
+bool InputSystem::IsValidAction(InputAction action) const
+{
+    return action.IsValid() && action.id < static_cast<int>(actions.size());
 }
 
 void InputSystem::BindKey(InputAction action, int key)
 {
-    if (!action.IsValid() || action.id >= static_cast<int>(actions.size()))
+    if (!IsValidAction(action))
         return;
 
     std::vector<int>& keys = actions[action.id].keys;
@@ -88,7 +194,7 @@ void InputSystem::BindKey(InputAction action, int key)
 void InputSystem::AddTouchButton(InputAction action, const char* label,
     TouchButtonAnchor anchor, int slot)
 {
-    if (!action.IsValid() || action.id >= static_cast<int>(actions.size()))
+    if (!IsValidAction(action))
         return;
 
     for (TouchButton& button : buttons)
@@ -119,54 +225,68 @@ InputAxis2D InputSystem::RegisterAxis2D(const char* name, int upKey,
             return InputAxis2D{ i };
     }
 
-    axes.push_back(AxisDefinition{
-        name ? name : "", upKey, downKey, leftKey, rightKey });
+    AxisDefinition definition;
+    definition.name = name ? name : "";
+    definition.keySets.push_back(AxisKeys{ upKey, downKey, leftKey, rightKey });
+    axes.push_back(definition);
     return InputAxis2D{ static_cast<int>(axes.size()) - 1 };
+}
+
+void InputSystem::BindAxisKeys(InputAxis2D axis, int upKey, int downKey,
+    int leftKey, int rightKey)
+{
+    if (!axis.IsValid() || axis.id >= static_cast<int>(axes.size()))
+        return;
+    axes[axis.id].keySets.push_back(AxisKeys{ upKey, downKey, leftKey, rightKey });
+}
+
+void InputSystem::BindAxisTouchPad(InputAxis2D axis, TouchPad pad)
+{
+    if (!axis.IsValid() || axis.id >= static_cast<int>(axes.size()))
+        return;
+    axes[axis.id].pad = pad;
+}
+
+void InputSystem::SetTouchPadFloating(TouchPad pad, bool floating)
+{
+    if (pad == TouchPad::None)
+        return;
+    pads[static_cast<int>(pad)].floating = floating;
 }
 
 bool InputSystem::Down(InputAction action) const
 {
-    if (!action.IsValid() || action.id >= static_cast<int>(actions.size()))
-        return false;
-
-    for (int key : actions[action.id].keys)
-    {
-        if (IsKeyDown(key))
-            return true;
-    }
-    return ActionVirtualDown(action);
+    return IsValidAction(action) && actionDown[action.id];
 }
 
 bool InputSystem::Pressed(InputAction action) const
 {
-    if (!action.IsValid() || action.id >= static_cast<int>(actions.size()))
+    if (!IsValidAction(action))
         return false;
+    if (actionDown[action.id] && !previousActionDown[action.id])
+        return true;
 
+    // A key tapped and released between two frames never reads as held.
     for (int key : actions[action.id].keys)
     {
-        if (IsKeyPressed(key))
+        if (backend->IsKeyPressed(key))
             return true;
     }
-
-    for (const TouchButton& button : buttons)
-        if (button.action.id == action.id && button.touchId >= 0 && button.previousTouchId < 0)
-            return true;
     return false;
 }
 
 bool InputSystem::Released(InputAction action) const
 {
-    if (!action.IsValid() || action.id >= static_cast<int>(actions.size()))
+    if (!IsValidAction(action))
         return false;
+    if (!actionDown[action.id] && previousActionDown[action.id])
+        return true;
 
     for (int key : actions[action.id].keys)
     {
-        if (IsKeyReleased(key))
+        if (backend->IsKeyReleased(key))
             return true;
     }
-    for (const TouchButton& button : buttons)
-        if (button.action.id == action.id && button.touchId < 0 && button.previousTouchId >= 0)
-            return true;
     return false;
 }
 
@@ -176,40 +296,47 @@ Vector2 InputSystem::Axis(InputAxis2D axis) const
         return Vector2{ 0, 0 };
 
     const AxisDefinition& definition = axes[axis.id];
-    Vector2 result = {
-        (IsKeyDown(definition.rightKey) ? 1.0f : 0.0f) -
-            (IsKeyDown(definition.leftKey) ? 1.0f : 0.0f),
-        (IsKeyDown(definition.downKey) ? 1.0f : 0.0f) -
-            (IsKeyDown(definition.upKey) ? 1.0f : 0.0f)
-    };
-
-    if (result.x != 0.0f && result.y != 0.0f)
+    bool up = false, down = false, left = false, right = false;
+    for (const AxisKeys& keys : definition.keySets)
     {
-        constexpr float InverseSqrtTwo = 0.70710678f;
-        result.x *= InverseSqrtTwo;
-        result.y *= InverseSqrtTwo;
+        up = up || backend->IsKeyDown(keys.upKey);
+        down = down || backend->IsKeyDown(keys.downKey);
+        left = left || backend->IsKeyDown(keys.leftKey);
+        right = right || backend->IsKeyDown(keys.rightKey);
     }
-    return result;
+
+    const Vector2 padValue = PadValue(definition.pad);
+    const float keyX = (right ? 1.0f : 0.0f) - (left ? 1.0f : 0.0f);
+    const float keyY = (down ? 1.0f : 0.0f) - (up ? 1.0f : 0.0f);
+    return Vector2{
+        keyX != 0.0f ? keyX : padValue.x,
+        keyY != 0.0f ? keyY : padValue.y
+    };
+}
+
+Vector2 InputSystem::PadValue(TouchPad pad) const
+{
+    return pads[static_cast<int>(pad)].value;
 }
 
 bool InputSystem::IsKeyDown(int key) const
 {
     const auto it = virtualKeys.find(key);
-    return ::IsKeyDown(key) || (it != virtualKeys.end() && it->second);
+    return backend->IsKeyDown(key) || (it != virtualKeys.end() && it->second);
 }
 
 bool InputSystem::IsKeyPressed(int key) const
 {
     const bool current = virtualKeys.count(key) > 0 && virtualKeys.at(key);
     const bool previous = previousVirtualKeys.count(key) > 0 && previousVirtualKeys.at(key);
-    return ::IsKeyPressed(key) || (current && !previous);
+    return backend->IsKeyPressed(key) || (current && !previous);
 }
 
 bool InputSystem::IsKeyReleased(int key) const
 {
     const bool current = virtualKeys.count(key) > 0 && virtualKeys.at(key);
     const bool previous = previousVirtualKeys.count(key) > 0 && previousVirtualKeys.at(key);
-    return ::IsKeyReleased(key) || (!current && previous);
+    return backend->IsKeyReleased(key) || (!current && previous);
 }
 
 void InputSystem::SetVirtualControlsVisible(bool visible)
@@ -221,91 +348,204 @@ void InputSystem::SetVirtualControlsVisible(bool visible)
         virtualKeys.clear();
         for (TouchButton& button : buttons)
             button.touchId = -1;
+        for (PadState& pad : pads)
+            pad.touchId = -1;
     }
 }
 
 void InputSystem::BeginFrame()
 {
-    previousVirtualKeys = virtualKeys;
-    virtualKeys.clear();
     for (TouchButton& button : buttons)
         button.previousTouchId = button.touchId;
+    for (PadState& pad : pads)
+        pad.value = Vector2{ 0, 0 };
+    zoomDelta = 0.0f;
+    panDelta = Vector2{ 0, 0 };
+
+    // Fingers that were down when the app lost focus (e.g. the user switched
+    // apps) never report a release, so start over whenever focus changes.
+    const bool focused = backend->IsWindowFocused();
+    if (focused != wasFocused)
+    {
+        ResetTouchState();
+        wasFocused = focused;
+    }
+
     UpdateLayout();
 
-    if (virtualControlsVisible)
+    if (virtualControlsVisible && focused)
         UpdateTouches();
     else
         captures.clear();
 
-    UpdatePrimaryPointer();
-    UpdateSecondaryPointer();
+    UpdateActions();
+    UpdateVirtualKeys();
+
+    if (profile == InputProfile::KeyboardMouse)
+        UpdateMousePointers();
+    else
+        UpdateTouchPointers();
 }
 
-void InputSystem::UpdateSecondaryPointer()
+void InputSystem::UpdateActions()
 {
-    if (profile == InputProfile::Touch)
+    previousActionDown = actionDown;
+    for (int i = 0; i < static_cast<int>(actions.size()); ++i)
     {
-        secondaryPointer = primaryPointer;
-        return;
+        bool down = false;
+        for (int key : actions[i].keys)
+            down = down || backend->IsKeyDown(key);
+        for (const TouchButton& button : buttons)
+            down = down || (button.action.id == i && button.touchId >= 0);
+        actionDown[i] = down;
+    }
+}
+
+void InputSystem::UpdateVirtualKeys()
+{
+    previousVirtualKeys = virtualKeys;
+    virtualKeys.clear();
+
+    for (const TouchButton& button : buttons)
+    {
+        if (button.touchId < 0)
+            continue;
+        for (int key : actions[button.action.id].keys)
+            virtualKeys[key] = true;
     }
 
-    secondaryPointer.position = GetMousePosition();
-    secondaryPointer.delta = GetMouseDelta();
-    secondaryPointer.pressed = IsMouseButtonPressed(MOUSE_BUTTON_RIGHT);
-    secondaryPointer.down = IsMouseButtonDown(MOUSE_BUTTON_RIGHT);
-    secondaryPointer.released = IsMouseButtonReleased(MOUSE_BUTTON_RIGHT);
+    // A pad presses the direction keys of every key set on its axis, using
+    // eight 45-degree sectors: a direction counts unless the finger is more
+    // than 67.5 degrees away from it (tan(22.5) ~= 0.4142).
+    constexpr float DiagonalRatio = 0.4142f;
+    for (const AxisDefinition& axis : axes)
+    {
+        const Vector2 value = PadValue(axis.pad);
+        const float absX = std::fabs(value.x);
+        const float absY = std::fabs(value.y);
+        if (absX == 0.0f && absY == 0.0f)
+            continue;
+
+        const bool horizontal = absX >= absY * DiagonalRatio;
+        const bool vertical = absY >= absX * DiagonalRatio;
+        for (const AxisKeys& keys : axis.keySets)
+        {
+            if (horizontal)
+                virtualKeys[value.x < 0 ? keys.leftKey : keys.rightKey] = true;
+            if (vertical)
+                virtualKeys[value.y < 0 ? keys.upKey : keys.downKey] = true;
+        }
+    }
+}
+
+void InputSystem::UpdateMousePointers()
+{
+    primaryPointer.position = backend->MousePosition();
+    primaryPointer.delta = backend->MouseDelta();
+    primaryPointer.pressed = backend->IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+    primaryPointer.down = backend->IsMouseButtonDown(MOUSE_BUTTON_LEFT);
+    primaryPointer.released = backend->IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
+    lastPointerPosition = primaryPointer.position;
+
+    secondaryPointer.position = primaryPointer.position;
+    secondaryPointer.delta = primaryPointer.delta;
+    secondaryPointer.pressed = backend->IsMouseButtonPressed(MOUSE_BUTTON_RIGHT);
+    secondaryPointer.down = backend->IsMouseButtonDown(MOUSE_BUTTON_RIGHT);
+    secondaryPointer.released = backend->IsMouseButtonReleased(MOUSE_BUTTON_RIGHT);
+
+    zoomDelta = backend->MouseWheelMove();
 }
 
 void InputSystem::UpdateLayout()
 {
-    const float width = static_cast<float>(GetScreenWidth());
-    const float height = static_cast<float>(GetScreenHeight());
-
-    leftDPadBounds = Rectangle{
-        ControlMargin,
-        height - DPadSize - ControlMargin,
-        DPadSize,
-        DPadSize
-    };
-    rightDPadBounds = Rectangle{
-        width - DPadSize - ControlMargin,
-        height - DPadSize - ControlMargin,
-        DPadSize,
-        DPadSize
-    };
+    padSize = std::min(PadSizeDp * backend->DpScale(), ShortSide() * MaxPadShare);
+    const float scale = padSize / PadSizeDp;
+    buttonSize = ButtonSizeDp * scale;
+    buttonPadding = ButtonPaddingDp * scale;
+    controlMargin = ControlMarginDp * scale;
 
     for (TouchButton& button : buttons)
         button.bounds = ButtonBounds(button);
+
+    // Idle pads rest in their corner; a held floating pad keeps the center
+    // set when it was grabbed.
+    for (TouchPad pad : { TouchPad::Left, TouchPad::Right })
+    {
+        PadState& state = pads[static_cast<int>(pad)];
+        if (state.touchId < 0)
+        {
+            const Rectangle bounds = PadBounds(pad);
+            state.center = Vector2{
+                bounds.x + bounds.width * 0.5f,
+                bounds.y + bounds.height * 0.5f
+            };
+        }
+    }
 }
 
 Rectangle InputSystem::ButtonBounds(const TouchButton& button) const
 {
-    const float width = static_cast<float>(GetScreenWidth());
-    const float height = static_cast<float>(GetScreenHeight());
-    const float stride = ButtonSize + ButtonPadding;
+    const float width = static_cast<float>(backend->ScreenWidth());
+    const float height = static_cast<float>(backend->ScreenHeight());
+    const float stride = buttonSize + buttonPadding;
     const int column = button.slot % 3;
     const int row = button.slot / 3;
 
-    float x = ControlMargin + column * stride;
-    float y = ControlMargin + row * stride;
+    float x = controlMargin + column * stride;
+    float y = controlMargin + row * stride;
 
     if (button.anchor == TouchButtonAnchor::TopRight ||
         button.anchor == TouchButtonAnchor::BottomRight)
-        x = width - ControlMargin - ButtonSize - column * stride;
+        x = width - controlMargin - buttonSize - column * stride;
 
     if (button.anchor == TouchButtonAnchor::BottomLeft ||
         button.anchor == TouchButtonAnchor::BottomRight)
-        y = height - ControlMargin - ButtonSize - row * stride;
+        y = height - controlMargin - buttonSize - row * stride;
 
-    return Rectangle{ x, y, ButtonSize, ButtonSize };
+    return Rectangle{ x, y, buttonSize, buttonSize };
+}
+
+Rectangle InputSystem::PadBounds(TouchPad pad) const
+{
+    const float width = static_cast<float>(backend->ScreenWidth());
+    const float height = static_cast<float>(backend->ScreenHeight());
+    const float x = pad == TouchPad::Left
+        ? controlMargin
+        : width - padSize - controlMargin;
+    return Rectangle{ x, height - padSize - controlMargin, padSize, padSize };
+}
+
+Rectangle InputSystem::PadCaptureZone(TouchPad pad) const
+{
+    if (!pads[static_cast<int>(pad)].floating)
+        return PadBounds(pad);
+
+    const float width = static_cast<float>(backend->ScreenWidth());
+    const float height = static_cast<float>(backend->ScreenHeight());
+    const float top = height * FloatingZoneTop;
+    const float halfWidth = width * 0.5f;
+    return Rectangle{
+        pad == TouchPad::Left ? 0.0f : halfWidth, top,
+        halfWidth, height - top
+    };
+}
+
+const InputSystem::AxisDefinition* InputSystem::AxisForPad(TouchPad pad) const
+{
+    for (const AxisDefinition& axis : axes)
+    {
+        if (axis.pad == pad)
+            return &axis;
+    }
+    return nullptr;
 }
 
 int InputSystem::FindTouchIndexById(int touchId) const
 {
-    const int count = GetTouchPointCount();
+    const int count = backend->TouchCount();
     for (int i = 0; i < count; ++i)
     {
-        if (GetTouchPointId(i) == touchId)
+        if (backend->TouchId(i) == touchId)
             return i;
     }
     return -1;
@@ -317,7 +557,7 @@ bool InputSystem::IsTouchPresent(int touchId, Vector2* position) const
     if (index < 0)
         return false;
     if (position)
-        *position = GetTouchPosition(index);
+        *position = backend->TouchPosition(index);
     return true;
 }
 
@@ -329,63 +569,155 @@ bool InputSystem::IsTouchCaptured(int touchId) const
     return false;
 }
 
-void InputSystem::UpdatePrimaryPointer()
+void InputSystem::UpdateTouchPointers()
 {
     primaryPointer.pressed = false;
     primaryPointer.released = false;
     primaryPointer.delta = Vector2{ 0, 0 };
+    secondaryPointer.pressed = false;
+    secondaryPointer.released = false;
 
-    if (profile == InputProfile::KeyboardMouse)
-    {
-        primaryPointer.position = GetMousePosition();
-        primaryPointer.delta = GetMouseDelta();
-        primaryPointer.pressed = IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
-        primaryPointer.down = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
-        primaryPointer.released = IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
-        lastPointerPosition = primaryPointer.position;
-        return;
-    }
-
-    Vector2 position;
-    if (primaryTouchId >= 0 && IsTouchPresent(primaryTouchId, &position) &&
-        !IsTouchCaptured(primaryTouchId))
-    {
-        primaryPointer.position = position;
-        primaryPointer.delta = Vector2{
-            position.x - lastPointerPosition.x,
-            position.y - lastPointerPosition.y
-        };
-        primaryPointer.down = true;
-        lastPointerPosition = position;
-        return;
-    }
-
-    if (primaryTouchId >= 0)
-    {
-        primaryPointer.down = false;
-        primaryPointer.released = true;
-        primaryPointer.position = lastPointerPosition;
-        primaryTouchId = -1;
-        return;
-    }
-
-    const int touchCount = GetTouchPointCount();
+    // Fingers not held by an on-screen control.
+    std::vector<FreeTouch> freeTouches;
+    const int touchCount = backend->TouchCount();
     for (int i = 0; i < touchCount; ++i)
     {
-        const int touchId = GetTouchPointId(i);
-        if (IsTouchCaptured(touchId))
-            continue;
+        const int touchId = backend->TouchId(i);
+        if (!IsTouchCaptured(touchId))
+            freeTouches.push_back(FreeTouch{ touchId, backend->TouchPosition(i) });
+    }
 
-        primaryTouchId = touchId;
-        position = GetTouchPosition(i);
-        primaryPointer.position = position;
-        primaryPointer.down = true;
-        primaryPointer.pressed = true;
-        lastPointerPosition = position;
+    if (freeTouches.size() >= 2)
+    {
+        // A second finger turns the gesture into a pinch: end the one-finger
+        // drag so cameras stop orbiting, and keep it ended until every finger
+        // has lifted, so the last finger of a pinch does not start a drag.
+        if (primaryTouchId >= 0)
+            ReleasePrimaryTouch();
+        waitForAllFingersUp = true;
+        UpdatePinch(freeTouches);
+    }
+    else
+    {
+        pinchTouchIds[0] = pinchTouchIds[1] = -1;
+        if (freeTouches.empty())
+            waitForAllFingersUp = false;
+
+        const FreeTouch* primary = nullptr;
+        for (const FreeTouch& touch : freeTouches)
+            if (touch.id == primaryTouchId)
+                primary = &touch;
+
+        if (primary)
+        {
+            primaryPointer.position = primary->position;
+            primaryPointer.delta = Vector2{
+                primary->position.x - lastPointerPosition.x,
+                primary->position.y - lastPointerPosition.y
+            };
+            primaryPointer.down = true;
+            lastPointerPosition = primary->position;
+        }
+        else if (primaryTouchId >= 0)
+        {
+            ReleasePrimaryTouch();
+        }
+        else if (!freeTouches.empty() && !waitForAllFingersUp)
+        {
+            const FreeTouch& touch = freeTouches.front();
+            primaryTouchId = touch.id;
+            primaryPointer.position = touch.position;
+            primaryPointer.down = true;
+            primaryPointer.pressed = true;
+            lastPointerPosition = touch.position;
+
+            primaryPressTime = backend->Time();
+            primaryPressPosition = touch.position;
+            longPressCancelled = false;
+            longPressFired = false;
+        }
+        else
+        {
+            primaryPointer.down = false;
+        }
+    }
+
+    UpdateLongPress();
+
+    secondaryPointer.position = primaryPointer.position;
+    secondaryPointer.delta = primaryPointer.delta;
+    secondaryPointer.down = primaryPointer.down;
+}
+
+void InputSystem::ReleasePrimaryTouch()
+{
+    primaryPointer.down = false;
+    primaryPointer.released = true;
+    primaryPointer.position = lastPointerPosition;
+    primaryTouchId = -1;
+
+    if (longPressFired)
+        secondaryPointer.released = true;
+    longPressFired = false;
+}
+
+void InputSystem::UpdateLongPress()
+{
+    if (!primaryPointer.down || longPressFired || longPressCancelled)
+        return;
+
+    // Moving the finger turns the press into a drag for good.
+    if (Distance(primaryPressPosition, primaryPointer.position) > LongPressSlopDp * backend->DpScale())
+    {
+        longPressCancelled = true;
         return;
     }
 
-    primaryPointer.down = false;
+    if (backend->Time() - primaryPressTime >= LongPressSeconds)
+    {
+        longPressFired = true;
+        secondaryPointer.pressed = true;
+    }
+}
+
+void InputSystem::UpdatePinch(const std::vector<FreeTouch>& freeTouches)
+{
+    const FreeTouch* first = nullptr;
+    const FreeTouch* second = nullptr;
+    for (const FreeTouch& touch : freeTouches)
+    {
+        if (touch.id == pinchTouchIds[0])
+            first = &touch;
+        else if (touch.id == pinchTouchIds[1])
+            second = &touch;
+    }
+
+    const bool newPair = !first || !second;
+    if (newPair)
+    {
+        first = &freeTouches[0];
+        second = &freeTouches[1];
+        pinchTouchIds[0] = first->id;
+        pinchTouchIds[1] = second->id;
+    }
+
+    const float distance = Distance(first->position, second->position);
+    const Vector2 midpoint = {
+        (first->position.x + second->position.x) * 0.5f,
+        (first->position.y + second->position.y) * 0.5f
+    };
+
+    // The first frame of a pair only records where the fingers are.
+    if (!newPair)
+    {
+        zoomDelta = (distance - lastPinchDistance) * PinchNotchesPerShortSide / ShortSide();
+        panDelta = Vector2{
+            midpoint.x - lastPinchMidpoint.x,
+            midpoint.y - lastPinchMidpoint.y
+        };
+    }
+    lastPinchDistance = distance;
+    lastPinchMidpoint = midpoint;
 }
 
 void InputSystem::UpdateTouches()
@@ -393,40 +725,39 @@ void InputSystem::UpdateTouches()
     // Update existing captures and discard fingers that were released.
     for (int i = static_cast<int>(captures.size()) - 1; i >= 0; --i)
     {
+        const TouchCapture& capture = captures[i];
         Vector2 position;
-        if (!IsTouchPresent(captures[i].touchId, &position))
+        if (!IsTouchPresent(capture.touchId, &position))
         {
-            if (captures[i].type == CapturedControlType::Button &&
-                captures[i].index >= 0 && captures[i].index < static_cast<int>(buttons.size()))
-                buttons[captures[i].index].touchId = -1;
+            if (capture.type == CapturedControlType::Button &&
+                capture.index >= 0 && capture.index < static_cast<int>(buttons.size()))
+                buttons[capture.index].touchId = -1;
+            else if (capture.type == CapturedControlType::Pad)
+                pads[capture.index].touchId = -1;
             captures.erase(captures.begin() + i);
             continue;
         }
 
-        if (captures[i].type == CapturedControlType::LeftDPad)
-            UpdateDPad(position, true);
-        else if (captures[i].type == CapturedControlType::RightDPad)
-            UpdateDPad(position, false);
-        else if (captures[i].index >= 0 && captures[i].index < static_cast<int>(buttons.size()))
-        {
-            const TouchButton& button = buttons[captures[i].index];
-            for (int key : actions[button.action.id].keys)
-                PressVirtualKey(key);
-        }
+        if (capture.type == CapturedControlType::Pad)
+            UpdatePad(position, static_cast<TouchPad>(capture.index));
     }
 
-    // Capture newly-arrived fingers. A touch belongs to at most one control.
-    const int touchCount = GetTouchPointCount();
+    // Capture newly-arrived fingers. A touch belongs to at most one control,
+    // and buttons win over a floating pad's zone.
+    const int touchCount = backend->TouchCount();
     for (int touchIndex = 0; touchIndex < touchCount; ++touchIndex)
     {
-        const int touchId = GetTouchPointId(touchIndex);
-        bool alreadyCaptured = false;
-        for (const TouchCapture& capture : captures)
-            alreadyCaptured = alreadyCaptured || capture.touchId == touchId;
-        if (alreadyCaptured)
+        const int touchId = backend->TouchId(touchIndex);
+        if (IsTouchCaptured(touchId))
             continue;
 
-        const Vector2 position = GetTouchPosition(touchIndex);
+        // A finger that is already dragging the view does not grab a control
+        // it slides onto.
+        if (touchId == primaryTouchId ||
+            touchId == pinchTouchIds[0] || touchId == pinchTouchIds[1])
+            continue;
+
+        const Vector2 position = backend->TouchPosition(touchIndex);
 
         bool captured = false;
         for (int buttonIndex = 0; buttonIndex < static_cast<int>(buttons.size()); ++buttonIndex)
@@ -436,8 +767,6 @@ void InputSystem::UpdateTouches()
                 buttons[buttonIndex].touchId = touchId;
                 captures.push_back(TouchCapture{
                     touchId, CapturedControlType::Button, buttonIndex });
-                for (int key : actions[buttons[buttonIndex].action.id].keys)
-                    PressVirtualKey(key);
                 captured = true;
                 break;
             }
@@ -445,78 +774,55 @@ void InputSystem::UpdateTouches()
         if (captured)
             continue;
 
-        if (PointInRectangle(position, leftDPadBounds))
+        for (TouchPad pad : { TouchPad::Left, TouchPad::Right })
         {
+            PadState& state = pads[static_cast<int>(pad)];
+            if (state.touchId >= 0 || !AxisForPad(pad) ||
+                !PointInRectangle(position, PadCaptureZone(pad)))
+                continue;
+
+            state.touchId = touchId;
+            if (state.floating)
+                state.center = position;
             captures.push_back(TouchCapture{
-                touchId, CapturedControlType::LeftDPad, -1 });
-            UpdateDPad(position, true);
-        }
-        else if (PointInRectangle(position, rightDPadBounds))
-        {
-            captures.push_back(TouchCapture{
-                touchId, CapturedControlType::RightDPad, -1 });
-            UpdateDPad(position, false);
+                touchId, CapturedControlType::Pad, static_cast<int>(pad) });
+            UpdatePad(position, pad);
+            break;
         }
     }
 }
 
-void InputSystem::UpdateDPad(Vector2 position, bool leftPad)
+void InputSystem::UpdatePad(Vector2 position, TouchPad pad)
 {
-    const Rectangle bounds = leftPad ? leftDPadBounds : rightDPadBounds;
-    const Vector2 center = {
-        bounds.x + bounds.width * 0.5f,
-        bounds.y + bounds.height * 0.5f
-    };
-    const float dx = position.x - center.x;
-    const float dy = position.y - center.y;
-    const float deadZone = bounds.width * 0.14f;
+    PadState& state = pads[static_cast<int>(pad)];
+    const float radius = padSize * 0.5f;
+    float dx = position.x - state.center.x;
+    float dy = position.y - state.center.y;
+    float distance = std::sqrt(dx * dx + dy * dy);
 
-    const float absX = std::fabs(dx);
-    const float absY = std::fabs(dy);
-    if (absX * absX + absY * absY < deadZone * deadZone)
+    // A floating pad's base trails a thumb that slides past its edge, so
+    // reversing direction responds immediately.
+    if (state.floating && distance > radius)
+    {
+        const float excess = distance - radius;
+        state.center.x += dx / distance * excess;
+        state.center.y += dy / distance * excess;
+        dx = position.x - state.center.x;
+        dy = position.y - state.center.y;
+        distance = radius;
+    }
+
+    const float deadZone = padSize * PadDeadZone;
+    if (distance < deadZone)
         return;
 
-    // Eight 45-degree sectors: a direction is active unless the finger is
-    // more than 67.5 degrees away from it (tan(22.5) ~= 0.4142).
-    constexpr float DiagonalRatio = 0.4142f;
-    const bool horizontal = absX >= absY * DiagonalRatio;
-    const bool vertical = absY >= absX * DiagonalRatio;
-
-    if (horizontal)
-    {
-        if (leftPad)
-        {
-            PressVirtualKey(dx < 0 ? KEY_A : KEY_D);
-            PressVirtualKey(dx < 0 ? KEY_LEFT : KEY_RIGHT);
-        }
-        else
-            PressVirtualKey(dx < 0 ? KEY_J : KEY_M);
-    }
-    if (vertical)
-    {
-        if (leftPad)
-        {
-            PressVirtualKey(dy < 0 ? KEY_W : KEY_S);
-            PressVirtualKey(dy < 0 ? KEY_UP : KEY_DOWN);
-        }
-        else
-            PressVirtualKey(dy < 0 ? KEY_I : KEY_K);
-    }
-}
-
-void InputSystem::PressVirtualKey(int key)
-{
-    virtualKeys[key] = true;
-}
-
-bool InputSystem::ActionVirtualDown(InputAction action) const
-{
-    for (const TouchButton& button : buttons)
-    {
-        if (button.action.id == action.id && button.touchId >= 0)
-            return true;
-    }
-    return false;
+    // Rescale so the value starts at 0 at the dead zone's edge and reaches 1
+    // at the pad's edge; fingers beyond the edge stay at full strength.
+    const float strength = std::min((distance - deadZone) / (radius - deadZone), 1.0f);
+    state.value = Vector2{
+        dx / distance * strength,
+        dy / distance * strength
+    };
 }
 
 void InputSystem::DrawOverlay() const
@@ -524,54 +830,162 @@ void InputSystem::DrawOverlay() const
     if (!virtualControlsVisible)
         return;
 
-    auto drawDPad = [](Rectangle bounds, const char* up, const char* left,
-        const char* down, const char* right)
+    const Color baseFill = Color{ 20, 24, 34, 120 };
+    const Color outline = Color{ 230, 235, 255, 170 };
+    const Color labelColor = Color{ 255, 255, 255, 190 };
+    const Color knobIdle = Color{ 230, 235, 255, 150 };
+    const Color knobActive = Color{ 70, 130, 240, 220 };
+
+    for (TouchPad pad : { TouchPad::Left, TouchPad::Right })
     {
-        const float cell = bounds.width / 3.0f;
-        const Color fill = Color{ 20, 24, 34, 145 };
-        const Color outline = Color{ 230, 235, 255, 180 };
-        const Color text = Color{ 255, 255, 255, 220 };
-        const Rectangle cells[4] = {
-            { bounds.x + cell, bounds.y, cell, cell },
-            { bounds.x, bounds.y + cell, cell, cell },
-            { bounds.x + cell, bounds.y + cell * 2.0f, cell, cell },
-            { bounds.x + cell * 2.0f, bounds.y + cell, cell, cell }
+        const AxisDefinition* axis = AxisForPad(pad);
+        if (!axis || axis->keySets.empty())
+            continue;
+
+        const PadState& state = pads[static_cast<int>(pad)];
+        const bool active = state.touchId >= 0;
+        const float radius = padSize * 0.5f;
+        const Vector2 center = state.center;
+
+        DrawCircleV(center, radius, baseFill);
+        DrawCircleLinesV(center, radius, outline);
+
+        // Key hints at the four edges, so keyboard users of the same sample
+        // recognize the controls.
+        const AxisKeys& keys = axis->keySets.front();
+        const int fontSize = static_cast<int>(radius * 0.24f);
+        const float labelOffset = radius * 0.72f;
+        const struct { int key; float x; float y; } labels[4] = {
+            { keys.upKey, 0.0f, -labelOffset },
+            { keys.leftKey, -labelOffset, 0.0f },
+            { keys.downKey, 0.0f, labelOffset },
+            { keys.rightKey, labelOffset, 0.0f }
         };
-        const char* labels[4] = { up, left, down, right };
-
-        for (int i = 0; i < 4; ++i)
+        for (const auto& label : labels)
         {
-            DrawRectangleRounded(cells[i], 0.25f, 6, fill);
-            DrawRectangleRoundedLines(cells[i], 0.25f, 6, outline);
-            const int fontSize = static_cast<int>(cell * 0.38f);
-            const int textWidth = MeasureText(labels[i], fontSize);
-            DrawText(labels[i],
-                static_cast<int>(cells[i].x + (cell - textWidth) * 0.5f),
-                static_cast<int>(cells[i].y + (cell - fontSize) * 0.5f),
-                fontSize, text);
+            const std::string text = KeyLabel(label.key);
+            if (text.empty())
+                continue;
+            const int textWidth = MeasureText(text.c_str(), fontSize);
+            DrawText(text.c_str(),
+                static_cast<int>(center.x + label.x - textWidth * 0.5f),
+                static_cast<int>(center.y + label.y - fontSize * 0.5f),
+                fontSize, labelColor);
         }
-    };
 
-    drawDPad(leftDPadBounds, "W", "A", "S", "D");
-    drawDPad(rightDPadBounds, "I", "J", "K", "M");
+        DrawCircleV(Vector2{
+                center.x + state.value.x * radius,
+                center.y + state.value.y * radius },
+            radius * 0.38f, active ? knobActive : knobIdle);
+    }
 
     for (const TouchButton& button : buttons)
     {
         const bool down = button.touchId >= 0;
         const Color fill = down ? Color{ 70, 130, 240, 205 } : Color{ 20, 24, 34, 165 };
-        const Color outline = Color{ 235, 240, 255, 210 };
-        DrawCircle(static_cast<int>(button.bounds.x + button.bounds.width * 0.5f),
-            static_cast<int>(button.bounds.y + button.bounds.height * 0.5f),
-            button.bounds.width * 0.5f, fill);
-        DrawCircleLines(static_cast<int>(button.bounds.x + button.bounds.width * 0.5f),
-            static_cast<int>(button.bounds.y + button.bounds.height * 0.5f),
-            button.bounds.width * 0.5f, outline);
-        const int fontSize = 22;
+        const Color buttonOutline = Color{ 235, 240, 255, 210 };
+        const Vector2 center = {
+            button.bounds.x + button.bounds.width * 0.5f,
+            button.bounds.y + button.bounds.height * 0.5f
+        };
+        DrawCircleV(center, button.bounds.width * 0.5f, fill);
+        DrawCircleLinesV(center, button.bounds.width * 0.5f, buttonOutline);
+        const int fontSize = std::max(10, static_cast<int>(button.bounds.width * 0.25f));
         const int textWidth = MeasureText(button.label.c_str(), fontSize);
         DrawText(button.label.c_str(),
-            static_cast<int>(button.bounds.x + (button.bounds.width - textWidth) * 0.5f),
-            static_cast<int>(button.bounds.y + (button.bounds.height - fontSize) * 0.5f),
+            static_cast<int>(center.x - textWidth * 0.5f),
+            static_cast<int>(center.y - fontSize * 0.5f),
             fontSize, WHITE);
     }
 }
 
+void InputSystem::DrawDebugOverlay() const
+{
+    const int fontSize = std::max(14, backend->ScreenHeight() / 48);
+    const int lineHeight = fontSize + 4;
+    const Color idle = Color{ 200, 205, 215, 255 };
+    const Color active = Color{ 120, 230, 120, 255 };
+
+    struct Line
+    {
+        std::string name;
+        std::string value;
+        bool highlighted;
+    };
+    std::vector<Line> lines;
+    auto add = [&lines](const std::string& name, const std::string& value,
+        bool highlighted)
+    {
+        lines.push_back(Line{ name, value, highlighted });
+    };
+
+    add(profile == InputProfile::Touch ? "Touch profile" : "KeyboardMouse profile",
+        TextFormat("%d touch(es)", backend->TouchCount()), false);
+
+    for (int i = 0; i < static_cast<int>(actions.size()); ++i)
+    {
+        const InputAction action{ i };
+        add(actions[i].name, TextFormat("%s%s", Down(action) ? "DOWN" : "-",
+            Pressed(action) ? " pressed" : ""), Down(action));
+    }
+
+    for (int i = 0; i < static_cast<int>(axes.size()); ++i)
+    {
+        const Vector2 value = Axis(InputAxis2D{ i });
+        add(axes[i].name, TextFormat("(%+.2f, %+.2f)", value.x, value.y),
+            value.x != 0.0f || value.y != 0.0f);
+    }
+
+    auto pointerValue = [](const PointerState& pointer)
+    {
+        return std::string(TextFormat("%s at (%.0f, %.0f) moved (%+.0f, %+.0f)%s%s",
+            pointer.down ? "DOWN" : "-",
+            pointer.position.x, pointer.position.y,
+            pointer.delta.x, pointer.delta.y,
+            pointer.pressed ? " pressed" : "",
+            pointer.released ? " released" : ""));
+    };
+    add("Primary pointer", pointerValue(primaryPointer), primaryPointer.down);
+    add("Secondary pointer", pointerValue(secondaryPointer), secondaryPointer.down);
+    add("Zoom", TextFormat("%+.2f", zoomDelta), zoomDelta != 0.0f);
+    add("Pan", TextFormat("(%+.0f, %+.0f)", panDelta.x, panDelta.y),
+        panDelta.x != 0.0f || panDelta.y != 0.0f);
+
+    int nameWidth = 0;
+    int valueWidth = 0;
+    for (const Line& line : lines)
+    {
+        nameWidth = std::max(nameWidth, MeasureText(line.name.c_str(), fontSize));
+        valueWidth = std::max(valueWidth, MeasureText(line.value.c_str(), fontSize));
+    }
+
+    const int x = 10;
+    const int y = 56; // Below the FPS counter
+    const int valueX = x + nameWidth + fontSize;
+    DrawRectangle(x - 6, y - 6, valueX - x + valueWidth + 12,
+        static_cast<int>(lines.size()) * lineHeight + 8, Color{ 0, 0, 0, 170 });
+    for (int i = 0; i < static_cast<int>(lines.size()); ++i)
+    {
+        const Color color = lines[i].highlighted ? active : idle;
+        DrawText(lines[i].name.c_str(), x, y + i * lineHeight, fontSize, color);
+        DrawText(lines[i].value.c_str(), valueX, y + i * lineHeight, fontSize, color);
+    }
+
+    // Each finger: its id, and a ring colored by what owns it.
+    for (int i = 0; i < backend->TouchCount(); ++i)
+    {
+        const int touchId = backend->TouchId(i);
+        const Vector2 position = backend->TouchPosition(i);
+        const bool onControl = IsTouchCaptured(touchId);
+        const bool isPointer = touchId == primaryTouchId;
+        const Color color = onControl ? Color{ 255, 190, 60, 230 }
+            : isPointer ? Color{ 120, 230, 120, 230 }
+            : Color{ 230, 120, 230, 230 };
+        DrawCircleLinesV(position, 28.0f, color);
+        DrawCircleLinesV(position, 30.0f, color);
+        DrawText(TextFormat("%d %s", touchId,
+                onControl ? "control" : isPointer ? "pointer" : "gesture"),
+            static_cast<int>(position.x) + 34, static_cast<int>(position.y) - fontSize / 2,
+            fontSize, color);
+    }
+}

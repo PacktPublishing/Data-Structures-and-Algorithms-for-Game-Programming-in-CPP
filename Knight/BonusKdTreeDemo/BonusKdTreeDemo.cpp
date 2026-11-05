@@ -41,15 +41,16 @@ BoundingBox getCubeBBox(const Vector3& p)
 
 void BonusKdTreeDemo::Update(float ElapsedSeconds)
 {
-	if (IsKeyPressed(KEY_R))
+	if (Input.Pressed(regenerateAction))
 	{
 		GenerateCubesNoOverlap(cubes, positions, tree);
 	}
 
-	// Click detection
-	if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) 
+	// Click (or tap) detection
+	const PointerState& pointer = Input.PrimaryPointer();
+	if (pointer.pressed)
 	{
-		Ray ray = GetScreenToWorldRay(GetMousePosition(), *camera->GetCamera3D());
+		Ray ray = GetScreenToWorldRay(pointer.position, *camera->GetCamera3D());
 
 		int bestIdx = -1;
 		float bestDist = 1e30f;
@@ -128,6 +129,16 @@ void BonusKdTreeDemo::OnCreateDefaultResources()
 {
 	__super::OnCreateDefaultResources();
 	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
+}
+
+void BonusKdTreeDemo::OnConfigureInput()
+{
+	// The fly-through camera moves with the left pad; the right pad is unused.
+	Input.BindAxisTouchPad(Input.SecondaryAxis(), TouchPad::None);
+
+	regenerateAction = Input.RegisterAction("Regenerate");
+	Input.BindKey(regenerateAction, KEY_R);
+	Input.AddTouchButton(regenerateAction, "NEW", TouchButtonAnchor::TopRight, 0);
 }
 
 // ------------------------ Placement using kd-tree ----------------------

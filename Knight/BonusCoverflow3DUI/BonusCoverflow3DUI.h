@@ -162,6 +162,7 @@ public:
 protected:
 
 	void OnCreateDefaultResources() override;
+	void OnConfigureInput() override;
 	void Update(float ElapsedSeconds) override;
 	void DrawFrame() override;
 	void DrawGUI() override;
@@ -171,6 +172,9 @@ protected:
 private:
 
     PerspectiveCamera* camera = nullptr;
+
+    InputAction nextCardAction;
+    InputAction previousCardAction;
 
     std::vector<ItemData> items;
 

@@ -150,11 +150,17 @@ public:
 
 protected:
 	void OnCreateDefaultResources() override;
+	void OnConfigureInput() override;
 	void Update(float ElapsedSeconds) override;
 	void DrawFrame() override;
 	void DrawGUI() override;
 
 private:
+	// Input
+	InputAction growAreaAction;
+	InputAction shrinkAreaAction;
+	InputAction toggleAreaAction;
+
 	// World
 	const float CELL = 2.0f;     // hash grid cell
 	const float HALF = 60.0f;    // half-extent

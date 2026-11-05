@@ -9,7 +9,10 @@ FlyThroughCamera::FlyThroughCamera(Scene* Scene, const char* Name, bool IsMainCa
 
 bool FlyThroughCamera::Update(float ElapsedSeconds)
 {
-    Vector2 delta = GetMouseDelta();
+    // Right mouse button drag on desktop, one-finger drag on touch screens
+    const InputSystem& input = Knight::Instance->Input;
+    const PointerState& lookPointer = input.SecondaryPointer();
+    Vector2 delta = lookPointer.delta;
 
 	__super::Update(ElapsedSeconds); // Call base class update
 
@@ -17,7 +20,7 @@ bool FlyThroughCamera::Update(float ElapsedSeconds)
         return false;
 
     // Handle mouse rotation
-    if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
+    if (lookPointer.down) {
         // Adjust yaw and pitch based on mouse movement
         yaw += delta.x * sensitivity;
         pitch -= delta.x * sensitivity;
@@ -28,8 +31,8 @@ bool FlyThroughCamera::Update(float ElapsedSeconds)
         if (pitch < -pitchLimit) pitch = -pitchLimit;
     }
 
-    // Handle zoom
-    distance -= GetMouseWheelMove() * zoomSpeed;
+    // Handle zoom (mouse wheel or pinch)
+    distance -= input.ZoomDelta() * zoomSpeed;
     if (distance < 1.0f) distance = 1.0f; // Minimum zoom distance
 
     // Handle movement using arrow keys
@@ -60,6 +63,15 @@ bool FlyThroughCamera::Update(float ElapsedSeconds)
     if (Knight::Instance->Input.IsKeyDown(KEY_LEFT)) {
         _Camera.target.x -= right.x * moveSpeed;
         _Camera.target.z -= right.z * moveSpeed;
+    }
+
+    // Two-finger drag on touch screens: the ground follows the fingers.
+    // Scaled so a drag across the screen's height covers the view distance.
+    const Vector2 pan = input.PanDelta();
+    if (pan.x != 0.0f || pan.y != 0.0f) {
+        const float worldPerPixel = distance / GetScreenHeight();
+        _Camera.target.x -= (right.x * pan.x + forward.x * pan.y) * worldPerPixel;
+        _Camera.target.z -= (right.z * pan.x + forward.z * pan.y) * worldPerPixel;
     }
 
 

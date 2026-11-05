@@ -30,6 +30,7 @@ class BonusKdTreeDemo : public Knight
 		void DrawFrame() override;
 		void DrawGUI() override;
 		void OnCreateDefaultResources() override;
+		void OnConfigureInput() override;
 
 		void GenerateCubesNoOverlap(vector<Cube>& cubes, vector<Vector3>& positions, KdTree2XZ& tree);
 
@@ -38,6 +39,8 @@ class BonusKdTreeDemo : public Knight
 		KdTree2XZ tree;
 
 		int selectedIdx = -1;  // remember last clicked cube
+
+		InputAction regenerateAction;
 };
 
 //End of file BonusKdTreeDemo.h

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Knight.h"   //Engine includes
+#include "InputConfig.h"
 
 #include "QuadTreeTerrainComponent.h"
 #include "SkyboxComponent.h"

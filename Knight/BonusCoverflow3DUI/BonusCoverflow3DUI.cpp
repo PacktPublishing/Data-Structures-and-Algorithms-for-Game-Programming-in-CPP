@@ -66,8 +66,9 @@ void BonusCoverFlow3DUI::Update(float ElapsedSeconds)
 {
 	__super::Update(ElapsedSeconds);
 
-    // 1. Generate ray from mouse position
-    Ray ray = GetScreenToWorldRay(GetMousePosition(), *camera->GetCamera3D());
+    // 1. Generate ray from the pointer (mouse, or finger on touch screens)
+    const PointerState& pointer = Input.PrimaryPointer();
+    Ray ray = GetScreenToWorldRay(pointer.position, *camera->GetCamera3D());
 
     int clickedLogicalIndex = -1;
     bool anyHovered = false;
@@ -111,7 +112,7 @@ void BonusCoverFlow3DUI::Update(float ElapsedSeconds)
             card.targetScale *= 1.2f;
 
             // CHECK CLICK
-            if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) 
+            if (pointer.pressed)
             {
                 clickedLogicalIndex = slots[i].logicalIndex;
             }
@@ -123,11 +124,11 @@ void BonusCoverFlow3DUI::Update(float ElapsedSeconds)
     int diff = 0;
     bool selectionChanged = false;
 
-    // Keyboard Input
-    if (IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D)) 
+    // Keyboard or on-screen buttons
+    if (Input.Pressed(nextCardAction))
         diff = 1;
 
-    if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A))  
+    if (Input.Pressed(previousCardAction))
         diff = -1;
 
     // Mouse Input (Click)
@@ -137,7 +138,7 @@ void BonusCoverFlow3DUI::Update(float ElapsedSeconds)
     }
 
 	//Mouse wheel input
-    float wheel = GetMouseWheelMove();
+    float wheel = Input.WheelMove();
 
     // Check if the wheel moved significantly (e.g., > 0.0f)
     if (fabs(wheel) > 0.0f)
@@ -224,6 +225,24 @@ void BonusCoverFlow3DUI::OnCreateDefaultResources()
     __super::OnCreateDefaultResources();
     //Loads a better TrueType font to display text information on the screen
     _Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
+}
+
+void BonusCoverFlow3DUI::OnConfigureInput()
+{
+    // Cards are picked by tapping or flipped with two buttons, so the
+    // on-screen D-pads are not needed.
+    Input.BindAxisTouchPad(Input.MoveAxis(), TouchPad::None);
+    Input.BindAxisTouchPad(Input.SecondaryAxis(), TouchPad::None);
+
+    nextCardAction = Input.RegisterAction("Next Card");
+    Input.BindKey(nextCardAction, KEY_RIGHT);
+    Input.BindKey(nextCardAction, KEY_D);
+    Input.AddTouchButton(nextCardAction, ">", TouchButtonAnchor::BottomRight, 0);
+
+    previousCardAction = Input.RegisterAction("Previous Card");
+    Input.BindKey(previousCardAction, KEY_LEFT);
+    Input.BindKey(previousCardAction, KEY_A);
+    Input.AddTouchButton(previousCardAction, "<", TouchButtonAnchor::BottomLeft, 0);
 }
 
 //Handle selection change(with sliding)

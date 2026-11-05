@@ -139,6 +139,7 @@
     <ClInclude Include="Entities.h" />
     <ClInclude Include="FollowUpCamera.h" />
     <ClInclude Include="FSM.h" />
+    <ClInclude Include="InputConfig.h" />
     <ClInclude Include="MagicAttackEffect.h" />
     <ClInclude Include="ParticleComponent.h" />
     <ClInclude Include="PlayerFSM.h" />

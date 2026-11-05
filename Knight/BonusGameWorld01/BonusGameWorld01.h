@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Knight.h"   
+#include "InputConfig.h"
 
 #include "QuadTreeTerrainComponent.h"
 #include "SkyboxComponent.h"

@@ -28,8 +28,10 @@ bool OrthogonalCamera::Update(float ElapsedSeconds)
     if (!_ProcessInput)
 		return true; // If input processing is disabled, skip further updates
 
-    // Zoom control with mouse wheel
-    cameraZoom -= GetMouseWheelMove() * 0.5f;
+    const InputSystem& input = Knight::Instance->Input;
+
+    // Zoom control with mouse wheel (or pinch on touch screens)
+    cameraZoom -= input.ZoomDelta() * 0.5f;
     if (cameraZoom < 2.0f) cameraZoom = 2.0f;   // Minimum zoom
     if (cameraZoom > 50.0f) cameraZoom = 50.0f; // Maximum zoom
     _Camera.fovy = cameraZoom;
@@ -46,9 +48,11 @@ bool OrthogonalCamera::Update(float ElapsedSeconds)
     if (Knight::Instance->Input.IsKeyDown(KEY_RIGHT)) _Camera.target.x += panSpeed;
 
     // Rotate the camera around the player when right mouse button is held
-    if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-        cameraHorizontalAngleShift += GetMouseDelta().x * 0.01f;
-        cameraVerticalOffset += GetMouseDelta().y * 0.01f;
+    // (or a finger drags on touch screens)
+    const PointerState& lookPointer = input.SecondaryPointer();
+    if (lookPointer.down) {
+        cameraHorizontalAngleShift += lookPointer.delta.x * 0.01f;
+        cameraVerticalOffset += lookPointer.delta.y * 0.01f;
     }
 
     return true;

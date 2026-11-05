@@ -51,13 +51,13 @@ void BonusHashGridDemo::Update(float ElapsedSeconds)
     __super::Update(ElapsedSeconds);
 
     // Adjust area radius 
-    if (IsKeyPressed(KEY_X)) 
+    if (Input.Pressed(growAreaAction))
     {
         areaRadius += 3.0f;
         EnsureRadiusRange();
     }
 
-    if (IsKeyPressed(KEY_Z))
+    if (Input.Pressed(shrinkAreaAction))
     {
         areaRadius -= 3.0f;
         EnsureRadiusRange();
@@ -88,7 +88,7 @@ void BonusHashGridDemo::Update(float ElapsedSeconds)
         grid[c].push_back(i);
     }
 
-    // Area center from MMB
+    // Area center from MMB (desktop only; touch screens have no equivalent)
     if (IsMouseButtonPressed(MOUSE_MIDDLE_BUTTON)) {
         Ray ray = GetScreenToWorldRay(GetMousePosition(), *camera->GetCamera3D());
         if (std::fabs(ray.direction.y) > 1e-6f) {
@@ -101,12 +101,13 @@ void BonusHashGridDemo::Update(float ElapsedSeconds)
         }
     }
 
-    if (IsKeyPressed(KEY_Q)) 
+    if (Input.Pressed(toggleAreaAction))
         areaActive = !areaActive;
 
     // Ray casting using grid-DDA on XZ, hash lookup per visited cell, precise ray-AABB
-    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-        Ray ray = GetScreenToWorldRay(GetMousePosition(), *camera->GetCamera3D());
+    const PointerState& pointer = Input.PrimaryPointer();
+    if (pointer.pressed) {
+        Ray ray = GetScreenToWorldRay(pointer.position, *camera->GetCamera3D());
 
         float tStart = 0.0f;
         if (std::fabs(ray.direction.y) > 1e-6f) {
@@ -228,4 +229,22 @@ void BonusHashGridDemo::OnCreateDefaultResources()
     //Loads a better TrueType font to display text information on the screen
     _Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 	Config.ShowFPS = true;
+}
+
+void BonusHashGridDemo::OnConfigureInput()
+{
+    // The fly-through camera moves with the left pad; the right pad is unused.
+    Input.BindAxisTouchPad(Input.SecondaryAxis(), TouchPad::None);
+
+    growAreaAction = Input.RegisterAction("Grow Area");
+    Input.BindKey(growAreaAction, KEY_X);
+    Input.AddTouchButton(growAreaAction, "AREA+", TouchButtonAnchor::TopRight, 0);
+
+    shrinkAreaAction = Input.RegisterAction("Shrink Area");
+    Input.BindKey(shrinkAreaAction, KEY_Z);
+    Input.AddTouchButton(shrinkAreaAction, "AREA-", TouchButtonAnchor::TopRight, 1);
+
+    toggleAreaAction = Input.RegisterAction("Toggle Area");
+    Input.BindKey(toggleAreaAction, KEY_Q);
+    Input.AddTouchButton(toggleAreaAction, "AREA", TouchButtonAnchor::TopRight, 2);
 }

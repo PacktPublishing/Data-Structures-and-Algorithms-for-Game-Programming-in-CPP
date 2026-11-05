@@ -37,8 +37,8 @@ public:
 
     void MoveForward(float ElapsedSeconds);
     void MoveBackward(float ElapsedSeconds);
-    void TurnLeft(float ElapsedSeconds);
-    void TurnRight(float ElapsedSeconds);
+    void TurnLeft(float ElapsedSeconds, float Strength = 1.0f);
+    void TurnRight(float ElapsedSeconds, float Strength = 1.0f);
 
 protected:
     FSMState* _States[15];      //Stores the 15 animation states

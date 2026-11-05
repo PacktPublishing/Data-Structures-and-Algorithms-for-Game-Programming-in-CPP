@@ -124,35 +124,22 @@ void BonusGameWorld02::Update(float ElapsedSeconds)
 
 	//These are the controls for moving the light direction.
 	//Solely for debugging purpose.
-	if (IsKeyDown(KEY_J))
+	const Vector2 lightInput = Input.Axis(GameInput.LightDirection);
+	const float lightStep = cameraSpeed * 60.0f * ElapsedSeconds;
+	if (lightInput.x > 0.0f || sceneLight->lightDir.x > -0.6f)
 	{
-		sceneLight->lightDir.x += cameraSpeed * 60.0f * ElapsedSeconds;
+		sceneLight->lightDir.x += lightInput.x * lightStep;
+	}
+	sceneLight->lightDir.z -= lightInput.y * lightStep;
+
+	if (Input.Down(GameInput.LightUp))
+	{
+		sceneLight->lightDir.y += lightStep;
 	}
 
-	if (IsKeyDown(KEY_K))
+	if (Input.Down(GameInput.LightDown))
 	{
-		if (sceneLight->lightDir.x > -0.6f)
-			sceneLight->lightDir.x -= cameraSpeed * 60.0f * ElapsedSeconds;
-	}
-
-	if (IsKeyDown(KEY_I))
-	{
-		sceneLight->lightDir.z += cameraSpeed * 60.0f * ElapsedSeconds;
-	}
-
-	if (IsKeyDown(KEY_M))
-	{
-		sceneLight->lightDir.z -= cameraSpeed * 60.0f * ElapsedSeconds;
-	}
-
-	if (IsKeyDown(KEY_O))
-	{
-		sceneLight->lightDir.y += cameraSpeed * 60.0f * ElapsedSeconds;
-	}
-
-	if (IsKeyDown(KEY_P))
-	{
-		sceneLight->lightDir.y -= cameraSpeed * 60.0f * ElapsedSeconds;
+		sceneLight->lightDir.y -= lightStep;
 	} 
 
 	//after all the SceneObjects are updated, it's time to make adjustments to the 

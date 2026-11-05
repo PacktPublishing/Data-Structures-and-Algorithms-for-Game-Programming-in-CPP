@@ -13,6 +13,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(KNIGHT_BUILD_ALL_GAMES "Build every Knight demo (desktop only by default)" ON)
+option(KNIGHT_BUILD_TESTS "Build the Knight unit tests (desktop only)" ON)
 set(KNIGHT_GAME "Demo1" CACHE STRING "Single game target used by Android and Web builds")
 
 if(ANDROID OR EMSCRIPTEN)
@@ -29,6 +30,10 @@ elseif(EMSCRIPTEN)
     set(PLATFORM Web CACHE STRING "raylib platform" FORCE)
 else()
     set(PLATFORM Desktop CACHE STRING "raylib platform" FORCE)
+endif()
+
+if(KNIGHT_BUILD_TESTS AND NOT ANDROID AND NOT EMSCRIPTEN)
+    enable_testing()
 endif()
 
 add_subdirectory(raylib EXCLUDE_FROM_ALL)

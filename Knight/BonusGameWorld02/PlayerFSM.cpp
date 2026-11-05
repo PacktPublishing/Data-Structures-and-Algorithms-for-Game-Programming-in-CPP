@@ -26,14 +26,30 @@ void FSM::MoveBackward(float ElapsedSeconds)
 
 }
 
-void FSM::TurnLeft(float ElapsedSeconds)
+void FSM::TurnLeft(float ElapsedSeconds, float Strength)
 {
-    _Character->Rotation.y += 3;  // Rotate left
+    _Character->Rotation.y += 3 * Strength;  // Rotate left
 }
 
-void FSM::TurnRight(float ElapsedSeconds)
+void FSM::TurnRight(float ElapsedSeconds, float Strength)
 {
-    _Character->Rotation.y -= 3;  // Rotate right
+    _Character->Rotation.y -= 3 * Strength;  // Rotate right
+}
+
+// Applies the Move axis to the character. Touch input is analog, so speed and
+// turn rate scale with how far the pad is pushed. Returns true if it moved.
+static bool ApplyMoveInput(FSM* FiniteStateMachine, float DeltaTime)
+{
+    const Vector2 move = KnightInput().Axis(GameInput.Move);
+    if (move.x < 0.0f)
+        FiniteStateMachine->TurnLeft(DeltaTime, -move.x);
+    if (move.y < 0.0f)
+        FiniteStateMachine->MoveForward(DeltaTime * -move.y);
+    if (move.x > 0.0f)
+        FiniteStateMachine->TurnRight(DeltaTime, move.x);
+    if (move.y > 0.0f)
+        FiniteStateMachine->MoveBackward(DeltaTime * move.y);
+    return move.x != 0.0f || move.y != 0.0f;
 }
 
 void PlayerIdleState::Enter(FSM* FiniteStateMachine)
@@ -50,31 +66,14 @@ void PlayerIdleState::Enter(FSM* FiniteStateMachine)
 
 void PlayerIdleState::Update(FSM* FiniteStateMachine, float DeltaTime)
 {
-    if (Knight::Instance->Input.IsKeyPressed(KEY_SPACE))
+    if (KnightInput().Pressed(GameInput.Attack))
     {
         FiniteStateMachine->SetState(PlayerFSM::ATTACK);
         return;
     }
 
-    SceneActor* character = FiniteStateMachine->GetCharacter();
-    if (Knight::Instance->Input.IsKeyDown(KEY_A))
+    if (ApplyMoveInput(FiniteStateMachine, DeltaTime))
     {
-        FiniteStateMachine->TurnLeft(DeltaTime);
-        FiniteStateMachine->SetState(PlayerFSM::WALK);
-    }
-    if (Knight::Instance->Input.IsKeyDown(KEY_W))
-    {
-        FiniteStateMachine->MoveForward(DeltaTime);
-        FiniteStateMachine->SetState(PlayerFSM::WALK);
-    }
-    if (Knight::Instance->Input.IsKeyDown(KEY_D))
-    {
-        FiniteStateMachine->TurnRight(DeltaTime);
-        FiniteStateMachine->SetState(PlayerFSM::WALK);
-    }
-    if (Knight::Instance->Input.IsKeyDown(KEY_S))
-    {
-        FiniteStateMachine->MoveBackward(DeltaTime);
         FiniteStateMachine->SetState(PlayerFSM::WALK);
     }
 }
@@ -86,35 +85,13 @@ void PlayerWalkState::Enter(FSM* FiniteStateMachine)
 
 void PlayerWalkState::Update(FSM* FiniteStateMachine, float DeltaTime)
 {
-    if (Knight::Instance->Input.IsKeyPressed(KEY_SPACE))
+    if (KnightInput().Pressed(GameInput.Attack))
     {
-        FiniteStateMachine->SetState(PlayerFSM::ATTACK);        
+        FiniteStateMachine->SetState(PlayerFSM::ATTACK);
         return;
     }
 
-    SceneActor* character = FiniteStateMachine->GetCharacter();
-	bool isIdle = true;
-    if (Knight::Instance->Input.IsKeyDown(KEY_A))
-    {
-		FiniteStateMachine->TurnLeft(DeltaTime);
-		isIdle = false;
-    }
-    if (Knight::Instance->Input.IsKeyDown(KEY_W))
-    {
-		FiniteStateMachine->MoveForward(DeltaTime);
-        isIdle = false;
-    }
-    if (Knight::Instance->Input.IsKeyDown(KEY_D))
-    {
-		FiniteStateMachine->TurnRight(DeltaTime);
-        isIdle = false;
-    }
-    if (Knight::Instance->Input.IsKeyDown(KEY_S))
-    {
-		FiniteStateMachine->MoveBackward(DeltaTime);
-        isIdle = false;
-    }
-    if (isIdle == true)
+    if (!ApplyMoveInput(FiniteStateMachine, DeltaTime))
     {
         FiniteStateMachine->SetState(PlayerFSM::IDLE);
     }

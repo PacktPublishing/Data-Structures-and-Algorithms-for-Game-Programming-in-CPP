@@ -13,7 +13,7 @@ bool TopDownCamera::Update(float ElapsedSeconds)
         return false;
 
     // Zoom control with mouse wheel
-    cameraZoom -= KnightInput().WheelMove() * zoomSpeed;
+    cameraZoom -= KnightInput().ZoomDelta() * zoomSpeed;
     if (cameraZoom < 5.0f) cameraZoom = 5.0f;
     if (cameraZoom > 25.0f) cameraZoom = 25.0f;
 

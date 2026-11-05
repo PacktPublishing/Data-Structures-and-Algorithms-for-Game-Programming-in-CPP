@@ -29,6 +29,7 @@ struct KnightConfig
 {
 	bool ShowFPS = false;
 	bool ShowDebugInfo = false;
+	bool ShowInputDebug = false;   //input diagnostics panel; F3 toggles it on desktop
 	bool EnableDefaultLight = true;
 	bool EnableDefaultRenderPasses = true;
 	int WindowWidth = DEFAULT_SCREEN_WIDTH;   //use default window width if not set by user
@@ -116,6 +117,15 @@ protected:
 	// Called to configure the Knight application, such as title, rendering settings.
 	virtual void OnConfigKnightApp();
 	virtual void OnConfigureInput();
+	// Called when the Android Back button is pressed. The default asks for a
+	// second press within BackExitSeconds before leaving the app.
+	virtual void OnBackRequested();
+
+private:
+	static constexpr double BackExitSeconds = 2.0;
+	double _backRequestedTime = -1.0;
+
+	void DrawBackHint();
 };
 
 // Input access for code outside Knight-derived classes (components, FSM

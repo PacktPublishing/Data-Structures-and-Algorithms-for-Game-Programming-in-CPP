@@ -182,6 +182,10 @@ void Knight::GameLoop()
 		{
 			TakeScreenshot("screenshot.png");
 		}
+		if (app->Input.IsKeyPressed(KEY_F3))
+		{
+			app->Config.ShowInputDebug = !app->Config.ShowInputDebug;
+		}
 
 		BeginDrawing();
 		ClearBackground(DARKGRAY);
@@ -199,6 +203,10 @@ void Knight::GameLoop()
 
 		app->DrawGUI();
 		app->Input.DrawOverlay();
+		if (app->Config.ShowInputDebug)
+		{
+			app->Input.DrawDebugOverlay();
+		}
 		if (app->Config.ShowFPS)
 		{
 			app->DrawFPS(10, 10);
@@ -213,11 +221,13 @@ void Knight::GameLoop()
 
 #if defined(PLATFORM_ANDROID)
 		// raylib maps Android's Back button to KEY_BACK and consumes the OS
-		// event. Treat it like Escape so NativeActivity can shut down cleanly.
-		if (IsKeyPressed(KEY_BACK) || IsKeyPressed(KEY_ESCAPE))
+		// event, so the app decides what Back means. Escape from a hardware
+		// keyboard is treated the same way.
+		if (Input.Pressed(Input.BackAction()) || IsKeyPressed(KEY_ESCAPE))
 		{
-			ExitGameLoop();
-			continue;
+			OnBackRequested();
+			if (_shouldExitGameLoop)
+				continue;
 		}
 #endif
 
@@ -226,6 +236,10 @@ void Knight::GameLoop()
 		if (IsKeyPressed(KEY_ENTER))
 		{
 			TakeScreenshot("screenshot.png");
+		}
+		if (IsKeyPressed(KEY_F3))
+		{
+			Config.ShowInputDebug = !Config.ShowInputDebug;
 		}
 
 		BeginDrawing();
@@ -243,6 +257,11 @@ void Knight::GameLoop()
 
 		DrawGUI();
 		Input.DrawOverlay();
+		if (Config.ShowInputDebug)
+		{
+			Input.DrawDebugOverlay();
+		}
+		DrawBackHint();
 
 		if (Config.ShowFPS)
 		{
@@ -309,6 +328,35 @@ void Knight::DrawFPS(int x, int y)
 void Knight::DrawText(const char* text, int x, int y, int size, const Color& color)
 {
 	DrawTextEx(_Font, text, Vector2{ (float)x, (float)y }, (float)size, 3, color);
+}
+
+// Default Back button behavior on Android: the first press shows a hint and a
+// second press within BackExitSeconds leaves the app, so a stray tap on Back
+// does not end the session. Override to pause or return to a menu instead.
+void Knight::OnBackRequested()
+{
+	const double now = GetTime();
+	if (_backRequestedTime >= 0.0 && now - _backRequestedTime <= BackExitSeconds)
+	{
+		ExitGameLoop();
+		return;
+	}
+	_backRequestedTime = now;
+}
+
+void Knight::DrawBackHint()
+{
+	if (_backRequestedTime < 0.0 || GetTime() - _backRequestedTime > BackExitSeconds)
+		return;
+
+	const char* text = "Press Back again to exit";
+	const float size = GetScreenHeight() * 0.045f;
+	const Vector2 extent = MeasureTextEx(_Font, text, size, 3);
+	const float x = (GetScreenWidth() - extent.x) * 0.5f;
+	const float y = GetScreenHeight() * 0.8f;
+	DrawRectangleRounded(Rectangle{ x - size * 0.6f, y - size * 0.3f,
+		extent.x + size * 1.2f, extent.y + size * 0.6f }, 0.5f, 8, Color{ 0, 0, 0, 170 });
+	DrawTextEx(_Font, text, Vector2{ x, y }, size, 3, WHITE);
 }
 
 void Knight::OnConfigKnightApp()
