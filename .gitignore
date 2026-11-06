@@ -13,6 +13,7 @@ android/.idea/
 android/local.properties
 android/app/.cxx/
 android/app/build/
+android/smoke-results/
 
 #Ignore files
 *.log

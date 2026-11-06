@@ -2,6 +2,10 @@ plugins {
     id("com.android.application")
 }
 
+val knightGame = providers.gradleProperty("knightGame")
+    .orElse("Demo1")
+    .get()
+
 android {
     namespace = "com.knight.cookbook"
     compileSdk = 36
@@ -22,10 +26,10 @@ android {
             cmake {
                 arguments += listOf(
                     "-DKNIGHT_BUILD_ALL_GAMES=OFF",
-                    "-DKNIGHT_GAME=BonusGameWorld02",
+                    "-DKNIGHT_GAME=$knightGame",
                     "-DANDROID_STL=c++_shared"
                 )
-                targets += "BonusGameWorld02"
+                targets += knightGame
             }
         }
     }
