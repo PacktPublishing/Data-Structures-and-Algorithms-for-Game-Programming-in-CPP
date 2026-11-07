@@ -43,5 +43,7 @@ protected:
 	Vector3 ForwardKinematics(Vector3 *Angles = nullptr);
 	void ComputeJacobianMatrix();
 	void DrawRoboticArm();
+protected:
+	void OnConfigureInput() override;
 };
 

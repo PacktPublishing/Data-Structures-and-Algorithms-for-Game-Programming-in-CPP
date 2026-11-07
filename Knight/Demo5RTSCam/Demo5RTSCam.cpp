@@ -99,3 +99,9 @@ void Demo5RTSCam::OnCreateDefaultResources()
 	__super::OnCreateDefaultResources();
 	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 }
+
+void Demo5RTSCam::OnConfigureInput()
+{
+	// The arrows pan the camera.
+	Input.AddKeyPad(TouchPad::Left, "Camera Pan", KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT);
+}

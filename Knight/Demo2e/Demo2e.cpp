@@ -65,3 +65,12 @@ void Demo2e::OnCreateDefaultResources()
 	__super::OnCreateDefaultResources();
 	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 }
+
+void Demo2e::OnConfigureInput()
+{
+	// M opens the menu; S, V and Backspace navigate the popups.
+	Input.AddKeyButton(KEY_M, "MENU", TouchButtonAnchor::TopRight);
+	Input.AddKeyButton(KEY_BACKSPACE, "BACK", TouchButtonAnchor::BottomRight);
+	Input.AddKeyButton(KEY_S, "S", TouchButtonAnchor::BottomRight);
+	Input.AddKeyButton(KEY_V, "V", TouchButtonAnchor::BottomRight);
+}

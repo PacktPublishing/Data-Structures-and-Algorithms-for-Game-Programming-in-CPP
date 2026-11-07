@@ -20,4 +20,6 @@ private:
 	SceneActor* ground = nullptr;
 	vector<SceneActor*> imposters = { 0 };
 	Texture2D billboardImage = { 0 };
+protected:
+	void OnConfigureInput() override;
 };

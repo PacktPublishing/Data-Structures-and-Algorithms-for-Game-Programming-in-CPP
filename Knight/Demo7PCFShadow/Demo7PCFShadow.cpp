@@ -164,3 +164,13 @@ void Demo7PCFShadow::OnConfigKnightApp()
 	Config.EnableDefaultLight = false; //Disable default light	
 	Config.EnableDefaultRenderPasses = false; //Disable default render passes, we will use ours.
 }
+
+void Demo7PCFShadow::OnConfigureInput()
+{
+	// WASD moves the player, I/J/K/M tilt the light, O/P raise and lower it.
+	// The camera pans with a two-finger drag.
+	Input.AddKeyPad(TouchPad::Left, "Player", KEY_W, KEY_S, KEY_A, KEY_D);
+	Input.AddKeyPad(TouchPad::Right, "Light", KEY_I, KEY_M, KEY_J, KEY_K);
+	Input.AddKeyButton(KEY_O, "O", TouchButtonAnchor::TopRight);
+	Input.AddKeyButton(KEY_P, "P", TouchButtonAnchor::TopRight);
+}

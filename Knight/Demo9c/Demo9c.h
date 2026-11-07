@@ -13,5 +13,7 @@ protected:
 	void DrawFrame() override;
 
 	AStarPathFinder _pathFinder;
+protected:
+	void OnConfigureInput() override;
 };
 

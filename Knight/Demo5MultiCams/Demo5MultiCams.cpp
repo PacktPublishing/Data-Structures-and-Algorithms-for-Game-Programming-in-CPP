@@ -153,3 +153,10 @@ void Demo5MultiCams::OnConfigKnightApp()
 {
 	Config.WindowTitle = "Demo 5 - Multiple Cameras";
 }
+
+void Demo5MultiCams::OnConfigureInput()
+{
+	// WASD moves the player; the arrows pan the top-down camera.
+	Input.AddKeyPad(TouchPad::Left, "Player", KEY_W, KEY_S, KEY_A, KEY_D);
+	Input.AddKeyPad(TouchPad::Right, "Camera Pan", KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT);
+}

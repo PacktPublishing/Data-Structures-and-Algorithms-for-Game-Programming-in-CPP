@@ -8,6 +8,7 @@
 #include "../../raylib/examples/core/raygui.h"
 
 #include "KnightUtils.h"
+#include "Knight.h"
 
 void InGameDialogue::Create(UIPopupManager* uim)
 {
@@ -16,10 +17,10 @@ void InGameDialogue::Create(UIPopupManager* uim)
 
 void InGameDialogue::Update(float interval)
 {
-	if (IsKeyPressed(KEY_BACKSPACE)) {
+	if (KnightInput().IsKeyPressed(KEY_BACKSPACE)) {
 		ui_manager->Close();
 	}
-	if (IsKeyPressed(KEY_S)) {
+	if (KnightInput().IsKeyPressed(KEY_S)) {
 		ui_manager->Show(ui_manager->GetPopup("Settings"));
 	}
 }
@@ -44,10 +45,10 @@ void SettingsDialogue::Create(UIPopupManager* uim)
 
 void SettingsDialogue::Update(float interval)
 {
-	if (IsKeyPressed(KEY_BACKSPACE)) {
+	if (KnightInput().IsKeyPressed(KEY_BACKSPACE)) {
 		ui_manager->Close();
 	}
-	if (IsKeyPressed(KEY_V)) {
+	if (KnightInput().IsKeyPressed(KEY_V)) {
 		ui_manager->Show(ui_manager->GetPopup("Volume"));
 	}
 }
@@ -76,7 +77,7 @@ void SoundDialogue::Create(UIPopupManager* uim)
 
 void SoundDialogue::Update(float interval)
 {
-	if (IsKeyPressed(KEY_BACKSPACE)) {
+	if (KnightInput().IsKeyPressed(KEY_BACKSPACE)) {
 		ui_manager->Close();
 	}
 }

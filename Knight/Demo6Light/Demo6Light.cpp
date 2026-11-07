@@ -132,3 +132,14 @@ void Demo6Light::OnCreateDefaultResources()
 	__super::OnCreateDefaultResources();
 	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 }
+
+void Demo6Light::OnConfigureInput()
+{
+	// WASD moves the actor, the arrows move the camera, Y/R/G/B toggle lights.
+	Input.AddKeyPad(TouchPad::Left, "Actor", KEY_W, KEY_S, KEY_A, KEY_D);
+	Input.AddKeyPad(TouchPad::Right, "Camera", KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT);
+	Input.AddKeyButton(KEY_Y, "Y", TouchButtonAnchor::TopRight);
+	Input.AddKeyButton(KEY_R, "R", TouchButtonAnchor::TopRight);
+	Input.AddKeyButton(KEY_G, "G", TouchButtonAnchor::TopRight);
+	Input.AddKeyButton(KEY_B, "B", TouchButtonAnchor::TopRight);
+}

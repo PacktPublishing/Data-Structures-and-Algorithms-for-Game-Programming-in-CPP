@@ -34,6 +34,8 @@ protected:
 	void Update(float ElapsedSeconds) override;
 	void DrawFrame() override;
 	void DrawGUI() override;
+protected:
+	void OnConfigureInput() override;
 };
 
 

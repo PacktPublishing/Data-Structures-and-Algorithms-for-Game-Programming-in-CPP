@@ -54,3 +54,10 @@ void Demo7QuadTreeTerrain::OnConfigKnightApp()
 	Config.EnableDefaultLight = true; // Enable default light
 }
 
+
+void Demo7QuadTreeTerrain::OnConfigureInput()
+{
+	// The arrows move the camera, B toggles the quad-tree bounds.
+	Input.AddKeyPad(TouchPad::Left, "Camera", KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT);
+	Input.AddKeyButton(KEY_B, "BOUNDS", TouchButtonAnchor::TopRight);
+}

@@ -26,5 +26,7 @@ private:
 	void InitEntities();
 	bool CheckDefeatEnemy();
 	void OnCreateDefaultResources() override;
+protected:
+	void OnConfigureInput() override;
 };
 

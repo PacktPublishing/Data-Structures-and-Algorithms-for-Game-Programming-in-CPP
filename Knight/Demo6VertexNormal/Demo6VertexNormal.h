@@ -27,6 +27,8 @@ protected:
 	void OnCreateDefaultResources() override;
 
 	Vector3 RotateAroudnY(const Vector3& point, float angle);
+protected:
+	void OnConfigureInput() override;
 };
 
 

@@ -61,3 +61,10 @@ void Demo9a::DrawGUI()
 	DrawText("w,a,d,s: Move", inputHelpX, 10, 30, GREEN);
 	DrawText("space: Attack.", inputHelpX, 50, 30, GREEN);
 }
+
+void Demo9a::OnConfigureInput()
+{
+	// WASD walks, Space attacks.
+	Input.AddKeyPad(TouchPad::Left, "Walk", KEY_W, KEY_S, KEY_A, KEY_D);
+	Input.AddKeyButton(KEY_SPACE, "ATTACK", TouchButtonAnchor::BottomRight);
+}

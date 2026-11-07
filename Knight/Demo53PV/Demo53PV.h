@@ -19,6 +19,8 @@ class Demo53PV : public Knight
 		void DrawFrame() override;
 		void DrawGUI() override;
 		void OnCreateDefaultResources();
+protected:
+	void OnConfigureInput() override;
 };
 
 

@@ -16,5 +16,7 @@ protected:
 	void Update(float ElapsedSeconds) override;
 	void DrawFrame() override;
 	void OnCreateDefaultResources() override;
+protected:
+	void OnConfigureInput() override;
 };
 

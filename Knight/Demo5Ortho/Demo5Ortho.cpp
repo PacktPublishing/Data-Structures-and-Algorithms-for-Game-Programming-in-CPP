@@ -66,3 +66,9 @@ void Demo5Ortho::OnCreateDefaultResources()
 	UnloadFont(_Font);
 	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 }
+
+void Demo5Ortho::OnConfigureInput()
+{
+	// The arrows pan the orthographic camera.
+	Input.AddKeyPad(TouchPad::Left, "Camera Pan", KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT);
+}

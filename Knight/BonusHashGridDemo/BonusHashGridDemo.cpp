@@ -233,18 +233,18 @@ void BonusHashGridDemo::OnCreateDefaultResources()
 
 void BonusHashGridDemo::OnConfigureInput()
 {
-    // The fly-through camera moves with the left pad; the right pad is unused.
-    Input.BindAxisTouchPad(Input.SecondaryAxis(), TouchPad::None);
+    // The fly-through camera moves with the arrow keys.
+    Input.AddKeyPad(TouchPad::Left, "Camera", KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT);
 
     growAreaAction = Input.RegisterAction("Grow Area");
     Input.BindKey(growAreaAction, KEY_X);
-    Input.AddTouchButton(growAreaAction, "AREA+", TouchButtonAnchor::TopRight, 0);
+    Input.AddTouchButton(growAreaAction, "AREA+", TouchButtonAnchor::TopRight);
 
     shrinkAreaAction = Input.RegisterAction("Shrink Area");
     Input.BindKey(shrinkAreaAction, KEY_Z);
-    Input.AddTouchButton(shrinkAreaAction, "AREA-", TouchButtonAnchor::TopRight, 1);
+    Input.AddTouchButton(shrinkAreaAction, "AREA-", TouchButtonAnchor::TopRight);
 
     toggleAreaAction = Input.RegisterAction("Toggle Area");
     Input.BindKey(toggleAreaAction, KEY_Q);
-    Input.AddTouchButton(toggleAreaAction, "AREA", TouchButtonAnchor::TopRight, 2);
+    Input.AddTouchButton(toggleAreaAction, "AREA", TouchButtonAnchor::TopRight);
 }

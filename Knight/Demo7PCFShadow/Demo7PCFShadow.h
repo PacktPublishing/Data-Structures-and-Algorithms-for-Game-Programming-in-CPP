@@ -38,5 +38,7 @@ protected:
 
 	void OnCreateDefaultResources() override;
 	void OnConfigKnightApp() override;
+protected:
+	void OnConfigureInput() override;
 };
 

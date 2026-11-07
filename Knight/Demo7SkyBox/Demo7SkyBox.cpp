@@ -159,3 +159,9 @@ void Demo7Skybox::OnCreateDefaultResources()
 	UnloadFont(_Font);
 	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 }
+
+void Demo7Skybox::OnConfigureInput()
+{
+	// WASD moves the actor.
+	Input.AddKeyPad(TouchPad::Left, "Actor", KEY_W, KEY_S, KEY_A, KEY_D);
+}

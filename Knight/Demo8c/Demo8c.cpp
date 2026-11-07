@@ -209,3 +209,12 @@ void Demo8c::DrawRoboticArm()
 	DrawSphere(_TargetPosition, 0.5f, RED);
 }
 
+
+void Demo8c::OnConfigureInput()
+{
+	// The arrows move the IK target in x/y, W/S in z, Space solves.
+	Input.AddKeyPad(TouchPad::Left, "Target", KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT);
+	Input.AddKeyButton(KEY_SPACE, "SOLVE", TouchButtonAnchor::BottomRight);
+	Input.AddKeyButton(KEY_W, "W", TouchButtonAnchor::BottomRight);
+	Input.AddKeyButton(KEY_S, "S", TouchButtonAnchor::BottomRight);
+}

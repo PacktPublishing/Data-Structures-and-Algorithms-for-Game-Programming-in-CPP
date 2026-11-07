@@ -8,7 +8,8 @@
   <style>
     html, body { margin: 0; height: 100%; background: #111; color: #eee; }
     body { display: grid; place-items: center; font-family: system-ui, sans-serif; }
-    canvas { max-width: 100%; max-height: 100%; outline: none; }
+    /* touch-action: fingers drive the game, not page scrolling or zooming. */
+    canvas { max-width: 100%; max-height: 100%; outline: none; touch-action: none; }
     #focus-hint {
       position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
       padding: 8px 16px; border-radius: 999px; background: rgba(0, 0, 0, 0.75);
@@ -39,9 +40,10 @@
       });
       updateHint();
 
-      // Game keys must not scroll the page.
+      // Game keys must not scroll the page or trigger browser shortcuts
+      // (F3 is the input debug panel, F4 toggles touch emulation).
       var gameKeys = [' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
-        'PageUp', 'PageDown', 'Home', 'End'];
+        'PageUp', 'PageDown', 'Home', 'End', 'F3', 'F4'];
       window.addEventListener('keydown', function (event) {
         if (gameKeys.indexOf(event.key) >= 0) event.preventDefault();
       });

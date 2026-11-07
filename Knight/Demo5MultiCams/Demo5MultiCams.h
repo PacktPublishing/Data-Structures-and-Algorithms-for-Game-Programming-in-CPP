@@ -29,6 +29,8 @@ class Demo5MultiCams : public Knight
 		void DrawGameWorld(SceneCamera* pCam);
 
 		virtual void OnConfigKnightApp();
+protected:
+	void OnConfigureInput() override;
 };
 
 

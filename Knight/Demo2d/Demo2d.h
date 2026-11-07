@@ -25,6 +25,8 @@ protected:
 private:
 	void InitEntities();
 	void CheckDefeatEnemy();
+protected:
+	void OnConfigureInput() override;
 };
 
 

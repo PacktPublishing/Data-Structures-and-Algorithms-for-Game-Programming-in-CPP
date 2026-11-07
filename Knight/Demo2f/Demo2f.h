@@ -42,5 +42,7 @@ private:
 	static GameResult _gameOver;
 
 	friend EnemyEntity;
+protected:
+	void OnConfigureInput() override;
 };
 

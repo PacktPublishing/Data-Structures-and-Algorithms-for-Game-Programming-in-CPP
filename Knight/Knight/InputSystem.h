@@ -44,9 +44,10 @@ enum class TouchPad
     Right
 };
 
-// Which physical input the platform provides. Chosen once at startup:
-// Android uses Touch; desktop and browser builds use KeyboardMouse and never
-// read touch input or show the on-screen controls.
+// Which physical input the app reads. Touch shows the on-screen controls and
+// reads fingers (or the mouse as one finger, when touch is emulated);
+// KeyboardMouse hides them and reads the mouse directly. Keys work on both.
+// See SetProfile() for how the default is chosen.
 enum class InputProfile
 {
     KeyboardMouse,
@@ -55,11 +56,16 @@ enum class InputProfile
 
 // Central input service. Gameplay code reads named actions and axes; keys and
 // on-screen touch controls both feed them, so no platform conditionals are
-// needed. Default axes: MoveAxis() (WASD or arrows, left pad) and
-// SecondaryAxis() (IJKM, right pad).
+// needed. Default axes: MoveAxis() (WASD or arrows) and SecondaryAxis()
+// (IJKM). No on-screen control exists until a sample asks for one, normally
+// from Knight::OnConfigureInput(), so each sample shows only the pads
+// and buttons it uses.
 class InputSystem
 {
 public:
+    // Pass as a button's slot to take the next free slot in its corner.
+    static constexpr int AutoSlot = -1;
+
     InputSystem();
 
     // Replace where input comes from, e.g. a scripted backend in tests. The
@@ -67,9 +73,12 @@ public:
     void SetBackend(const InputBackend* newBackend);
 
     InputProfile Profile() const { return profile; }
-    // Override the platform default, e.g. to try the touch layout on desktop,
-    // where the left mouse button acts as a single finger. Setting the
-    // environment variable KNIGHT_INPUT_PROFILE=touch does the same at startup.
+    // Override the platform default, e.g. to emulate touch on desktop or in a
+    // browser, where the left mouse button acts as a single finger and the
+    // wheel as a pinch. Knight toggles this with F4. Defaults: Touch on
+    // Android and on touch-screen browsers (a page URL with ?touch or ?touch=0
+    // forces it), otherwise KeyboardMouse unless the environment variable
+    // KNIGHT_INPUT_PROFILE=touch is set.
     void SetProfile(InputProfile newProfile);
 
     void BeginFrame();
@@ -84,9 +93,28 @@ public:
     // Returns an invalid action if the name is not registered.
     InputAction FindAction(const char* name) const;
     void BindKey(InputAction action, int key);
+    // Buttons sit in a grid of three per row growing inward from the
+    // anchor's corner: slot 0 is in the corner, 1 and 2 follow along the
+    // screen edge, 3 starts the next row. Adding a button for an action that
+    // already has one moves that button.
     void AddTouchButton(InputAction action, const char* label,
         TouchButtonAnchor anchor = TouchButtonAnchor::BottomRight,
-        int slot = 0);
+        int slot = AutoSlot);
+    // On-screen button that acts as a keyboard key: while it is held,
+    // IsKeyDown(key) is true, so key-based sample code needs no changes.
+    // A null label uses the key's name. Returns the action created for it,
+    // named "Key <label>".
+    InputAction AddKeyButton(int key, const char* label = nullptr,
+        TouchButtonAnchor anchor = TouchButtonAnchor::BottomRight,
+        int slot = AutoSlot);
+    // On-screen pad that acts as four keyboard keys (pass 0 for a direction
+    // the sample does not use). Registers an axis named name with only those
+    // keys and binds it to the pad, replacing whatever the pad drove before.
+    InputAxis2D AddKeyPad(TouchPad pad, const char* name, int upKey,
+        int downKey, int leftKey, int rightKey, bool floating = false);
+    // Removes every on-screen button and detaches both pads. Actions, axes
+    // and their key bindings stay.
+    void ClearVirtualControls();
 
     // Returns the existing axis if the name is already registered.
     InputAxis2D RegisterAxis2D(const char* name, int upKey, int downKey,
@@ -123,8 +151,8 @@ public:
     // ZoomDelta() for zooming that should also work with a pinch.
     float WheelMove() const;
     // Desktop: mouse wheel. Touch: two-finger pinch, where spreading the
-    // fingers is positive like scrolling the wheel up. Units roughly match
-    // wheel notches.
+    // fingers is positive like scrolling the wheel up (the wheel also counts,
+    // for touch emulated with a mouse). Units roughly match wheel notches.
     float ZoomDelta() const { return zoomDelta; }
     // Touch: movement of a two-finger drag's midpoint this frame, in pixels.
     // Always zero on desktop.
@@ -140,10 +168,23 @@ public:
     bool IsKeyPressed(int key) const;
     bool IsKeyReleased(int key) const;
 
+    // Size of every on-screen pad and button (and the gaps between them)
+    // relative to the base sizes in InputSystem.cpp: 130 dp pads and 56 dp
+    // buttons at 1.0. Defaults to DefaultControlScale; values below
+    // MinControlScale are raised to it. A pad is still capped at half the
+    // screen's short side, and the other controls shrink with it. Kept by
+    // Reset().
+    void SetControlScale(float scale);
+    float ControlScale() const { return controlScale; }
+    static constexpr float DefaultControlScale = 1.2f;
+    static constexpr float MinControlScale = 0.25f;
+
     // Has no effect on the KeyboardMouse profile.
     void SetVirtualControlsVisible(bool visible);
     bool VirtualControlsVisible() const { return virtualControlsVisible; }
     int TouchButtonCount() const { return static_cast<int>(buttons.size()); }
+    // True when an axis is bound to the pad, which makes it visible.
+    bool IsTouchPadInUse(TouchPad pad) const { return AxisForPad(pad) != nullptr; }
 
     InputAxis2D MoveAxis() const { return moveAxis; }
     InputAxis2D SecondaryAxis() const { return secondaryAxis; }
@@ -222,6 +263,8 @@ private:
     void UpdatePad(Vector2 position, TouchPad pad);
     void ResetTouchState();
     Rectangle ButtonBounds(const TouchButton& button) const;
+    // Lowest slot in the corner not taken by a button of another action.
+    int NextFreeSlot(TouchButtonAnchor anchor, int ignoredActionId) const;
     // Fixed position of the pad in its bottom corner.
     Rectangle PadBounds(TouchPad pad) const;
     // Area where a new touch grabs the pad.
@@ -256,6 +299,7 @@ private:
 
     // Control layout in pixels, recomputed every frame from screen size and
     // density.
+    float controlScale = DefaultControlScale;
     float padSize = 0.0f;
     float buttonSize = 0.0f;
     float buttonPadding = 0.0f;

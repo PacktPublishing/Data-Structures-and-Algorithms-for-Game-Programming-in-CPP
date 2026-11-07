@@ -139,3 +139,9 @@ void Demo2f::OnCreateDefaultResources()
 	__super::OnCreateDefaultResources();
 	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 }
+
+void Demo2f::OnConfigureInput()
+{
+	// Space attacks the selected target.
+	Input.AddKeyButton(KEY_SPACE, "ATTACK", TouchButtonAnchor::BottomRight);
+}

@@ -120,18 +120,15 @@ void Knight::Start()
 
 	InitWindow(Config.WindowWidth, Config.WindowHeight, Config.WindowTitle.c_str());
 	SetTargetFPS(TARGET_FPS);
-	OnConfigureInput();
-
-#if defined(PLATFORM_ANDROID)
-	// Give legacy samples a usable primary action until they provide a
-	// sample-specific command layout. Explicit layouts always win.
-	if (Input.TouchButtonCount() == 0)
-	{
-		InputAction action = Input.RegisterAction("Primary Action");
-		Input.BindKey(action, KEY_SPACE);
-		Input.AddTouchButton(action, "ACTION", TouchButtonAnchor::TopRight, 0);
-	}
+#if !defined(PLATFORM_ANDROID)
+	if (Config.EmulateTouch)
+		Input.SetProfile(InputProfile::Touch);
+#if !defined(PLATFORM_WEB)
+	// KNIGHT_INPUT_PROFILE=touch already chose the Touch profile.
+	Config.EmulateTouch = Input.Profile() == InputProfile::Touch;
 #endif
+#endif
+	OnConfigureInput();
 
 	_Scene = new Scene();
 
@@ -177,15 +174,7 @@ void Knight::GameLoop()
 		app->Input.BeginFrame();
 		app->Update(GetFrameTime());
 		app->DrawOffscreen();
-
-		if (app->Input.IsKeyPressed(KEY_ENTER))
-		{
-			TakeScreenshot("screenshot.png");
-		}
-		if (app->Input.IsKeyPressed(KEY_F3))
-		{
-			app->Config.ShowInputDebug = !app->Config.ShowInputDebug;
-		}
+		app->HandleHotkeys();
 
 		BeginDrawing();
 		ClearBackground(DARKGRAY);
@@ -203,6 +192,7 @@ void Knight::GameLoop()
 
 		app->DrawGUI();
 		app->Input.DrawOverlay();
+		app->DrawTouchEmulationHint();
 		if (app->Config.ShowInputDebug)
 		{
 			app->Input.DrawDebugOverlay();
@@ -232,15 +222,7 @@ void Knight::GameLoop()
 #endif
 
 		DrawOffscreen();
-
-		if (IsKeyPressed(KEY_ENTER))
-		{
-			TakeScreenshot("screenshot.png");
-		}
-		if (IsKeyPressed(KEY_F3))
-		{
-			Config.ShowInputDebug = !Config.ShowInputDebug;
-		}
+		HandleHotkeys();
 
 		BeginDrawing();
 		ClearBackground(DARKGRAY);
@@ -257,6 +239,7 @@ void Knight::GameLoop()
 
 		DrawGUI();
 		Input.DrawOverlay();
+		DrawTouchEmulationHint();
 		if (Config.ShowInputDebug)
 		{
 			Input.DrawDebugOverlay();
@@ -357,6 +340,45 @@ void Knight::DrawBackHint()
 	DrawRectangleRounded(Rectangle{ x - size * 0.6f, y - size * 0.3f,
 		extent.x + size * 1.2f, extent.y + size * 0.6f }, 0.5f, 8, Color{ 0, 0, 0, 170 });
 	DrawTextEx(_Font, text, Vector2{ x, y }, size, 3, WHITE);
+}
+
+void Knight::HandleHotkeys()
+{
+	if (::IsKeyPressed(KEY_ENTER))
+	{
+		TakeScreenshot("screenshot.png");
+	}
+	if (::IsKeyPressed(KEY_F3))
+	{
+		Config.ShowInputDebug = !Config.ShowInputDebug;
+	}
+#if !defined(PLATFORM_ANDROID)
+	if (::IsKeyPressed(KEY_F4))
+	{
+		Config.EmulateTouch = Input.Profile() != InputProfile::Touch;
+		Input.SetProfile(Config.EmulateTouch ? InputProfile::Touch : InputProfile::KeyboardMouse);
+	}
+#endif
+}
+
+// A small label while touch is emulated with a mouse, so a mouse that suddenly
+// acts as a finger (and a wheel that only zooms) is not a surprise. Real touch
+// screens, such as a phone's browser, get no label.
+void Knight::DrawTouchEmulationHint()
+{
+#if !defined(PLATFORM_ANDROID)
+	if (!Config.EmulateTouch || Input.Profile() != InputProfile::Touch)
+		return;
+
+	const char* text = "Touch emulation - F4 to switch off";
+	const float size = 20.0f;
+	const Vector2 extent = MeasureTextEx(GetFontDefault(), text, size, 2);
+	const float x = (GetScreenWidth() - extent.x) * 0.5f;
+	const float y = 8.0f;
+	DrawRectangleRounded(Rectangle{ x - 10, y - 4, extent.x + 20, extent.y + 8 },
+		0.5f, 8, Color{ 0, 0, 0, 140 });
+	DrawTextEx(GetFontDefault(), text, Vector2{ x, y }, size, 2, Color{ 255, 255, 255, 200 });
+#endif
 }
 
 void Knight::OnConfigKnightApp()

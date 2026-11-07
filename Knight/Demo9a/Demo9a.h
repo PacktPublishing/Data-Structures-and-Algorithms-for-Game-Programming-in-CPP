@@ -10,5 +10,7 @@ public:
 protected:
 	void Update(float DeltaTime) override;
 	void DrawGUI();
+protected:
+	void OnConfigureInput() override;
 };
 

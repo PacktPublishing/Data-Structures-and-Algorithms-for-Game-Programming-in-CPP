@@ -49,8 +49,7 @@ void BonusMatch3Demo::OnCreateDefaultResources()
 
 void BonusMatch3Demo::OnConfigureInput()
 {
-    // Match-3 uses direct board gestures, so directional overlays would cover
-    // playable cells and consume touches intended for the board.
-    Input.SetVirtualControlsVisible(false);
+    // Match-3 uses direct board gestures and creates no on-screen controls,
+    // so nothing covers the board.
 }
 

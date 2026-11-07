@@ -229,20 +229,16 @@ void BonusCoverFlow3DUI::OnCreateDefaultResources()
 
 void BonusCoverFlow3DUI::OnConfigureInput()
 {
-    // Cards are picked by tapping or flipped with two buttons, so the
-    // on-screen D-pads are not needed.
-    Input.BindAxisTouchPad(Input.MoveAxis(), TouchPad::None);
-    Input.BindAxisTouchPad(Input.SecondaryAxis(), TouchPad::None);
-
+    // Cards are picked by tapping or flipped with two buttons; no pads.
     nextCardAction = Input.RegisterAction("Next Card");
     Input.BindKey(nextCardAction, KEY_RIGHT);
     Input.BindKey(nextCardAction, KEY_D);
-    Input.AddTouchButton(nextCardAction, ">", TouchButtonAnchor::BottomRight, 0);
+    Input.AddTouchButton(nextCardAction, ">", TouchButtonAnchor::BottomRight);
 
     previousCardAction = Input.RegisterAction("Previous Card");
     Input.BindKey(previousCardAction, KEY_LEFT);
     Input.BindKey(previousCardAction, KEY_A);
-    Input.AddTouchButton(previousCardAction, "<", TouchButtonAnchor::BottomLeft, 0);
+    Input.AddTouchButton(previousCardAction, "<", TouchButtonAnchor::BottomLeft);
 }
 
 //Handle selection change(with sliding)

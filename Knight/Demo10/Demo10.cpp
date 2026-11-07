@@ -96,3 +96,12 @@ void Demo10::DrawGUI()
 		DrawText("F2: Train the model with deep learning", inputHelpX, 70, 30, RED);
 	}
 }
+
+void Demo10::OnConfigureInput()
+{
+	// WASD walks, Space attacks, F1/F2 train the turret.
+	Input.AddKeyPad(TouchPad::Left, "Walk", KEY_W, KEY_S, KEY_A, KEY_D);
+	Input.AddKeyButton(KEY_SPACE, "ATTACK", TouchButtonAnchor::BottomRight);
+	Input.AddKeyButton(KEY_F1, "TRAIN1", TouchButtonAnchor::TopRight);
+	Input.AddKeyButton(KEY_F2, "TRAIN2", TouchButtonAnchor::TopRight);
+}

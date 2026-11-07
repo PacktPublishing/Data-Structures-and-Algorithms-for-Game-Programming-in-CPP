@@ -133,12 +133,12 @@ void BonusKdTreeDemo::OnCreateDefaultResources()
 
 void BonusKdTreeDemo::OnConfigureInput()
 {
-	// The fly-through camera moves with the left pad; the right pad is unused.
-	Input.BindAxisTouchPad(Input.SecondaryAxis(), TouchPad::None);
+	// The fly-through camera moves with the arrow keys.
+	Input.AddKeyPad(TouchPad::Left, "Camera", KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT);
 
 	regenerateAction = Input.RegisterAction("Regenerate");
 	Input.BindKey(regenerateAction, KEY_R);
-	Input.AddTouchButton(regenerateAction, "NEW", TouchButtonAnchor::TopRight, 0);
+	Input.AddTouchButton(regenerateAction, "NEW", TouchButtonAnchor::TopRight);
 }
 
 // ------------------------ Placement using kd-tree ----------------------

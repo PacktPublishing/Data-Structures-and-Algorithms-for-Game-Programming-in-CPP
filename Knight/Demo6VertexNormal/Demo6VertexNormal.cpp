@@ -136,3 +136,13 @@ Vector3 Demo6VertexNormal::RotateAroudnY(const Vector3& v, float degrees)
 			 v.y,
 			-v.x * s + v.z * c };
 }
+
+void Demo6VertexNormal::OnConfigureInput()
+{
+	// The arrows move the camera, Y/R/G/B toggle lights.
+	Input.AddKeyPad(TouchPad::Left, "Camera", KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT);
+	Input.AddKeyButton(KEY_Y, "Y", TouchButtonAnchor::TopRight);
+	Input.AddKeyButton(KEY_R, "R", TouchButtonAnchor::TopRight);
+	Input.AddKeyButton(KEY_G, "G", TouchButtonAnchor::TopRight);
+	Input.AddKeyButton(KEY_B, "B", TouchButtonAnchor::TopRight);
+}

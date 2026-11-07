@@ -16,9 +16,24 @@ int RaylibInputBackend::TouchCount() const { return ::GetTouchPointCount(); }
 int RaylibInputBackend::TouchId(int index) const { return ::GetTouchPointId(index); }
 Vector2 RaylibInputBackend::TouchPosition(int index) const { return ::GetTouchPosition(index); }
 #else
-int RaylibInputBackend::TouchCount() const { return ::IsMouseButtonDown(MOUSE_BUTTON_LEFT) ? 1 : 0; }
-int RaylibInputBackend::TouchId(int) const { return 0; }
-Vector2 RaylibInputBackend::TouchPosition(int) const { return ::GetMousePosition(); }
+// Browsers on touch screens report real touch points (and raylib suppresses the
+// mouse events a browser would otherwise synthesize from them). Desktop never
+// does, so whenever there are none the left mouse button is one finger.
+int RaylibInputBackend::TouchCount() const
+{
+    const int touches = ::GetTouchPointCount();
+    if (touches > 0)
+        return touches;
+    return ::IsMouseButtonDown(MOUSE_BUTTON_LEFT) ? 1 : 0;
+}
+int RaylibInputBackend::TouchId(int index) const
+{
+    return ::GetTouchPointCount() > 0 ? ::GetTouchPointId(index) : 0;
+}
+Vector2 RaylibInputBackend::TouchPosition(int index) const
+{
+    return ::GetTouchPointCount() > 0 ? ::GetTouchPosition(index) : ::GetMousePosition();
+}
 #endif
 
 int RaylibInputBackend::ScreenWidth() const { return ::GetScreenWidth(); }

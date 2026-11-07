@@ -49,9 +49,9 @@ public:
     Vector2 MouseDelta() const override;
     float MouseWheelMove() const override;
 
-    // raylib's desktop backends never report touch points, so off Android the
-    // left mouse button stands in for one finger. That is what makes the
-    // Touch profile usable on desktop (KNIGHT_INPUT_PROFILE=touch).
+    // Real touch points on Android and on touch-screen browsers. When there
+    // are none (always, on desktop) the left mouse button stands in for one
+    // finger, which is what makes touch emulation usable with a mouse.
     int TouchCount() const override;
     int TouchId(int index) const override;
     Vector2 TouchPosition(int index) const override;

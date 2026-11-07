@@ -6,6 +6,10 @@
 #include <cstring>
 #include <utility>
 
+#if defined(PLATFORM_WEB)
+#include <emscripten/emscripten.h>
+#endif
+
 namespace
 {
     // Control sizes in density-independent pixels (1 dp = 1 px at 160 dpi),
@@ -16,7 +20,7 @@ namespace
     constexpr float ButtonPaddingDp = 12.0f;
     // On small or low-density screens a pad never takes more than this share
     // of the screen's short side; every other control shrinks with it.
-    constexpr float MaxPadShare = 0.42f;
+    constexpr float MaxPadShare = 0.5f;
     // Dead zone at the center of a pad, as a fraction of the pad's size.
     constexpr float PadDeadZone = 0.14f;
     // Floating pads can be grabbed anywhere below this fraction of the height.
@@ -49,6 +53,28 @@ namespace
             return std::string(1, static_cast<char>(key));
         return std::string();
     }
+
+    // Default caption for a button that stands in for a key.
+    std::string KeyButtonLabel(int key)
+    {
+        const std::string letter = KeyLabel(key);
+        if (!letter.empty())
+            return letter;
+        if (key >= KEY_F1 && key <= KEY_F12)
+            return "F" + std::to_string(key - KEY_F1 + 1);
+        switch (key)
+        {
+        case KEY_SPACE: return "SPACE";
+        case KEY_ENTER: return "ENTER";
+        case KEY_BACKSPACE: return "BACK";
+        case KEY_TAB: return "TAB";
+        case KEY_UP: return "UP";
+        case KEY_DOWN: return "DOWN";
+        case KEY_LEFT: return "LEFT";
+        case KEY_RIGHT: return "RIGHT";
+        default: return "KEY " + std::to_string(key);
+        }
+    }
 }
 
 InputSystem::InputSystem()
@@ -58,6 +84,17 @@ InputSystem::InputSystem()
     profile = InputProfile::Touch;
 #else
     profile = InputProfile::KeyboardMouse;
+#if defined(PLATFORM_WEB)
+    // Phones and tablets (a coarse primary pointer) get the touch controls.
+    // The page's URL can force it either way: ?touch or ?touch=0.
+    if (emscripten_run_script_int(
+            "(function () {"
+            "  var q = new URLSearchParams(window.location.search);"
+            "  if (q.has('touch')) return q.get('touch') !== '0' ? 1 : 0;"
+            "  return window.matchMedia('(pointer: coarse)').matches ? 1 : 0;"
+            "})()"))
+        profile = InputProfile::Touch;
+#endif
     // Set KNIGHT_INPUT_PROFILE=touch to preview the Android controls on
     // desktop with the mouse standing in for one finger.
 #if defined(_MSC_VER)
@@ -78,12 +115,12 @@ InputSystem::InputSystem()
 
 void InputSystem::RegisterDefaults()
 {
+    // Keys only: a sample that wants a pad binds one explicitly, so samples
+    // that never read these axes show no pads.
     moveAxis = RegisterAxis2D("Move", KEY_W, KEY_S, KEY_A, KEY_D);
     BindAxisKeys(moveAxis, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT);
-    BindAxisTouchPad(moveAxis, TouchPad::Left);
 
     secondaryAxis = RegisterAxis2D("Secondary", KEY_I, KEY_K, KEY_J, KEY_M);
-    BindAxisTouchPad(secondaryAxis, TouchPad::Right);
 
     backAction = RegisterAction("Back");
     BindKey(backAction, KEY_BACK);
@@ -105,6 +142,11 @@ void InputSystem::SetProfile(InputProfile newProfile)
     profile = newProfile;
     SetVirtualControlsVisible(profile == InputProfile::Touch);
     ResetTouchState();
+}
+
+void InputSystem::SetControlScale(float scale)
+{
+    controlScale = std::max(scale, MinControlScale);
 }
 
 void InputSystem::Reset()
@@ -197,6 +239,9 @@ void InputSystem::AddTouchButton(InputAction action, const char* label,
     if (!IsValidAction(action))
         return;
 
+    if (slot < 0)
+        slot = NextFreeSlot(anchor, action.id);
+
     for (TouchButton& button : buttons)
     {
         if (button.action.id == action.id)
@@ -214,6 +259,66 @@ void InputSystem::AddTouchButton(InputAction action, const char* label,
     button.anchor = anchor;
     button.slot = slot;
     buttons.push_back(button);
+}
+
+int InputSystem::NextFreeSlot(TouchButtonAnchor anchor, int ignoredActionId) const
+{
+    for (int slot = 0;; ++slot)
+    {
+        bool taken = false;
+        for (const TouchButton& button : buttons)
+        {
+            if (button.action.id != ignoredActionId && button.anchor == anchor &&
+                button.slot == slot)
+            {
+                taken = true;
+                break;
+            }
+        }
+        if (!taken)
+            return slot;
+    }
+}
+
+InputAction InputSystem::AddKeyButton(int key, const char* label,
+    TouchButtonAnchor anchor, int slot)
+{
+    const std::string caption = label ? std::string(label) : KeyButtonLabel(key);
+    const InputAction action = RegisterAction(("Key " + caption).c_str());
+    BindKey(action, key);
+    AddTouchButton(action, caption.c_str(), anchor, slot);
+    return action;
+}
+
+InputAxis2D InputSystem::AddKeyPad(TouchPad pad, const char* name, int upKey,
+    int downKey, int leftKey, int rightKey, bool floating)
+{
+    const InputAxis2D axis = RegisterAxis2D(name, upKey, downKey, leftKey, rightKey);
+    if (pad == TouchPad::None)
+        return axis;
+
+    // A pad drives one axis; detach the previous owner so its keys are not
+    // pressed too.
+    for (AxisDefinition& definition : axes)
+    {
+        if (definition.pad == pad)
+            definition.pad = TouchPad::None;
+    }
+    BindAxisTouchPad(axis, pad);
+    SetTouchPadFloating(pad, floating);
+    return axis;
+}
+
+void InputSystem::ClearVirtualControls()
+{
+    buttons.clear();
+    for (AxisDefinition& definition : axes)
+        definition.pad = TouchPad::None;
+    for (PadState& pad : pads)
+        pad = PadState{};
+    virtualKeys.clear();
+    previousVirtualKeys.clear();
+    ResetTouchState();
 }
 
 InputAxis2D InputSystem::RegisterAxis2D(const char* name, int upKey,
@@ -382,9 +487,17 @@ void InputSystem::BeginFrame()
     UpdateVirtualKeys();
 
     if (profile == InputProfile::KeyboardMouse)
+    {
         UpdateMousePointers();
+    }
     else
+    {
         UpdateTouchPointers();
+        // When touch is emulated with a mouse, the wheel stands in for a
+        // pinch. Touch devices report no wheel, so this changes nothing there.
+        if (zoomDelta == 0.0f)
+            zoomDelta = backend->MouseWheelMove();
+    }
 }
 
 void InputSystem::UpdateActions()
@@ -411,7 +524,8 @@ void InputSystem::UpdateVirtualKeys()
         if (button.touchId < 0)
             continue;
         for (int key : actions[button.action.id].keys)
-            virtualKeys[key] = true;
+            if (key != KEY_NULL)
+                virtualKeys[key] = true;
     }
 
     // A pad presses the direction keys of every key set on its axis, using
@@ -435,6 +549,8 @@ void InputSystem::UpdateVirtualKeys()
             if (vertical)
                 virtualKeys[value.y < 0 ? keys.upKey : keys.downKey] = true;
         }
+        // Directions a pad leaves unbound (KEY_NULL) press nothing.
+        virtualKeys.erase(KEY_NULL);
     }
 }
 
@@ -458,7 +574,8 @@ void InputSystem::UpdateMousePointers()
 
 void InputSystem::UpdateLayout()
 {
-    padSize = std::min(PadSizeDp * backend->DpScale(), ShortSide() * MaxPadShare);
+    padSize = std::min(PadSizeDp * controlScale * backend->DpScale(),
+        ShortSide() * MaxPadShare);
     const float scale = padSize / PadSizeDp;
     buttonSize = ButtonSizeDp * scale;
     buttonPadding = ButtonPaddingDp * scale;

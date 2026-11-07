@@ -134,3 +134,9 @@ void Demo9c::DrawGUI()
 	DrawText("Space: Start ... ", 10, 10, 30, GREEN);
 }
 
+
+void Demo9c::OnConfigureInput()
+{
+	// Space generates a new maze.
+	Input.AddKeyButton(KEY_SPACE, "MAZE", TouchButtonAnchor::BottomRight);
+}

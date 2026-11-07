@@ -96,3 +96,11 @@ void Demo2d::OnCreateDefaultResources()
 	__super::OnCreateDefaultResources();
 	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 }
+
+void Demo2d::OnConfigureInput()
+{
+	// 1/2/3 attack the matching enemy.
+	Input.AddKeyButton(KEY_ONE, "1", TouchButtonAnchor::BottomRight);
+	Input.AddKeyButton(KEY_TWO, "2", TouchButtonAnchor::BottomRight);
+	Input.AddKeyButton(KEY_THREE, "3", TouchButtonAnchor::BottomRight);
+}

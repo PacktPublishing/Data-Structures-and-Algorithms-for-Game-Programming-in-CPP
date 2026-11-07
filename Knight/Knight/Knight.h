@@ -30,6 +30,7 @@ struct KnightConfig
 	bool ShowFPS = false;
 	bool ShowDebugInfo = false;
 	bool ShowInputDebug = false;   //input diagnostics panel; F3 toggles it on desktop
+	bool EmulateTouch = false;     //desktop/web: start with the on-screen controls, the mouse as one finger; F4 toggles it
 	bool EnableDefaultLight = true;
 	bool EnableDefaultRenderPasses = true;
 	int WindowWidth = DEFAULT_SCREEN_WIDTH;   //use default window width if not set by user
@@ -116,6 +117,17 @@ protected:
 	virtual void AfterReleaseDefaultResources();
 	// Called to configure the Knight application, such as title, rendering settings.
 	virtual void OnConfigKnightApp();
+	// Called once at startup to set up this sample's input: register named
+	// actions and axes with their keys, and create the on-screen pads and
+	// buttons it needs on touch screens. The default creates no controls.
+	// An on-screen control can feed an action or simply press keyboard keys,
+	// so key-based sample code works on touch unchanged, e.g.:
+	//   Input.AddKeyPad(TouchPad::Left, "Walk", KEY_W, KEY_S, KEY_A, KEY_D);
+	//   Input.AddKeyButton(KEY_SPACE, "JUMP", TouchButtonAnchor::BottomRight);
+	//   InputAction reset = Input.RegisterAction("Reset");
+	//   Input.BindKey(reset, KEY_R);
+	//   Input.AddTouchButton(reset, "RESET", TouchButtonAnchor::TopLeft);
+	// Controls are only drawn and only read touches on the Touch profile.
 	virtual void OnConfigureInput();
 	// Called when the Android Back button is pressed. The default asks for a
 	// second press within BackExitSeconds before leaving the app.
@@ -126,6 +138,10 @@ private:
 	double _backRequestedTime = -1.0;
 
 	void DrawBackHint();
+	// Enter (screenshot), F3 (input debug panel) and, off Android, F4 (touch
+	// emulation). Physical keys only, so on-screen buttons never trigger them.
+	void HandleHotkeys();
+	void DrawTouchEmulationHint();
 };
 
 // Input access for code outside Knight-derived classes (components, FSM

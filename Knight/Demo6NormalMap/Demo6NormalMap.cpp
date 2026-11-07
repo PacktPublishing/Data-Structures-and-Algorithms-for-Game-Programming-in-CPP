@@ -148,3 +148,10 @@ void Demo6NormalMap::OnCreateDefaultResources()
 	__super::OnCreateDefaultResources();
 	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 }
+
+void Demo6NormalMap::OnConfigureInput()
+{
+	// WASD moves the actor, the arrows move the camera.
+	Input.AddKeyPad(TouchPad::Left, "Actor", KEY_W, KEY_S, KEY_A, KEY_D);
+	Input.AddKeyPad(TouchPad::Right, "Camera", KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT);
+}

@@ -147,3 +147,15 @@ void Demo8b::OnCreateDefaultResources()
 	_Scene->Lights[0].target = Vector3{ 0.0f, 0.0f, 0.0f };
 	_Scene->Lights[0].dirty = true;
 }
+
+void Demo8b::OnConfigureInput()
+{
+	// Left/Right turn the character, A switches the animation, T cycles the
+	// transition mode, Up/Down change the playback speed.
+	Input.AddKeyButton(KEY_LEFT, "<", TouchButtonAnchor::BottomLeft);
+	Input.AddKeyButton(KEY_RIGHT, ">", TouchButtonAnchor::BottomLeft);
+	Input.AddKeyButton(KEY_A, "ANIM", TouchButtonAnchor::BottomRight);
+	Input.AddKeyButton(KEY_T, "BLEND", TouchButtonAnchor::BottomRight);
+	Input.AddKeyButton(KEY_UP, "FAST", TouchButtonAnchor::TopRight);
+	Input.AddKeyButton(KEY_DOWN, "SLOW", TouchButtonAnchor::TopRight);
+}

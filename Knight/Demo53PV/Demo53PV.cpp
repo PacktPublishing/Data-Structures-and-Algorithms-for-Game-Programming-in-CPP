@@ -93,3 +93,9 @@ void Demo53PV::OnCreateDefaultResources()
 	__super::OnCreateDefaultResources();
 	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 }
+
+void Demo53PV::OnConfigureInput()
+{
+	// WASD moves the player.
+	Input.AddKeyPad(TouchPad::Left, "Player", KEY_W, KEY_S, KEY_A, KEY_D);
+}

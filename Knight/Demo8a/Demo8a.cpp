@@ -113,3 +113,15 @@ void Demo8a::DrawGUI()
 	sprintf_s(strBuf, 50, "Time Scale: %.1f", TimeScale);
 	DrawText(strBuf, 10, 60, 30, GREEN);
 }
+
+void Demo8a::OnConfigureInput()
+{
+	// 1/3/6 pick the frame rate, A cycles the animation mode, Up/Down
+	// change the playback speed.
+	Input.AddKeyButton(KEY_ONE, "5FPS", TouchButtonAnchor::TopRight);
+	Input.AddKeyButton(KEY_THREE, "30FPS", TouchButtonAnchor::TopRight);
+	Input.AddKeyButton(KEY_SIX, "60FPS", TouchButtonAnchor::TopRight);
+	Input.AddKeyButton(KEY_A, "ANIM", TouchButtonAnchor::BottomRight);
+	Input.AddKeyButton(KEY_UP, "FAST", TouchButtonAnchor::BottomRight);
+	Input.AddKeyButton(KEY_DOWN, "SLOW", TouchButtonAnchor::BottomRight);
+}

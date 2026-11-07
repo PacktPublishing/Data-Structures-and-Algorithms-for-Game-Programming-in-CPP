@@ -15,5 +15,7 @@ protected:
 	void DrawGUI();
 
 	void OnCreateDefaultResources();
+protected:
+	void OnConfigureInput() override;
 };
 
