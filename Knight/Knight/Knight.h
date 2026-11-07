@@ -22,6 +22,7 @@
 #include "LitShadowRenderPass.h"
 #include "KnightUtils.h"
 #include "InputSystem.h"
+#include "Display.h"
 
 #include <string>
 
@@ -33,8 +34,11 @@ struct KnightConfig
 	bool EmulateTouch = false;     //desktop/web: start with the on-screen controls, the mouse as one finger; F4 toggles it
 	bool EnableDefaultLight = true;
 	bool EnableDefaultRenderPasses = true;
-	int WindowWidth = DEFAULT_SCREEN_WIDTH;   //use default window width if not set by user
-	int WindowHeight = DEFAULT_SCREEN_HEIGHT;    //use default window height if not set by user
+	//Window size on desktop and web. Android always uses the whole screen; there
+	//(and whenever the window is resized) Knight overwrites these with the
+	//current size, which Display::Width()/Height() also report.
+	int WindowWidth = DEFAULT_SCREEN_WIDTH;
+	int WindowHeight = DEFAULT_SCREEN_HEIGHT;
 	string WindowTitle = DEFAULT_APP_TITLE;
 	string ResourcesBasePath = RESOURCE_ROOT_PATH;
 };
@@ -132,6 +136,13 @@ protected:
 	// Called when the Android Back button is pressed. The default asks for a
 	// second press within BackExitSeconds before leaving the app.
 	virtual void OnBackRequested();
+	// Called once after the window opens and again whenever the screen
+	// changes: size (window resize, a foldable folding or unfolding), density,
+	// safe area or fold state. Display already holds the new values; previous
+	// is what it held before. The default does nothing; override to rebuild
+	// screen-sized render targets or move HUD elements. On-screen controls
+	// and Config.WindowWidth/WindowHeight are updated by Knight itself.
+	virtual void OnDisplayChange(const DisplayInfo& previous);
 
 private:
 	static constexpr double BackExitSeconds = 2.0;
@@ -142,6 +153,12 @@ private:
 	// emulation). Physical keys only, so on-screen buttons never trigger them.
 	void HandleHotkeys();
 	void DrawTouchEmulationHint();
+	// Polls Display and, when something changed, applies it, keeps
+	// Config.WindowWidth/WindowHeight in step and calls OnDisplayChange().
+	// Runs on the game thread at the start of every frame.
+	void UpdateDisplay();
+	// F3 panel extra: outlines the safe area, the control area and the hinge.
+	void DrawDisplayDebug();
 };
 
 // Input access for code outside Knight-derived classes (components, FSM

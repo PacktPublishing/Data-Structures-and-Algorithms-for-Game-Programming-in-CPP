@@ -118,8 +118,23 @@ void Knight::Start()
 	//Validate the configuration settings and set default values if necessary
 	ApplyAppConfig();
 
+#if defined(PLATFORM_ANDROID)
+	// A phone's screen is whatever it is: 0x0 tells raylib to use the whole
+	// display at its native size instead of scaling a fixed size with bars.
+	InitWindow(0, 0, Config.WindowTitle.c_str());
+#else
 	InitWindow(Config.WindowWidth, Config.WindowHeight, Config.WindowTitle.c_str());
+#endif
 	SetTargetFPS(TARGET_FPS);
+
+	// Display is valid from here on, so input setup and resource creation can
+	// read it. OnDisplayChange() runs at the end of Start(), once the scene
+	// exists.
+	DisplayInfo initialDisplay;
+	Display::Poll(initialDisplay);
+	Display::Apply(initialDisplay);
+	Config.WindowWidth = initialDisplay.width;
+	Config.WindowHeight = initialDisplay.height;
 #if !defined(PLATFORM_ANDROID)
 	if (Config.EmulateTouch)
 		Input.SetProfile(InputProfile::Touch);
@@ -136,6 +151,28 @@ void Knight::Start()
 	OnCreateDefaultResources();
 
 	AfterCreateDefaultResources();
+
+	OnDisplayChange(DisplayInfo{});
+}
+
+void Knight::UpdateDisplay()
+{
+	DisplayInfo next;
+	if (!Display::Poll(next))
+		return;
+
+	const DisplayInfo previous = Display::Info();
+	Display::Apply(next);
+	Config.WindowWidth = next.width;
+	Config.WindowHeight = next.height;
+	TRACELOG(LOG_INFO, "Knight: Display %dx%d, safe area (%.0f, %.0f, %.0f, %.0f), fold %d",
+		next.width, next.height, next.safeArea.x, next.safeArea.y,
+		next.safeArea.width, next.safeArea.height, static_cast<int>(next.fold));
+	OnDisplayChange(previous);
+}
+
+void Knight::OnDisplayChange(const DisplayInfo& previous)
+{
 }
 
 void Knight::EndGame()
@@ -171,6 +208,7 @@ void Knight::GameLoop()
 			return;
 		}
 
+		app->UpdateDisplay();
 		app->Input.BeginFrame();
 		app->Update(GetFrameTime());
 		app->DrawOffscreen();
@@ -195,17 +233,20 @@ void Knight::GameLoop()
 		app->DrawTouchEmulationHint();
 		if (app->Config.ShowInputDebug)
 		{
-			app->Input.DrawDebugOverlay();
+			app->DrawDisplayDebug();
+			const Rectangle safe = Display::SafeArea();
+			app->Input.DrawDebugOverlay(Vector2{ safe.x + 10, safe.y + 56 });
 		}
 		if (app->Config.ShowFPS)
 		{
-			app->DrawFPS(10, 10);
+			app->DrawFPS((int)Display::SafeArea().x + 10, (int)Display::SafeArea().y + 10);
 		}
 		EndDrawing();
 	}, this, 0, true);
 #else
 	while (!WindowShouldClose() && (!_shouldExitGameLoop))
-	{	
+	{
+		UpdateDisplay();
 		Input.BeginFrame();
 		Update(GetFrameTime());
 
@@ -242,13 +283,15 @@ void Knight::GameLoop()
 		DrawTouchEmulationHint();
 		if (Config.ShowInputDebug)
 		{
-			Input.DrawDebugOverlay();
+			DrawDisplayDebug();
+			const Rectangle safe = Display::SafeArea();
+			Input.DrawDebugOverlay(Vector2{ safe.x + 10, safe.y + 56 });
 		}
 		DrawBackHint();
 
 		if (Config.ShowFPS)
 		{
-			DrawFPS(10, 10);
+			DrawFPS((int)Display::SafeArea().x + 10, (int)Display::SafeArea().y + 10);
 		}
 
 		EndDrawing();
@@ -333,10 +376,11 @@ void Knight::DrawBackHint()
 		return;
 
 	const char* text = "Press Back again to exit";
-	const float size = GetScreenHeight() * 0.045f;
+	const Rectangle area = Display::ControlArea();
+	const float size = Display::Height() * 0.045f;
 	const Vector2 extent = MeasureTextEx(_Font, text, size, 3);
-	const float x = (GetScreenWidth() - extent.x) * 0.5f;
-	const float y = GetScreenHeight() * 0.8f;
+	const float x = area.x + (area.width - extent.x) * 0.5f;
+	const float y = area.y + area.height * 0.8f - extent.y * 0.5f;
 	DrawRectangleRounded(Rectangle{ x - size * 0.6f, y - size * 0.3f,
 		extent.x + size * 1.2f, extent.y + size * 0.6f }, 0.5f, 8, Color{ 0, 0, 0, 170 });
 	DrawTextEx(_Font, text, Vector2{ x, y }, size, 3, WHITE);
@@ -359,6 +403,41 @@ void Knight::HandleHotkeys()
 		Input.SetProfile(Config.EmulateTouch ? InputProfile::Touch : InputProfile::KeyboardMouse);
 	}
 #endif
+#if !defined(PLATFORM_ANDROID) && !defined(PLATFORM_WEB)
+	// Fake foldable postures, picked up by the next UpdateDisplay().
+	if (::IsKeyPressed(KEY_F5))
+	{
+		Display::CycleFakeFold();
+	}
+#endif
+}
+
+// Cyan: safe area. Yellow: control area, when it differs. Red: the hinge.
+void Knight::DrawDisplayDebug()
+{
+	const DisplayInfo& info = Display::Info();
+	const Rectangle safe = info.safeArea;
+	DrawRectangleLinesEx(safe, 2.0f, Color{ 80, 220, 255, 200 });
+
+	const Rectangle control = info.ControlArea();
+	if (control.y != safe.y || control.height != safe.height ||
+		control.x != safe.x || control.width != safe.width)
+		DrawRectangleLinesEx(control, 2.0f, Color{ 255, 220, 60, 200 });
+
+	if (info.hingeAxis != HingeAxis::None)
+	{
+		Rectangle hinge = info.hinge;
+		// A seamless hinge has no width or height; draw it as a thick line.
+		if (hinge.width < 4.0f) { hinge.x -= 2.0f; hinge.width = 4.0f; }
+		if (hinge.height < 4.0f) { hinge.y -= 2.0f; hinge.height = 4.0f; }
+		DrawRectangleRec(hinge, Color{ 255, 70, 70, 170 });
+	}
+
+	const char* foldNames[] = { "not foldable", "flat", "half-opened" };
+	const char* text = TextFormat("Display %dx%d @%.2fx, %s", info.width, info.height,
+		info.dpScale, foldNames[static_cast<int>(info.fold)]);
+	::DrawText(text, (int)safe.x + 10, (int)(safe.y + safe.height) - 28, 20,
+		Color{ 80, 220, 255, 230 });
 }
 
 // A small label while touch is emulated with a mouse, so a mouse that suddenly
@@ -373,8 +452,9 @@ void Knight::DrawTouchEmulationHint()
 	const char* text = "Touch emulation - F4 to switch off";
 	const float size = 20.0f;
 	const Vector2 extent = MeasureTextEx(GetFontDefault(), text, size, 2);
-	const float x = (GetScreenWidth() - extent.x) * 0.5f;
-	const float y = 8.0f;
+	const Rectangle safe = Display::SafeArea();
+	const float x = safe.x + (safe.width - extent.x) * 0.5f;
+	const float y = safe.y + 8.0f;
 	DrawRectangleRounded(Rectangle{ x - 10, y - 4, extent.x + 20, extent.y + 8 },
 		0.5f, 8, Color{ 0, 0, 0, 140 });
 	DrawTextEx(GetFontDefault(), text, Vector2{ x, y }, size, 2, Color{ 255, 255, 255, 200 });

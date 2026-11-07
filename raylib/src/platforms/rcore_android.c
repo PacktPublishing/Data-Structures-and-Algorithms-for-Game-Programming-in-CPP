@@ -63,6 +63,7 @@ typedef struct {
     struct android_poll_source *source; // Android events polling source
     bool appEnabled;                    // Flag to detect if app is active ** = true
     bool contextRebindRequired;         // Used to know context rebind required
+    bool followDisplaySize;             // KNIGHT PATCH: InitWindow(0, 0) asked for the whole display, so follow its size
 
     // Display data
     EGLDisplay device;                  // Native display device (physical screen connection)
@@ -269,6 +270,7 @@ static int32_t AndroidInputCallback(struct android_app *app, AInputEvent *event)
 static GamepadButton AndroidTranslateGamepadButton(int button);                     // Map Android gamepad button to raylib gamepad button
 
 static void SetupFramebuffer(int width, int height); // Setup main framebuffer (required by InitPlatform())
+static void AndroidFollowWindowSize(bool force);     // KNIGHT PATCH: resize screen and framebuffer to the window
 
 static int android_read(void *cookie, char *buf, int size);
 static int android_write(void *cookie, const char *buf, int size);
@@ -741,6 +743,9 @@ const char *GetKeyName(int key)
 // Register all input events
 void PollInputEvents(void)
 {
+    // KNIGHT PATCH: IsWindowResized() reports a resize for one frame only
+    CORE.Window.resizedLastFrame = false;
+
 #if SUPPORT_GESTURES_SYSTEM
     // NOTE: Gestures update must be called every frame to reset gestures correctly
     // because ProcessGestureEvent() is called on an event, not every frame
@@ -801,6 +806,10 @@ void PollInputEvents(void)
             break;
         }
     }
+
+    // KNIGHT PATCH: not every device sends APP_CMD_WINDOW_RESIZED when a
+    // foldable folds or the app enters multi-window, so check every frame
+    AndroidFollowWindowSize(false);
 }
 
 //----------------------------------------------------------------------------------
@@ -815,6 +824,9 @@ int InitPlatform(void)
     CORE.Window.currentFbo.width = CORE.Window.screen.width;
     CORE.Window.currentFbo.height = CORE.Window.screen.height;
 
+    // KNIGHT PATCH: a 0x0 request means "the whole display, whatever its size"
+    platform.followDisplaySize = (CORE.Window.screen.width == 0) || (CORE.Window.screen.height == 0);
+
     // Set desired windows flags before initializing anything
     ANativeActivity_setWindowFlags(platform.app->activity, AWINDOW_FLAG_FULLSCREEN, 0);  //AWINDOW_FLAG_SCALED, AWINDOW_FLAG_DITHER
 
@@ -824,7 +836,9 @@ int InitPlatform(void)
     else if (orientation == ACONFIGURATION_ORIENTATION_LAND) TRACELOG(LOG_INFO, "ANDROID: Window orientation set as landscape");
 
     // TODO: Automatic orientation doesn't seem to work
-    if (CORE.Window.screen.width <= CORE.Window.screen.height)
+    // KNIGHT PATCH: with followDisplaySize the manifest decides the orientation
+    if (platform.followDisplaySize) { }
+    else if (CORE.Window.screen.width <= CORE.Window.screen.height)
     {
         AConfiguration_setOrientation(platform.app->config, ACONFIGURATION_ORIENTATION_PORT);
         TRACELOG(LOG_WARNING, "ANDROID: Window orientation changed to portrait");
@@ -1064,16 +1078,23 @@ static void AndroidCommandCallback(struct android_app *app, int32_t cmd)
                     // Adding renderOffset here feels rather hackish, but the viewport scaling is wrong after the
                     // context rebinding if the screen is scaled unless offsets are added. There's probably a more
                     // appropriate way to fix this
-                    ANativeWindow_setBuffersGeometry(app->window,
-                        CORE.Window.render.width + CORE.Window.renderOffset.x,
-                        CORE.Window.render.height + CORE.Window.renderOffset.y,
-                        displayFormat);
+                    // KNIGHT PATCH: when following the display, the new window may have a new size
+                    // (the device was folded while the app was in the background); handled below
+                    if (!platform.followDisplaySize)
+                    {
+                        ANativeWindow_setBuffersGeometry(app->window,
+                            CORE.Window.render.width + CORE.Window.renderOffset.x,
+                            CORE.Window.render.height + CORE.Window.renderOffset.y,
+                            displayFormat);
+                    }
 
                     // Recreate display surface and re-attach OpenGL context
                     platform.surface = eglCreateWindowSurface(platform.device, platform.config, app->window, NULL);
                     eglMakeCurrent(platform.device, platform.surface, platform.surface, platform.context);
 
                     platform.contextRebindRequired = false;
+
+                    AndroidFollowWindowSize(true);   // KNIGHT PATCH
                 }
                 else
                 {
@@ -1171,9 +1192,51 @@ static void AndroidCommandCallback(struct android_app *app, int32_t cmd)
             //print_cur_config(platform.app);
 
             // Check screen orientation here!
+            AndroidFollowWindowSize(false);   // KNIGHT PATCH
+        } break;
+        // KNIGHT PATCH: folding, unfolding and multi-window resize the window
+        case APP_CMD_WINDOW_RESIZED:
+        case APP_CMD_CONTENT_RECT_CHANGED:
+        {
+            AndroidFollowWindowSize(false);
         } break;
         default: break;
     }
+}
+
+// KNIGHT PATCH: when the app asked for the whole display (InitWindow(0, 0)),
+// keep screen, render and framebuffer sizes equal to the window's, which
+// changes when a foldable folds or unfolds or the app enters multi-window.
+// Runs on the main (game) thread with the GL context current, or does nothing.
+static void AndroidFollowWindowSize(bool force)
+{
+    if (!platform.followDisplaySize || (platform.app->window == NULL) || (platform.surface == EGL_NO_SURFACE)) return;
+
+    int width = ANativeWindow_getWidth(platform.app->window);
+    int height = ANativeWindow_getHeight(platform.app->window);
+    if ((width <= 0) || (height <= 0)) return;
+    if (!force && (width == CORE.Window.display.width) && (height == CORE.Window.display.height)) return;
+
+    EGLint displayFormat = 0;
+    eglGetConfigAttrib(platform.device, platform.config, EGL_NATIVE_VISUAL_ID, &displayFormat);
+    ANativeWindow_setBuffersGeometry(platform.app->window, width, height, displayFormat);
+
+    CORE.Window.display.width = width;
+    CORE.Window.display.height = height;
+    CORE.Window.screen.width = width;
+    CORE.Window.screen.height = height;
+    CORE.Window.render.width = width;
+    CORE.Window.render.height = height;
+    CORE.Window.renderOffset.x = 0;
+    CORE.Window.renderOffset.y = 0;
+    CORE.Window.currentFbo.width = width;
+    CORE.Window.currentFbo.height = height;
+    CORE.Window.screenScale = MatrixIdentity();
+
+    SetupViewport(width, height);
+    CORE.Window.resizedLastFrame = true;
+
+    TRACELOG(LOG_INFO, "DISPLAY: Window resized to %i x %i", width, height);
 }
 
 // ANDROID: Map Android gamepad button to raylib gamepad button

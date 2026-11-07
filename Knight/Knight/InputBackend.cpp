@@ -1,4 +1,5 @@
 #include "InputBackend.h"
+#include "Display.h"
 
 bool RaylibInputBackend::IsKeyDown(int key) const { return ::IsKeyDown(key); }
 bool RaylibInputBackend::IsKeyPressed(int key) const { return ::IsKeyPressed(key); }
@@ -39,8 +40,18 @@ Vector2 RaylibInputBackend::TouchPosition(int index) const
 int RaylibInputBackend::ScreenWidth() const { return ::GetScreenWidth(); }
 int RaylibInputBackend::ScreenHeight() const { return ::GetScreenHeight(); }
 
+// Display is filled in once the window opens; before that, ask raylib.
+Rectangle RaylibInputBackend::ControlArea() const
+{
+    if (Display::Width() > 0)
+        return Display::ControlArea();
+    return InputBackend::ControlArea();
+}
+
 float RaylibInputBackend::DpScale() const
 {
+    if (Display::Width() > 0)
+        return Display::DpScale();
     const float scale = ::GetWindowScaleDPI().x;
     return scale > 0.0f ? scale : 1.0f;
 }

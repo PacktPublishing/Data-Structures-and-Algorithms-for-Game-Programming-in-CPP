@@ -29,6 +29,13 @@ public:
 
     virtual int ScreenWidth() const = 0;
     virtual int ScreenHeight() const = 0;
+    // Where on-screen controls may go: the screen minus notches, system bars
+    // and, in tabletop posture, the upper half. Defaults to the whole screen.
+    virtual Rectangle ControlArea() const
+    {
+        return Rectangle{ 0, 0, static_cast<float>(ScreenWidth()),
+            static_cast<float>(ScreenHeight()) };
+    }
     // Pixels per density-independent pixel (1 dp = 1 px at 160 dpi).
     virtual float DpScale() const = 0;
     virtual double Time() const = 0;
@@ -58,7 +65,9 @@ public:
 
     int ScreenWidth() const override;
     int ScreenHeight() const override;
-    // Android reports its density bucket; desktop reports the monitor's
+    // Display::ControlArea().
+    Rectangle ControlArea() const override;
+    // Display::DpScale(): Android's screen density; desktop's monitor
     // content scale, which is 1 on most displays.
     float DpScale() const override;
     double Time() const override;

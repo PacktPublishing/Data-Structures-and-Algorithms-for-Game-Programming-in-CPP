@@ -3,6 +3,7 @@
 // knight_input_tests target and run it directly or through ctest.
 
 #include "InputSystem.h"
+#include "Display.h"
 
 #include <cmath>
 #include <cstdio>
@@ -43,6 +44,8 @@ namespace
         float dpScale = 1.0f;
         double time = 0.0;
         bool focused = true;
+        // Empty: the whole screen.
+        Rectangle controlArea = { 0, 0, 0, 0 };
 
         void Frame(InputSystem& input, double seconds = 1.0 / 60.0)
         {
@@ -102,6 +105,10 @@ namespace
         int ScreenWidth() const override { return width; }
         int ScreenHeight() const override { return height; }
         float DpScale() const override { return dpScale; }
+        Rectangle ControlArea() const override
+        {
+            return controlArea.width > 0 ? controlArea : InputBackend::ControlArea();
+        }
         double Time() const override { return time; }
         bool IsWindowFocused() const override { return focused; }
 
@@ -114,8 +121,9 @@ namespace
         float shownWheel = 0.0f;
     };
 
-    // Layout at 1280x720 and 1 px per dp (see the constants in InputSystem.cpp):
-    // pads are 130 px with a 16 px margin, buttons are 56 px.
+    // Layout at 1280x720, 1 px per dp and control scale 1 (see the constants
+    // in InputSystem.cpp): pads are 130 px with a 16 px margin, buttons are
+    // 56 px.
     const Vector2 LeftPadCenter = { 16 + 65, 720 - 16 - 65 };
     const Vector2 RightPadCenter = { 1280 - 16 - 65, 720 - 16 - 65 };
     const float PadRadius = 65.0f;
@@ -127,10 +135,18 @@ namespace
         FakeBackend platform;
         InputSystem input;
 
-        explicit Fixture(InputProfile profile = InputProfile::Touch)
+        // withPads gives the two-pad layout most tests exercise; InputSystem
+        // itself starts with no on-screen controls.
+        explicit Fixture(InputProfile profile = InputProfile::Touch, bool withPads = true)
         {
             input.SetBackend(&platform);
             input.SetProfile(profile);
+            input.SetControlScale(1.0f);
+            if (withPads)
+            {
+                input.BindAxisTouchPad(input.MoveAxis(), TouchPad::Left);
+                input.BindAxisTouchPad(input.SecondaryAxis(), TouchPad::Right);
+            }
         }
     };
 
@@ -414,18 +430,153 @@ namespace
         f.platform.Frame(f.input);
         CHECK(f.input.IsKeyDown(KEY_W));
 
-        // On a small screen the pad is capped at 42% of the short side.
+        // On a small screen the pad is capped at half the short side.
         Fixture small;
         small.platform.width = 400;
         small.platform.height = 240;
         small.platform.dpScale = 3.0f;
-        const float padSize = 240 * 0.42f;
+        const float padSize = 240 * 0.5f;
         const float scale = padSize / 130.0f;
         const Vector2 smallCenter = { 16 * scale + padSize / 2, 240 - 16 * scale - padSize / 2 };
         // Just inside the top edge: (0.49 - 0.14) / (0.5 - 0.14) of full strength.
         small.platform.Touch(1, smallCenter.x, smallCenter.y - padSize * 0.49f);
         small.platform.Frame(small.input);
         CHECK_NEAR(small.input.Axis(small.input.MoveAxis()).y, -0.35f / 0.36f, 1e-3f);
+    }
+
+    void ControlScaleResizesControls()
+    {
+        // A fresh InputSystem draws controls at 1.2x: a 156 px pad and
+        // 67.2 px buttons with a 19.2 px margin at 1 px per dp.
+        InputSystem fresh;
+        CHECK(fresh.ControlScale() == InputSystem::DefaultControlScale);
+        CHECK(InputSystem::DefaultControlScale == 1.2f);
+
+        Fixture f;
+        f.input.SetControlScale(1.2f);
+        const InputAction attack = f.input.AddKeyButton(KEY_SPACE, "ATTACK",
+            TouchButtonAnchor::TopRight);
+        // Inside the 1.2x pad but outside the 1x one.
+        const Vector2 bigPadCenter = { 19.2f + 78, 720 - 19.2f - 78 };
+        f.platform.Touch(1, bigPadCenter.x, bigPadCenter.y - 70);
+        // Inside the 1.2x button but outside the 1x one.
+        f.platform.Touch(2, 1200, 80);
+        f.platform.Frame(f.input);
+        CHECK(f.input.IsKeyDown(KEY_W));
+        CHECK(f.input.Down(attack));
+
+        // Reset keeps the scale; tiny values are raised to the minimum.
+        f.input.Reset();
+        CHECK(f.input.ControlScale() == 1.2f);
+        f.input.SetControlScale(0.0f);
+        CHECK(f.input.ControlScale() == InputSystem::MinControlScale);
+    }
+
+    void ControlsStayInsideControlArea()
+    {
+        // A notch on the left and system bars top and bottom: 100 px left
+        // and right, 40 px top and bottom.
+        Fixture f;
+        f.platform.controlArea = Rectangle{ 100, 40, 1080, 640 };
+        const InputAction attack = f.input.AddKeyButton(KEY_SPACE, "ATTACK",
+            TouchButtonAnchor::TopRight);
+
+        // The pad's center moves in by the insets: (100 + 16 + 65, 680 - 16 - 65).
+        const Vector2 padCenter = { 181, 599 };
+        f.platform.Touch(1, padCenter.x, padCenter.y - PadRadius);
+        // Top-right button, slot 0: (1180 - 16 - 28, 40 + 16 + 28).
+        f.platform.Touch(2, 1136, 84);
+        f.platform.Frame(f.input);
+        CHECK(f.input.IsKeyDown(KEY_W));
+        CHECK(f.input.Down(attack));
+        f.platform.Lift(1);
+        f.platform.Lift(2);
+        f.platform.Frame(f.input);
+
+        // The old full-screen spots are now under the notch: nothing grabs them.
+        f.platform.Touch(1, LeftPadCenter.x - 40, LeftPadCenter.y);
+        f.platform.Touch(2, TopRightButton0.x, TopRightButton0.y);
+        f.platform.Frame(f.input);
+        CHECK(!f.input.IsKeyDown(KEY_A));
+        CHECK(!f.input.Down(attack));
+    }
+
+    void FloatingPadStaysInsideControlArea()
+    {
+        // Tabletop posture: controls only on the lower half.
+        Fixture f;
+        f.platform.controlArea = Rectangle{ 60, 360, 1160, 360 };
+        f.input.SetTouchPadFloating(TouchPad::Left, true);
+
+        // A thumb on the bezel side of the area, left of x = 60, still grabs
+        // the pad, which appears at the area's edge.
+        f.platform.Touch(1, 20, 600);
+        f.platform.Frame(f.input);
+        // Sliding right by the pad radius from the clamped center is full right.
+        f.platform.Touch(1, 60 + PadRadius, 600);
+        f.platform.Frame(f.input);
+        CHECK_NEAR(f.input.Axis(f.input.MoveAxis()).x, 1.0f, 1e-3f);
+
+        // Above the hinge is outside the floating zone.
+        f.platform.Lift(1);
+        f.platform.Frame(f.input);
+        f.platform.Touch(1, 300, 200);
+        f.platform.Frame(f.input);
+        CHECK(f.input.Axis(f.input.MoveAxis()).x == 0.0f);
+        CHECK(f.input.PrimaryPointer().down);
+    }
+
+    void DisplayComposesSafeAndControlAreas()
+    {
+        PlatformDisplayReport report;
+        report.insetLeft = 100;
+        report.insetTop = 40;
+        report.insetRight = 80;
+        report.insetBottom = 30;
+        DisplayInfo info = Display::Compose(2400, 1080, 2.0f, report);
+        CHECK(info.width == 2400 && info.height == 1080);
+        CHECK(info.dpScale == 2.0f);
+        CHECK(info.safeArea.x == 100 && info.safeArea.y == 40);
+        CHECK(info.safeArea.width == 2400 - 180 && info.safeArea.height == 1080 - 70);
+        // Not folded: controls use the whole safe area.
+        CHECK(info.ControlArea().y == info.safeArea.y);
+        CHECK(info.ControlArea().height == info.safeArea.height);
+
+        // Java's density wins over raylib's.
+        report.dpScale = 2.625f;
+        CHECK(Display::Compose(2400, 1080, 2.0f, report).dpScale == 2.625f);
+
+        // Tabletop: a separating horizontal hinge leaves the lower part.
+        report.fold = FoldState::HalfOpened;
+        report.hingeAxis = HingeAxis::Horizontal;
+        report.hinge = Rectangle{ 0, 530, 2400, 20 };
+        report.hingeSeparates = true;
+        info = Display::Compose(2400, 1080, 2.0f, report);
+        const Rectangle control = info.ControlArea();
+        CHECK(control.y == 550);
+        CHECK(control.height == 1050 - 550);
+        CHECK(control.x == 100 && control.width == info.safeArea.width);
+
+        // A vertical (book-style) hinge leaves the control area alone.
+        report.hingeAxis = HingeAxis::Vertical;
+        report.hinge = Rectangle{ 1200, 0, 0, 1080 };
+        info = Display::Compose(2400, 1080, 2.0f, report);
+        CHECK(info.ControlArea().y == info.safeArea.y);
+
+        // Insets that leave nothing are ignored.
+        PlatformDisplayReport broken;
+        broken.insetLeft = 1300;
+        broken.insetRight = 1300;
+        info = Display::Compose(2400, 1080, 0.0f, broken);
+        CHECK(info.safeArea.x == 0 && info.safeArea.width == 2400);
+        CHECK(info.dpScale == 1.0f);
+
+        // Equality drives OnDisplayChange: any field counts.
+        DisplayInfo a = Display::Compose(1280, 720, 1.0f, PlatformDisplayReport{});
+        DisplayInfo b = a;
+        CHECK(a == b);
+        b.fold = FoldState::Flat;
+        CHECK(a != b);
     }
 
     void FloatingPadCentersOnThumb()
@@ -471,14 +622,150 @@ namespace
     {
         Fixture f;
         f.input.RegisterAction("Attack");
-        f.input.BindAxisTouchPad(f.input.MoveAxis(), TouchPad::None);
+        f.input.AddKeyButton(KEY_R);
         f.input.Reset();
         CHECK(!f.input.FindAction("Attack").IsValid());
         CHECK(f.input.BackAction().IsValid());
+        CHECK(f.input.TouchButtonCount() == 0);
+        CHECK(!f.input.IsTouchPadInUse(TouchPad::Left));
+
+        // The default axes keep their keys.
+        f.platform.keys.insert(KEY_W);
+        f.platform.Frame(f.input);
+        CHECK(f.input.Axis(f.input.MoveAxis()).y == -1.0f);
+    }
+
+    void NoControlsUntilSampleCreatesThem()
+    {
+        Fixture f(InputProfile::Touch, false);
+        CHECK(!f.input.IsTouchPadInUse(TouchPad::Left));
+        CHECK(!f.input.IsTouchPadInUse(TouchPad::Right));
+        CHECK(f.input.TouchButtonCount() == 0);
+
+        // A finger where the pad used to be is a plain pointer.
+        f.platform.Touch(1, LeftPadCenter.x, LeftPadCenter.y - PadRadius);
+        f.platform.Frame(f.input);
+        CHECK(!f.input.IsKeyDown(KEY_W));
+        CHECK(f.input.PrimaryPointer().pressed);
+    }
+
+    void KeyButtonActsAsKey()
+    {
+        Fixture f(InputProfile::Touch, false);
+        const InputAction reset = f.input.AddKeyButton(KEY_R, "RESET", TouchButtonAnchor::TopLeft);
+        CHECK(reset.IsValid());
+        CHECK(f.input.FindAction("Key RESET").id == reset.id);
+
+        const Vector2 topLeft0 = { 16 + 28, 16 + 28 };
+        f.platform.Touch(1, topLeft0.x, topLeft0.y);
+        f.platform.Frame(f.input);
+        CHECK(f.input.IsKeyPressed(KEY_R));
+        CHECK(f.input.IsKeyDown(KEY_R));
+        CHECK(!f.input.IsKeyDown(KEY_SPACE));
+        CHECK(!f.input.PrimaryPointer().down);
+
+        // The physical key drives the same action.
+        f.platform.Lift(1);
+        f.platform.keys.insert(KEY_R);
+        f.platform.Frame(f.input);
+        CHECK(f.input.Down(reset));
+    }
+
+    void AutoSlotsFillEachCornerSeparately()
+    {
+        Fixture f(InputProfile::Touch, false);
+        f.input.AddKeyButton(KEY_ONE, "1", TouchButtonAnchor::TopRight);
+        f.input.AddKeyButton(KEY_TWO, "2", TouchButtonAnchor::TopRight);
+        f.input.AddKeyButton(KEY_THREE, "3", TouchButtonAnchor::BottomLeft);
+
+        // Slot 1 in the top-right corner is one button stride (56 + 12)
+        // further from the right edge than slot 0.
+        f.platform.Touch(1, TopRightButton0.x - 68, TopRightButton0.y);
+        f.platform.Touch(2, 16 + 28, 720 - 16 - 28);
+        f.platform.Frame(f.input);
+        CHECK(!f.input.IsKeyDown(KEY_ONE));
+        CHECK(f.input.IsKeyDown(KEY_TWO));
+        CHECK(f.input.IsKeyDown(KEY_THREE));
+
+        f.platform.fingers.clear();
+        f.platform.Touch(3, TopRightButton0.x, TopRightButton0.y);
+        f.platform.Frame(f.input);
+        CHECK(f.input.IsKeyDown(KEY_ONE));
+    }
+
+    void KeyPadPressesOnlyItsKeys()
+    {
+        Fixture f(InputProfile::Touch, false);
+        const InputAxis2D camera = f.input.AddKeyPad(TouchPad::Left, "Camera",
+            KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT);
+        CHECK(f.input.IsTouchPadInUse(TouchPad::Left));
+        CHECK(!f.input.IsTouchPadInUse(TouchPad::Right));
 
         f.platform.Touch(1, LeftPadCenter.x, LeftPadCenter.y - PadRadius);
         f.platform.Frame(f.input);
+        CHECK(f.input.IsKeyDown(KEY_UP));
+        CHECK(!f.input.IsKeyDown(KEY_W));
+        CHECK_NEAR(f.input.Axis(camera).y, -1.0f, 1e-4f);
+
+        // A pad drives one axis: binding another to it detaches the first.
+        f.platform.Lift(1);
+        f.platform.Frame(f.input);
+        f.input.AddKeyPad(TouchPad::Left, "Depth", KEY_W, KEY_S, KEY_NULL, KEY_NULL);
+        f.platform.Touch(2, LeftPadCenter.x + 40, LeftPadCenter.y - 40); // up-right
+        f.platform.Frame(f.input);
         CHECK(f.input.IsKeyDown(KEY_W));
+        CHECK(!f.input.IsKeyDown(KEY_UP));
+        CHECK(!f.input.IsKeyDown(KEY_NULL));
+    }
+
+    void ClearVirtualControlsKeepsKeys()
+    {
+        Fixture f;
+        const InputAction jump = f.input.AddKeyButton(KEY_SPACE, "JUMP");
+        f.input.ClearVirtualControls();
+        CHECK(f.input.TouchButtonCount() == 0);
+        CHECK(!f.input.IsTouchPadInUse(TouchPad::Left));
+
+        f.platform.keys.insert(KEY_SPACE);
+        f.platform.Frame(f.input);
+        CHECK(f.input.Down(jump));
+    }
+
+    // Touch emulation (F4) switches profiles at runtime: the sample's controls
+    // appear and disappear without being recreated, and keys keep working.
+    void ProfileSwitchShowsAndHidesControls()
+    {
+        Fixture f(InputProfile::KeyboardMouse, false);
+        const InputAction jump = f.input.AddKeyButton(KEY_SPACE, "JUMP", TouchButtonAnchor::TopRight);
+        CHECK(!f.input.VirtualControlsVisible());
+
+        f.input.SetProfile(InputProfile::Touch);
+        CHECK(f.input.VirtualControlsVisible());
+        f.platform.Touch(1, TopRightButton0.x, TopRightButton0.y);
+        f.platform.Frame(f.input);
+        CHECK(f.input.Down(jump));
+
+        // Switching back mid-press releases the button.
+        f.input.SetProfile(InputProfile::KeyboardMouse);
+        f.platform.Frame(f.input);
+        CHECK(!f.input.VirtualControlsVisible());
+        CHECK(!f.input.Down(jump));
+        CHECK(f.input.TouchButtonCount() == 1);
+
+        f.platform.Lift(1);
+        f.platform.keys.insert(KEY_SPACE);
+        f.platform.Frame(f.input);
+        CHECK(f.input.Down(jump));
+    }
+
+    void WheelZoomsWhenTouchIsEmulated()
+    {
+        Fixture f;
+        f.platform.wheel = -1.0f;
+        f.platform.Frame(f.input);
+        CHECK(f.input.ZoomDelta() == -1.0f);
+        // The raw wheel stays a desktop-only reading.
+        CHECK(f.input.WheelMove() == 0.0f);
     }
 
     struct Test { const char* name; void (*run)(); };
@@ -499,9 +786,20 @@ int main()
         { "FocusLossReleasesEverything", FocusLossReleasesEverything },
         { "KeyboardProfileIgnoresTouch", KeyboardProfileIgnoresTouch },
         { "ControlsScaleWithDensity", ControlsScaleWithDensity },
+        { "ControlScaleResizesControls", ControlScaleResizesControls },
+        { "ControlsStayInsideControlArea", ControlsStayInsideControlArea },
+        { "FloatingPadStaysInsideControlArea", FloatingPadStaysInsideControlArea },
+        { "DisplayComposesSafeAndControlAreas", DisplayComposesSafeAndControlAreas },
         { "FloatingPadCentersOnThumb", FloatingPadCentersOnThumb },
         { "BackActionIsBoundToBackKey", BackActionIsBoundToBackKey },
         { "ResetRestoresDefaults", ResetRestoresDefaults },
+        { "NoControlsUntilSampleCreatesThem", NoControlsUntilSampleCreatesThem },
+        { "KeyButtonActsAsKey", KeyButtonActsAsKey },
+        { "AutoSlotsFillEachCornerSeparately", AutoSlotsFillEachCornerSeparately },
+        { "KeyPadPressesOnlyItsKeys", KeyPadPressesOnlyItsKeys },
+        { "ClearVirtualControlsKeepsKeys", ClearVirtualControlsKeepsKeys },
+        { "ProfileSwitchShowsAndHidesControls", ProfileSwitchShowsAndHidesControls },
+        { "WheelZoomsWhenTouchIsEmulated", WheelZoomsWhenTouchIsEmulated },
     };
 
     for (const Test& test : tests)

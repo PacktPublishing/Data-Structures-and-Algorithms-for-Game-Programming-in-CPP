@@ -745,7 +745,7 @@ void Match3GameSession::StartColorBombWave(int originR, int originC, int color)
         for (int c = 0; c < COLS; ++c)
             explodeStart[r][c] = -1.f;
 
-    Vector2 startPos = { PADDING + originC * CELL + CELL * 0.5f + offsetX, PADDING + originR * CELL + CELL * 0.5f };
+    Vector2 startPos = { PADDING + originC * CELL + CELL * 0.5f + BoardOffsetX(), PADDING + originR * CELL + CELL * 0.5f };
 
     for (int r = 0; r < ROWS; ++r)
     {
@@ -753,7 +753,7 @@ void Match3GameSession::StartColorBombWave(int originR, int originC, int color)
         {
             if (bd.cell[r][c] == color)
             {
-                Vector2 endPos = { PADDING + c * CELL + CELL * 0.5f + offsetX, PADDING + r * CELL + CELL * 0.5f };
+                Vector2 endPos = { PADDING + c * CELL + CELL * 0.5f + BoardOffsetX(), PADDING + r * CELL + CELL * 0.5f };
                 float dx = float(c - originC), dy = float(r - originR);
                 float dist = sqrtf(dx * dx + dy * dy);
                 Missile m;
@@ -808,7 +808,7 @@ void Match3GameSession::DrawMissile(const Missile& m, float tt, Texture2D missil
 
 void Match3GameSession::MyDrawRing(float progress)
 {
-    Vector2 center = { PADDING + waveOriginC * CELL + CELL * 0.5f + offsetX, PADDING + waveOriginR * CELL + CELL * 0.5f };
+    Vector2 center = { PADDING + waveOriginC * CELL + CELL * 0.5f + BoardOffsetX(), PADDING + waveOriginR * CELL + CELL * 0.5f };
 
     float R = progress * sqrtf((float)(ROWS * ROWS + COLS * COLS)) * CELL;
     float inner = R - 10.0f;

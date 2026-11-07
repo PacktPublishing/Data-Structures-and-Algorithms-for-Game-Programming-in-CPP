@@ -137,6 +137,11 @@ float InputSystem::ShortSide() const
     return static_cast<float>(std::min(backend->ScreenWidth(), backend->ScreenHeight()));
 }
 
+float InputSystem::ControlAreaShortSide() const
+{
+    return std::min(controlArea.width, controlArea.height);
+}
+
 void InputSystem::SetProfile(InputProfile newProfile)
 {
     profile = newProfile;
@@ -574,8 +579,9 @@ void InputSystem::UpdateMousePointers()
 
 void InputSystem::UpdateLayout()
 {
+    controlArea = backend->ControlArea();
     padSize = std::min(PadSizeDp * controlScale * backend->DpScale(),
-        ShortSide() * MaxPadShare);
+        ControlAreaShortSide() * MaxPadShare);
     const float scale = padSize / PadSizeDp;
     buttonSize = ButtonSizeDp * scale;
     buttonPadding = ButtonPaddingDp * scale;
@@ -602,34 +608,32 @@ void InputSystem::UpdateLayout()
 
 Rectangle InputSystem::ButtonBounds(const TouchButton& button) const
 {
-    const float width = static_cast<float>(backend->ScreenWidth());
-    const float height = static_cast<float>(backend->ScreenHeight());
+    const Rectangle area = controlArea;
     const float stride = buttonSize + buttonPadding;
     const int column = button.slot % 3;
     const int row = button.slot / 3;
 
-    float x = controlMargin + column * stride;
-    float y = controlMargin + row * stride;
+    float x = area.x + controlMargin + column * stride;
+    float y = area.y + controlMargin + row * stride;
 
     if (button.anchor == TouchButtonAnchor::TopRight ||
         button.anchor == TouchButtonAnchor::BottomRight)
-        x = width - controlMargin - buttonSize - column * stride;
+        x = area.x + area.width - controlMargin - buttonSize - column * stride;
 
     if (button.anchor == TouchButtonAnchor::BottomLeft ||
         button.anchor == TouchButtonAnchor::BottomRight)
-        y = height - controlMargin - buttonSize - row * stride;
+        y = area.y + area.height - controlMargin - buttonSize - row * stride;
 
     return Rectangle{ x, y, buttonSize, buttonSize };
 }
 
 Rectangle InputSystem::PadBounds(TouchPad pad) const
 {
-    const float width = static_cast<float>(backend->ScreenWidth());
-    const float height = static_cast<float>(backend->ScreenHeight());
+    const Rectangle area = controlArea;
     const float x = pad == TouchPad::Left
-        ? controlMargin
-        : width - padSize - controlMargin;
-    return Rectangle{ x, height - padSize - controlMargin, padSize, padSize };
+        ? area.x + controlMargin
+        : area.x + area.width - padSize - controlMargin;
+    return Rectangle{ x, area.y + area.height - padSize - controlMargin, padSize, padSize };
 }
 
 Rectangle InputSystem::PadCaptureZone(TouchPad pad) const
@@ -637,14 +641,15 @@ Rectangle InputSystem::PadCaptureZone(TouchPad pad) const
     if (!pads[static_cast<int>(pad)].floating)
         return PadBounds(pad);
 
+    // The zone follows the control area, but reaches out to the screen's
+    // edges so a thumb resting on the bezel side of a notch still grabs it.
     const float width = static_cast<float>(backend->ScreenWidth());
     const float height = static_cast<float>(backend->ScreenHeight());
-    const float top = height * FloatingZoneTop;
-    const float halfWidth = width * 0.5f;
-    return Rectangle{
-        pad == TouchPad::Left ? 0.0f : halfWidth, top,
-        halfWidth, height - top
-    };
+    const float top = controlArea.y + controlArea.height * FloatingZoneTop;
+    const float middle = controlArea.x + controlArea.width * 0.5f;
+    return pad == TouchPad::Left
+        ? Rectangle{ 0.0f, top, middle, height - top }
+        : Rectangle{ middle, top, width - middle, height - top };
 }
 
 const InputSystem::AxisDefinition* InputSystem::AxisForPad(TouchPad pad) const
@@ -900,7 +905,14 @@ void InputSystem::UpdateTouches()
 
             state.touchId = touchId;
             if (state.floating)
-                state.center = position;
+            {
+                // Grabbed outside the control area (under a notch, say): the
+                // pad still appears inside it.
+                state.center = Vector2{
+                    std::clamp(position.x, controlArea.x, controlArea.x + controlArea.width),
+                    std::clamp(position.y, controlArea.y, controlArea.y + controlArea.height)
+                };
+            }
             captures.push_back(TouchCapture{
                 touchId, CapturedControlType::Pad, static_cast<int>(pad) });
             UpdatePad(position, pad);
@@ -1016,7 +1028,7 @@ void InputSystem::DrawOverlay() const
     }
 }
 
-void InputSystem::DrawDebugOverlay() const
+void InputSystem::DrawDebugOverlay(Vector2 topLeft) const
 {
     const int fontSize = std::max(14, backend->ScreenHeight() / 48);
     const int lineHeight = fontSize + 4;
@@ -1076,8 +1088,8 @@ void InputSystem::DrawDebugOverlay() const
         valueWidth = std::max(valueWidth, MeasureText(line.value.c_str(), fontSize));
     }
 
-    const int x = 10;
-    const int y = 56; // Below the FPS counter
+    const int x = static_cast<int>(topLeft.x);
+    const int y = static_cast<int>(topLeft.y);
     const int valueX = x + nameWidth + fontSize;
     DrawRectangle(x - 6, y - 6, valueX - x + valueWidth + 12,
         static_cast<int>(lines.size()) * lineHeight + 8, Color{ 0, 0, 0, 170 });

@@ -85,7 +85,8 @@ public:
     void DrawOverlay() const;
     // Diagnostic panel: every action and axis with its current state, both
     // pointers, zoom and pan, plus a marker on each finger on the screen.
-    void DrawDebugOverlay() const;
+    // The default position sits below Knight's FPS counter.
+    void DrawDebugOverlay(Vector2 topLeft = Vector2{ 10, 56 }) const;
     void Reset();
 
     // Returns the existing action if the name is already registered.
@@ -172,8 +173,8 @@ public:
     // relative to the base sizes in InputSystem.cpp: 130 dp pads and 56 dp
     // buttons at 1.0. Defaults to DefaultControlScale; values below
     // MinControlScale are raised to it. A pad is still capped at half the
-    // screen's short side, and the other controls shrink with it. Kept by
-    // Reset().
+    // control area's short side, and the other controls shrink with it.
+    // Kept by Reset().
     void SetControlScale(float scale);
     float ControlScale() const { return controlScale; }
     static constexpr float DefaultControlScale = 1.2f;
@@ -251,6 +252,7 @@ private:
 
     void RegisterDefaults();
     float ShortSide() const;
+    float ControlAreaShortSide() const;
     void UpdateLayout();
     void UpdateTouches();
     void UpdateActions();
@@ -300,6 +302,8 @@ private:
     // Control layout in pixels, recomputed every frame from screen size and
     // density.
     float controlScale = DefaultControlScale;
+    // Where controls go (InputBackend::ControlArea()), refreshed each frame.
+    Rectangle controlArea = { 0, 0, 0, 0 };
     float padSize = 0.0f;
     float buttonSize = 0.0f;
     float buttonPadding = 0.0f;

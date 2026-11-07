@@ -43,11 +43,26 @@ void Demo5MultiCams::Start()
 	//Setup view 2 camera and screen
 	pTopDownCamera->SetUp(Vector3{ -3.0f, 3.0f, 0 }, Actor->Position, 45.0f, CAMERA_PERSPECTIVE);
 
-	//Create render textures
-	ChaseCamRT = LoadRenderTexture(SCREEN_WIDTH / 2, SCREEN_HEIGHT);
-	TopDownCamRT = LoadRenderTexture(SCREEN_WIDTH / 2, SCREEN_HEIGHT);
+	CreateSplitScreenTargets();
+}
+
+//One render texture per half of the screen
+void Demo5MultiCams::CreateSplitScreenTargets()
+{
+	if (ChaseCamRT.id != 0) UnloadRenderTexture(ChaseCamRT);
+	if (TopDownCamRT.id != 0) UnloadRenderTexture(TopDownCamRT);
+
+	ChaseCamRT = LoadRenderTexture(Display::Width() / 2, Display::Height());
+	TopDownCamRT = LoadRenderTexture(Display::Width() / 2, Display::Height());
 
 	splitScreenRect = { 0.0f, 0.0f, (float)ChaseCamRT.texture.width, (float)-ChaseCamRT.texture.height };
+}
+
+void Demo5MultiCams::OnDisplayChange(const DisplayInfo& previous)
+{
+	if (previous.width != 0 &&
+		(previous.width != Display::Width() || previous.height != Display::Height()))
+		CreateSplitScreenTargets();
 }
 
 //Process player input and update camera
@@ -124,7 +139,7 @@ void Demo5MultiCams::DrawGUI()
 	__super::DrawGUI();
 
 	DrawTextureRec(ChaseCamRT.texture, splitScreenRect, Vector2{ 0, 0 }, WHITE);
-	DrawTextureRec(TopDownCamRT.texture, splitScreenRect, Vector2{ SCREEN_WIDTH / 2.0f, 0 }, WHITE);
+	DrawTextureRec(TopDownCamRT.texture, splitScreenRect, Vector2{ Display::Width() / 2.0f, 0 }, WHITE);
 
 	DrawRectangle(GetScreenWidth() / 2 - 2, 0, 4, GetScreenHeight(), LIGHTGRAY);
 

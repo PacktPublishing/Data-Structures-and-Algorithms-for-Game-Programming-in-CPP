@@ -44,3 +44,10 @@ android {
     sourceSets["main"].assets.srcDir("../../resources")
 }
 
+dependencies {
+    // KnightActivity: fold state (WindowInfoTracker) for Knight's Display class.
+    implementation("androidx.window:window:1.4.0")
+    implementation("androidx.window:window-java:1.4.0")
+    implementation("androidx.core:core:1.13.1")
+}
+

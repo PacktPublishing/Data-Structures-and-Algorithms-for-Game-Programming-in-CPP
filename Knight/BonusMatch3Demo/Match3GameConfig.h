@@ -60,9 +60,10 @@ static const float SECOND_SHAKE_DURATION = 0.16f;
 static const float SECOND_SHAKE_MAG = 6.0f;
 static const float SECOND_FLASH_DURATION = 0.12f;
 
-// Calculated offset to center the board, if you want to support resized windows later
-// you need to make it a variable instead of a const
-static const float offsetX = (SCREEN_WIDTH - BOARD_W) / 2.0f - PADDING;
+// Offset that centers the board. A function, not a constant, so it follows
+// the screen: on Android the size is only known once the window opens, and a
+// foldable can change it while the game runs.
+inline float BoardOffsetX() { return (SCREEN_WIDTH - BOARD_W) / 2.0f - PADDING; }
 
 // Core state enums and helpers shared by the game.
 enum GameState 
@@ -97,13 +98,13 @@ struct Vec2i
 // Convert board coords to pixel rect (for drawing a cell).
 static Rectangle cellRect(int r, int c) 
 { 
-    return Rectangle{ (float)PADDING + c * CELL + offsetX, (float)PADDING + r * CELL, (float)CELL, (float)CELL }; 
+    return Rectangle{ (float)PADDING + c * CELL + BoardOffsetX(), (float)PADDING + r * CELL, (float)CELL, (float)CELL }; 
 }
 
 // Convert mouse pos to board coord (does not clamp; caller should InBounds()).
 static Vec2i screenToCell(Vector2 m) 
 { 
-    return Vec2i{ (int)((m.y - PADDING) / CELL), (int)((m.x - PADDING - offsetX) / CELL) }; 
+    return Vec2i{ (int)((m.y - PADDING) / CELL), (int)((m.x - PADDING - BoardOffsetX()) / CELL) }; 
 }
 
 // Basic ease helpers for animation curves.

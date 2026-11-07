@@ -5,13 +5,17 @@
 
     <application
         android:allowBackup="false"
-        android:hasCode="false"
+        android:hasCode="true"
         android:label="Knight Demo"
         android:theme="@style/AppTheme">
+        <!-- configChanges: folding, unfolding and multi-window must not
+             restart the activity; the native game would not survive it.
+             Knight follows the new size instead (Display, OnDisplayChange). -->
         <activity
-            android:name="android.app.NativeActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:name=".KnightActivity"
+            android:configChanges="orientation|keyboard|keyboardHidden|screenSize|smallestScreenSize|screenLayout|density|uiMode"
             android:exported="true"
+            android:resizeableActivity="true"
             android:screenOrientation="landscape">
             <meta-data android:name="android.app.lib_name" android:value="main" />
             <intent-filter>

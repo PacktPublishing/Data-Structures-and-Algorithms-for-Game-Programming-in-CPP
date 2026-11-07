@@ -27,6 +27,10 @@ class Demo5MultiCams : public Knight
 		void OnCreateDefaultResources() override;
 
 		void DrawGameWorld(SceneCamera* pCam);
+		// Recreates the two half-screen views when the screen changes size
+		// (a resized window, or a foldable folding or unfolding).
+		void OnDisplayChange(const DisplayInfo& previous) override;
+		void CreateSplitScreenTargets();
 
 		virtual void OnConfigKnightApp();
 protected:
