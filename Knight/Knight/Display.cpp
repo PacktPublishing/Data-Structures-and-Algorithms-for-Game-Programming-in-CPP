@@ -49,8 +49,14 @@ namespace
 #pragma warning(pop)
 #endif
         int left = 0, top = 0, right = 0, bottom = 0;
-        if (value == nullptr ||
-            std::sscanf(value, "%d,%d,%d,%d", &left, &top, &right, &bottom) != 4)
+        if (value == nullptr)
+            return false;
+#if defined(_MSC_VER)
+        const int parsed = sscanf_s(value, "%d,%d,%d,%d", &left, &top, &right, &bottom);
+#else
+        const int parsed = std::sscanf(value, "%d,%d,%d,%d", &left, &top, &right, &bottom);
+#endif
+        if (parsed != 4)
             return false;
         report.insetLeft = left;
         report.insetTop = top;
