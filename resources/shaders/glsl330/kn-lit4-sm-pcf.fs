@@ -115,7 +115,10 @@ void main()
                     // Slope-scale depth bias: depth biasing reduces "shadow acne" artifacts, where dark stripes appear all over the scene.
                     // The solution is adding a small bias to the depth
                     // In this case, the bias is proportional to the slope of the surface, relative to the light
-                    float bias = max(0.001f * (1.0 - dot(normal, l)), 0.0005f) + 0.00005f;
+                    // A large slope bias erases nearby caster shadows on inclined
+                    // terrain (peter-panning). Keep enough bias to suppress acne
+                    // without detaching the character's lower-body shadow.
+                    float bias = max(0.0002f * (1.0 - dot(normal, l)), 0.00002f) + 0.00001f;
                     int shadowCounter = 0;
                     const int numSamples = 9;
                     // PCF (percentage-closer filtering) algorithm:

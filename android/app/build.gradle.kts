@@ -11,6 +11,15 @@ android {
     compileSdk = 36
     ndkVersion = "30.0.16248370"
 
+    signingConfigs {
+        create("knight") {
+            storeFile = rootProject.file("knight.keystore")
+            storePassword = "knightapp"
+            keyAlias = "knightapp"
+            keyPassword = "knightapp"
+        }
+    }
+
     defaultConfig {
         applicationId = "com.knight.cookbook"
         minSdk = 23
@@ -38,6 +47,15 @@ android {
         cmake {
             path = file("../../CMakeLists.txt")
             version = "3.31.6"
+        }
+    }
+
+    buildTypes {
+        getByName("debug") {
+            signingConfig = signingConfigs.getByName("knight")
+        }
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("knight")
         }
     }
 

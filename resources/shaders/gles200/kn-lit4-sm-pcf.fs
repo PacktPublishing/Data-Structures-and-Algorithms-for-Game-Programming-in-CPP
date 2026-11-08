@@ -47,7 +47,8 @@ void main() {
             vec3 shadowLight = -lightDir;
             vec4 lightSpace = lightVP*vec4(fragPosition, 1.0);
             vec3 projected = lightSpace.xyz/lightSpace.w*0.5 + 0.5;
-            float bias = max(0.001*(1.0 - dot(normal, shadowLight)), 0.0005) + 0.00005;
+            // Avoid peter-panning that erases nearby shadows on sloped terrain.
+            float bias = max(0.0002*(1.0 - dot(normal, shadowLight)), 0.00002) + 0.00001;
             float shadow = 0.0;
             vec2 texelSize = vec2(1.0/float(shadowMapResolution));
 
