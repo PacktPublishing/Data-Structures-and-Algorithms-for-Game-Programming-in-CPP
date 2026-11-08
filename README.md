@@ -19,6 +19,17 @@ Zhenyu George Li, Charles Shih-I Yeh</p>
 </p>
 
 <details open> 
+  <summary><h2>November 2026 update</summary>
+<p>
+<ul>
+  <li>Add new cross-platform InputSystem and InputAction support.</li> 
+  <li>A new NewIputSystem e-mini cookbook is released to explain how to use the new InputSystem and InputAction.</li>
+  <li>We are one step before full release of multiple-platform version of Knight</li>
+<ul>
+</p>
+</details>
+
+<details open> 
   <summary><h2>October 2026 update</summary>
 <p>
 <ul>
