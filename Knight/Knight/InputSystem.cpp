@@ -909,8 +909,10 @@ void InputSystem::UpdateTouches()
                 // Grabbed outside the control area (under a notch, say): the
                 // pad still appears inside it.
                 state.center = Vector2{
-                    std::clamp(position.x, controlArea.x, controlArea.x + controlArea.width),
-                    std::clamp(position.y, controlArea.y, controlArea.y + controlArea.height)
+                    std::max(controlArea.x,
+                        std::min(position.x, controlArea.x + controlArea.width)),
+                    std::max(controlArea.y,
+                        std::min(position.y, controlArea.y + controlArea.height))
                 };
             }
             captures.push_back(TouchCapture{

@@ -10,6 +10,7 @@ out/
 .vscode/.cmake/
 android/.gradle/
 android/.idea/
+android/build/
 android/local.properties
 android/app/.cxx/
 android/app/build/

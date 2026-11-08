@@ -10,7 +10,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $packageName = "com.knight.cookbook"
-$activityName = "android.app.NativeActivity"
+$activityName = ".KnightActivity"
 $repoRoot = Split-Path $PSScriptRoot -Parent
 $gameCmake = Join-Path $repoRoot "Knight\CMakeLists.txt"
 $gradleWrapper = Join-Path $PSScriptRoot "gradlew.bat"
@@ -27,10 +27,27 @@ function Get-KnightGames {
         ForEach-Object { $_.Value })
 }
 
-function Find-Adb {
-    $command = Get-Command adb -ErrorAction SilentlyContinue
-    if ($command) { return $command.Source }
+function Set-AndroidSdkEnvironmentFromLocalProperties {
+    $localProperties = Join-Path $PSScriptRoot 'local.properties'
+    if (-not (Test-Path -LiteralPath $localProperties)) { return }
 
+    $sdkLine = Get-Content -LiteralPath $localProperties |
+        Where-Object { $_ -match '^\s*sdk\.dir\s*=' } |
+        Select-Object -First 1
+    if (-not $sdkLine) { return }
+
+    $sdk = ($sdkLine -replace '^\s*sdk\.dir\s*=\s*', '').Trim()
+    $sdk = $sdk -replace '\\:', ':' -replace '\\\\', '\'
+    if (-not (Test-Path -LiteralPath $sdk -PathType Container)) {
+        throw "Android SDK directory from $localProperties does not exist: $sdk"
+    }
+
+    $env:ANDROID_HOME = $sdk
+    $env:ANDROID_SDK_ROOT = $sdk
+    Write-Host "Using Android SDK from local.properties: $sdk"
+}
+
+function Find-Adb {
     foreach ($sdkVariable in @('ANDROID_HOME', 'ANDROID_SDK_ROOT')) {
         $sdk = [Environment]::GetEnvironmentVariable($sdkVariable)
         if ($sdk) {
@@ -38,6 +55,9 @@ function Find-Adb {
             if (Test-Path -LiteralPath $candidate) { return $candidate }
         }
     }
+
+    $command = Get-Command adb -ErrorAction SilentlyContinue
+    if ($command) { return $command.Source }
 
     $localProperties = Join-Path $PSScriptRoot 'local.properties'
     if (Test-Path -LiteralPath $localProperties) {
@@ -72,6 +92,31 @@ function Invoke-Adb {
     }
 }
 
+function Invoke-GradleBuild {
+    param(
+        [Parameter(Mandatory)]
+        [string]$Game,
+        [Parameter(Mandatory)]
+        [string]$LogPath
+    )
+
+    # Windows PowerShell turns native stderr into error records. Gradle uses
+    # stderr for normal diagnostics as well as failures, so let its exit code
+    # determine the build result instead of terminating under Stop preference.
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        & $gradleWrapper ':app:assembleDebug' "-PknightGame=$Game" '--no-parallel' 2>&1 |
+            Tee-Object -FilePath $LogPath |
+            Out-Host
+        return $LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
+}
+
+Set-AndroidSdkEnvironmentFromLocalProperties
 $allGames = Get-KnightGames
 if ($Samples) {
     $unknown = @($Samples | Where-Object { $_ -notin $allGames })
@@ -115,11 +160,10 @@ try {
         $detail = ''
         Write-Host "`n=== $game ===" -ForegroundColor Cyan
 
-        & $gradleWrapper ':app:assembleDebug' "-PknightGame=$game" '--no-parallel' 2>&1 |
-            Tee-Object -FilePath (Join-Path $sampleDirectory 'build.log')
-        if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $apkPath)) {
+        $gradleExitCode = Invoke-GradleBuild -Game $game -LogPath (Join-Path $sampleDirectory 'build.log')
+        if ($gradleExitCode -ne 0 -or -not (Test-Path -LiteralPath $apkPath)) {
             $status = 'BuildFailed'
-            $detail = "Gradle exit code $LASTEXITCODE"
+            $detail = "Gradle exit code $gradleExitCode"
         }
 
         if ($status -eq 'Pass') {

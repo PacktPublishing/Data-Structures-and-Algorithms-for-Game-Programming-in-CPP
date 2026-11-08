@@ -172,6 +172,7 @@
     <ClInclude Include="ConeComponent.h" />
     <ClInclude Include="CubeComponent.h" />
     <ClInclude Include="CylinderComponent.h" />
+    <ClInclude Include="Display.h" />
     <ClInclude Include="ForwardRenderPass.h" />
     <ClInclude Include="InputBackend.h" />
     <ClInclude Include="InputSystem.h" />
@@ -197,6 +198,7 @@
     <ClCompile Include="ConeComponent.cpp" />
     <ClCompile Include="CubeComponent.cpp" />
     <ClCompile Include="CylinderComponent.cpp" />
+    <ClCompile Include="Display.cpp" />
     <ClCompile Include="FlyThroughCamera.cpp" />
     <ClCompile Include="FlyThroughCamera.h" />
     <ClCompile Include="ForewardRenderPass.cpp" />
