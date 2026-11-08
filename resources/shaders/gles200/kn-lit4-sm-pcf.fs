@@ -53,7 +53,7 @@ void main() {
             vec3 projected = lightSpace.xyz/lightSpace.w*0.5 + 0.5;
             // GLES2 depth buffers and mediump-only devices need a larger bias
             // than desktop, but not enough to detach shadows on slopes.
-            float bias = max(0.0005*(1.0 - dot(normal, shadowLight)), 0.00015) + 0.00005;
+            float bias = max(0.0005*(1.0 - dot(normal, shadowLight)), 0.0001) + 0.00005;
             float shadow = 0.0;
             vec2 texelSize = vec2(1.0/float(shadowMapResolution));
 
