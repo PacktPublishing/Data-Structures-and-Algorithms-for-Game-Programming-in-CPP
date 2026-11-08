@@ -23,8 +23,8 @@ Zhenyu George Li, Charles Shih-I Yeh</p>
 <p>
 <ul>
   <li>Add new cross-platform InputSystem and InputAction support.</li> 
-  <li>A new NewIputSystem e-mini cookbook is released to explain how to use the new InputSystem and InputAction.</li>
-  <li>We are one step before full release of multiple-platform version of Knight</li>
+  <li>A new NewInputSystem e-mini cookbook under the BonusFreeBooklets/SampleMiniCookbooks/ folder is released to explain how to use the new InputSystem and InputAction.</li>
+  <li>We are one step before the full release of the multi-platform version of Knight</li>
 <ul>
 </p>
 </details>
@@ -33,11 +33,11 @@ Zhenyu George Li, Charles Shih-I Yeh</p>
   <summary><h2>October 2026 update</summary>
 <p>
 <ul>
-  <li>Raylib upgrade to latest (6.2)</li>
-  <li>API breaking changes in the Sample codes are all fixed.</li>
+  <li>Raylib upgrade to the latest (6.2)</li>
+  <li>API breaking changes in the sample code are all fixed.</li>
   <li>Fix a Lit shader uniform issue</li>
   <li>Fix breaking changes of Raylib APIs</li>
-  <li>Both CMake/CMake-build branch are working in progress. Do not use it yet.</li>
+  <li>Both CMake/CMake-build branches are a work in progress. Do not use it yet.</li>
 </ul>
 </p>
 </details>
@@ -46,8 +46,8 @@ Zhenyu George Li, Charles Shih-I Yeh</p>
   <summary><h2>March 2026 update</summary>
 <p>
 <ul>
-  <li>Replace hardcoded resource path with a configurable base laoding path to all resources. Check Demo1.cs for details.</li>
-  <li>Minor update to allow application to set different application resolution.</li> 
+  <li>Replace hardcoded resource path with a configurable base loading path to all resources. Check Demo1.cs for details.</li>
+  <li>Minor update to allow the application to set a different application resolution.</li> 
   <li>Supporting of non-Windows platform(s) is on its way.</li>
 </ul>
 </p>
@@ -56,7 +56,7 @@ Zhenyu George Li, Charles Shih-I Yeh</p>
 <details close> 
   <summary><h2>December 2025 update - new 'Coverflow' 3D UI sample and mini sample cookbook!</summary>
 <p>
-  We've released a new sample to demonstrate how to implement Coverflow style 3D UI. This project demonstrates how to use <i>recyclable-list</i> to display and scroll with a large amount of data with limited number of visual elements. In this example you scroll with 1000 poker cards but only 31 of them are visible at the same time. This sameple is best tried after you finish reading of Chapter 4 of the book. 
+  We've released a new sample to demonstrate how to implement Coverflow-style 3D UI. This project demonstrates how to use <i>recyclable-list</i> to display and scroll through a large amount of data with a limited number of visual elements. In this example, you scroll with 1000 poker cards, but only 31 of them are visible at the same time. This sample is best tried after you finish reading Chapter 4 of the book. 
 </p>
 </details>
 
@@ -67,10 +67,10 @@ Zhenyu George Li, Charles Shih-I Yeh</p>
 Yet behind every falling candy lies a tight combination of bit manipulation, heuristic search, flood-fill algorithms, and state machines.    
 <ul>
   <li>How to identify horizontal/vertical/cross shape/T-shape matches of candies.</li> 
-  <li>Use heuristic search to find best matches among all available matches.</li>
+  <li>Use heuristic search to find the best matches among all available matches.</li>
   <li>Implement memory-efficient grid representation using bit-board manipulation.</li>
   <li>Use flood-fill algorithm to identify connected candies.</li>
-  <li>Implement game state management using finite state machine (FSM).</li>
+  <li>Implement game state management using a finite state machine (FSM).</li>
 </ul>
 </p>
 </details>
@@ -81,7 +81,7 @@ Yet behind every falling candy lies a tight combination of bit manipulation, heu
   We've released a new sparse hash grid sample that demonstrates how to performe spatial query of near-by objects when you have thousands objects on the terrain. We've also included a new mini-cookbooks that explain the logic behind the code in detail.    
  </p>    
 <ul>
-  <li>A new <i>BonusHashGridDemo</i> sample project demonstrates how to use K-d tree to speed up spatial queries of large amount objects.</li> 
+  <li>A new <i>BonusHashGridDemo</i> sample project demonstrates how to use a K-d tree to speed up spatial queries of a large number of objects.</li> 
   <li>A 14-page mini e-booklet <b>BonusHashGridDemo_MiniCookBook.pdf</b> is provided under <i>BonusFreeBooklets/SampleMiniCookbooks/</i> folder to explain how the algorithm works.</li>
 </ul>
 </details>
@@ -89,7 +89,7 @@ Yet behind every falling candy lies a tight combination of bit manipulation, heu
 <details close> 
   <summary><h2>October 2025 update - new K-d tree sample and mini sample cookbook!</summary>
 <p>
-  We've released a new K-d tree sample that demonstrates how to performe spatial query of near-by objects when you have hundreds/thousands objects on the terrain. We've also included a new mini-cookbooks that explain the logic behind the code in detail.    
+  We've released a new K-d tree sample that demonstrates how to perform spatial queries of nearby objects when you have hundreds/thousands of objects on the terrain. We've also included a new mini-cookbooks that explain the logic behind the code in detail.    
  </p>    
 <ul>
   <li>A new <i>BonusKdTreeDemo</i> sample project demonstrates how to use K-d tree to speed up spatial queries of large amount objects.</li> 
@@ -100,10 +100,10 @@ Yet behind every falling candy lies a tight combination of bit manipulation, heu
 <details close>
   <summary><h2>Latests updates and bug fixes</summary>
 <p>
-  Here is a quick summary of recent updates and bug-fixes outside the bigger monthly updates.    
+  Here is a quick summary of recent updates and bug fixes outside the bigger monthly updates.    
  </p>
 <ul>  
-  <li>[2025/9/17] Fixed a bug in various demos ModelComponents were added to the SceneActor twice.</li>
+  <li>[2025/9/17] Fixed a bug in various demos where ModelComponents were added to the SceneActor twice.</li>
 </ul>
 </details>
 
@@ -114,7 +114,7 @@ Yet behind every falling candy lies a tight combination of bit manipulation, heu
  </p>    
 <ul>
   <li>A new <i>DemoVertexNormal</i> sample project demonstrates how to recalculate the vertex normal to produce a smoother lighting effect. A 10-page mini e-booklet <b>Demo6VertexNormal_MiniCookBook.pdf</b> is provided under <i>BonusFreeBooklets/SampleMiniCookbooks/</i> folder to explain how the algorithm works.</li>
-  <li>A new e-booklet <b>BonusGameWorld01_MiniCookBook.pdf</b> under BonusFreeBooklets/SampleMiniCookbooks/ folder explains the details of the sample project <i>BonusGameWorld01</i>.</li>
+  <li>A new e-booklet <b>BonusGameWorld01_MiniCookBook.pdf</b> under the BonusFreeBooklets/SampleMiniCookbooks/ folder explains the details of the sample project <i>BonusGameWorld01</i>.</li>
   <li>A new e-booklet <b>BonusGameWorld02_MiniCookBook.pdf</b> under BonusFreeBooklets/SampleMiniCookbooks/ folder explains how we optimize <i>BonusGameWorld02</i> by using camera culling and distance-based detail.</li>
   <li><i>BonusGameWorld02</i> now supports up to four lights. The first light is a primary directional light source, perfect for casting shadows from the sun, moon, or a major indoor light. The second light serves as a focused spotlight, ensuring the main player character is always visible, even in dark surroundings. The third and fourth lights are dynamic, used for creating engaging visual effects, like a fireball casting a warm glow on nearby trees and the ground. Yet it runs around 10 fps faster than the original <i>BonusGameWorld01</i> project.</li>
   <li>Other minor bug fixes.</li>
