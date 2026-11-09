@@ -25,7 +25,7 @@ Options:
   --results DIR     Root directory for results
   -h, --help        Show this help
 
-With no Sample arguments, all entries in KNIGHT_GAME_DIRS are tested.
+With no Sample arguments, all entries in KNIGHT_SAMPLE_DIRS are tested.
 EOF
 }
 
@@ -50,7 +50,7 @@ ALL_GAMES=()
 while IFS= read -r game; do
     ALL_GAMES+=("$game")
 done < <(awk '
-        /set[[:space:]]*\(KNIGHT_GAME_DIRS/ { capture=1; sub(/^.*KNIGHT_GAME_DIRS/, ""); }
+        /set[[:space:]]*\(KNIGHT_SAMPLE_DIRS/ { capture=1; sub(/^.*KNIGHT_SAMPLE_DIRS/, ""); }
         capture {
             line=$0
             sub(/#.*/, "", line)
@@ -63,7 +63,7 @@ done < <(awk '
     ' "$GAME_CMAKE")
 
 if ((${#ALL_GAMES[@]} == 0)); then
-    echo "Could not read KNIGHT_GAME_DIRS from $GAME_CMAKE" >&2
+    echo "Could not read KNIGHT_SAMPLE_DIRS from $GAME_CMAKE" >&2
     exit 2
 fi
 

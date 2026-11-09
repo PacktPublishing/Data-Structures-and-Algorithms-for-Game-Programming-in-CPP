@@ -6,6 +6,7 @@ project(Knight
     LANGUAGES C CXX)
 
 include(GNUInstallDirs)
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/KnightGame.cmake")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -15,6 +16,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(KNIGHT_BUILD_ALL_GAMES "Build every Knight demo (desktop only by default)" ON)
 option(KNIGHT_BUILD_TESTS "Build the Knight unit tests (desktop only)" ON)
 set(KNIGHT_GAME "Demo1" CACHE STRING "Single game target used by Android and Web builds")
+set(KNIGHT_GAMES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Games" CACHE PATH
+    "Directory containing user-created Knight games")
 
 if(ANDROID OR EMSCRIPTEN)
     set(KNIGHT_BUILD_ALL_GAMES OFF CACHE BOOL "Build every Knight demo" FORCE)
@@ -38,4 +41,13 @@ endif()
 
 add_subdirectory(raylib EXCLUDE_FROM_ALL)
 add_subdirectory(Knight)
+
+if(EXISTS "${KNIGHT_GAMES_DIR}/CMakeLists.txt")
+    add_subdirectory("${KNIGHT_GAMES_DIR}" "${CMAKE_BINARY_DIR}/KnightUserGames")
+else()
+    message(FATAL_ERROR
+        "KNIGHT_GAMES_DIR does not contain CMakeLists.txt: ${KNIGHT_GAMES_DIR}")
+endif()
+
+knight_validate_selected_game()
 

@@ -18,9 +18,9 @@ $apkPath = Join-Path $PSScriptRoot "app\build\outputs\apk\debug\app-debug.apk"
 
 function Get-KnightGames {
     $text = Get-Content -LiteralPath $gameCmake -Raw
-    $match = [regex]::Match($text, 'set\s*\(KNIGHT_GAME_DIRS(?<games>.*?)\)', 'Singleline')
+    $match = [regex]::Match($text, 'set\s*\(KNIGHT_SAMPLE_DIRS(?<games>.*?)\)', 'Singleline')
     if (-not $match.Success) {
-        throw "Could not find KNIGHT_GAME_DIRS in $gameCmake"
+        throw "Could not find KNIGHT_SAMPLE_DIRS in $gameCmake"
     }
 
     return @([regex]::Matches($match.Groups['games'].Value, '[A-Za-z][A-Za-z0-9]*') |

@@ -1,0 +1,10 @@
+#pragma once
+
+#include "Knight.h"
+
+class @GAME_NAME@ : public Knight
+{
+protected:
+    void OnConfigKnightApp() override;
+    void DrawGUI() override;
+};

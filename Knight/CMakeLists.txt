@@ -35,7 +35,7 @@ else()
     endif()
 endif()
 
-set(KNIGHT_GAME_DIRS
+set(KNIGHT_SAMPLE_DIRS
     BonusCoverflow3DUI BonusGameWorld01 BonusGameWorld02 BonusHashGridDemo
     BonusKdTreeDemo BonusMatch3Demo Demo1 Demo10 Demo2a Demo2b Demo2c Demo2d
     Demo2e Demo2f Demo3a Demo3b Demo3c Demo3d Demo3e Demo3f Demo4iso Demo4ss
@@ -54,84 +54,11 @@ if(NOT ANDROID AND NOT EMSCRIPTEN)
     set_target_properties(knight_assets PROPERTIES FOLDER "Framework")
 endif()
 
-function(knight_add_game game_name)
-    set(game_dir "${CMAKE_CURRENT_SOURCE_DIR}/${game_name}")
-    if(NOT IS_DIRECTORY "${game_dir}")
-        message(FATAL_ERROR "Knight game directory does not exist: ${game_dir}")
-    endif()
-
-    file(GLOB game_sources CONFIGURE_DEPENDS
-        "${game_dir}/*.cpp"
-        "${game_dir}/*.h")
-
-    if(ANDROID)
-        add_library(${game_name} SHARED ${game_sources})
-        set_target_properties(${game_name} PROPERTIES OUTPUT_NAME main)
-        # NativeActivity looks up this entry point dynamically. Keep the
-        # native_app_glue object from being discarded from static raylib.
-        target_link_options(${game_name} PRIVATE
-            "LINKER:-u,ANativeActivity_onCreate")
-    else()
-        add_executable(${game_name} ${game_sources})
-    endif()
-
-    target_include_directories(${game_name} PRIVATE "${game_dir}")
-    target_link_libraries(${game_name} PRIVATE Knight::Framework)
-    set_target_properties(${game_name} PROPERTIES
-        VS_DEBUGGER_WORKING_DIRECTORY "$<TARGET_FILE_DIR:${game_name}>"
-        XCODE_GENERATE_SCHEME YES
-        XCODE_SCHEME_WORKING_DIRECTORY "$<TARGET_FILE_DIR:${game_name}>"
-        RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin"
-        FOLDER "Games")
-
-    if(TARGET knight_assets)
-        add_dependencies(${game_name} knight_assets)
-    endif()
-
-    if(NOT MSVC)
-        target_compile_options(${game_name} PRIVATE
-            -include "${PROJECT_SOURCE_DIR}/cmake/KnightCompatibility.h")
-        if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-            target_compile_options(${game_name} PRIVATE -fms-extensions)
-        endif()
-    endif()
-
-    if(EMSCRIPTEN)
-        set_target_properties(${game_name} PROPERTIES SUFFIX ".html")
-        target_link_options(${game_name} PRIVATE
-            "--shell-file=${PROJECT_SOURCE_DIR}/cmake/web/shell.html"
-            "-sALLOW_MEMORY_GROWTH=1"
-            "-sASSERTIONS=$<IF:$<CONFIG:Debug>,1,0>")
-
-        if(game_name STREQUAL "Demo1")
-            target_link_options(${game_name} PRIVATE
-                "--preload-file=${PROJECT_SOURCE_DIR}/resources/shaders@resources/shaders"
-                "--preload-file=${PROJECT_SOURCE_DIR}/resources/fonts/mecha.png@resources/fonts/mecha.png"
-                "--preload-file=${PROJECT_SOURCE_DIR}/resources/models/obj/castle.obj@resources/models/obj/castle.obj"
-                "--preload-file=${PROJECT_SOURCE_DIR}/resources/models/obj/castle_diffuse.png@resources/models/obj/castle_diffuse.png"
-                "--preload-file=${PROJECT_SOURCE_DIR}/resources/models/gltf/robot.glb@resources/models/gltf/robot.glb")
-        else()
-            target_link_options(${game_name} PRIVATE
-                "--preload-file=${PROJECT_SOURCE_DIR}/resources@resources")
-        endif()
-    endif()
-
-    install(TARGETS ${game_name}
-        RUNTIME DESTINATION .
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-endfunction()
-
-if(KNIGHT_BUILD_ALL_GAMES)
-    foreach(game_name IN LISTS KNIGHT_GAME_DIRS)
-        knight_add_game(${game_name})
-    endforeach()
-else()
-    if(NOT KNIGHT_GAME IN_LIST KNIGHT_GAME_DIRS)
-        message(FATAL_ERROR
-            "Unknown KNIGHT_GAME='${KNIGHT_GAME}'. Choose one of: ${KNIGHT_GAME_DIRS}")
-    endif()
-    knight_add_game(${KNIGHT_GAME})
-endif()
+foreach(game_name IN LISTS KNIGHT_SAMPLE_DIRS)
+    knight_add_game(
+        NAME "${game_name}"
+        SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${game_name}")
+endforeach()
 
 if(KNIGHT_BUILD_TESTS AND NOT ANDROID AND NOT EMSCRIPTEN)
     # Runs InputSystem against a scripted backend; no window or GPU needed.

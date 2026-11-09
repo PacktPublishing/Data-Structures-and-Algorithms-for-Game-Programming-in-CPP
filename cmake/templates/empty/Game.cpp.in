@@ -1,0 +1,30 @@
+#include "@GAME_NAME@.h"
+
+int main(int argc, char* argv[])
+{
+    @GAME_NAME@ game;
+    game.Start();
+    game.GameLoop();
+    return 0;
+}
+
+void @GAME_NAME@::OnConfigKnightApp()
+{
+    Knight::OnConfigKnightApp();
+    Config.WindowTitle = "@GAME_NAME@";
+    Config.ShowFPS = true;
+}
+
+void @GAME_NAME@::DrawGUI()
+{
+    Knight::DrawGUI();
+
+    const char* message = "Hello @GAME_NAME@";
+    const int fontSize = 64;
+    const float spacing = 3.0f;
+    const Vector2 textSize = MeasureTextEx(_Font, message, fontSize, spacing);
+    const int x = static_cast<int>((GetScreenWidth() - textSize.x) * 0.5f);
+    const int y = static_cast<int>((GetScreenHeight() - textSize.y) * 0.5f);
+
+    DrawText(message, x, y, fontSize, RAYWHITE);
+}
