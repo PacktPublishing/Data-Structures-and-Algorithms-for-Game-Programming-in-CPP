@@ -38,12 +38,13 @@ void Demo3c::Start()
 			PickedCardIDs[i] = i;
 		}
 
-		//Load card image
+		// Load directly: on Android these files are APK assets, so raylib's
+		// filesystem-only FileExists() cannot see them even though LoadTexture()
+		// can read them through AAssetManager.
 		sprintf_s(imageFile, IMAGE_FILENAME_BUFFER_SIZE, (Config.ResourcesBasePath + "textures/PokerDeckCards/%d.png").c_str(), i);
-		if (FileExists(imageFile))
-		{
-			CardImages[i] = LoadTextureForPlatform(imageFile);
-		}
+		CardImages[i] = LoadTextureForPlatform(imageFile);
+		if (CardImages[i].id == 0)
+			TraceLog(LOG_ERROR, "Demo3c: failed to load card texture: %s", imageFile);
 	}
 }
 
@@ -51,7 +52,8 @@ void Demo3c::EndGame()
 {
 	for (int i = 0; i < DECK_CARD_COUNT; ++i)
 	{
-		UnloadTexture(CardImages[i]);
+		if (CardImages[i].id != 0)
+			UnloadTexture(CardImages[i]);
 	}
 	__super::EndGame();
 }
@@ -59,7 +61,7 @@ void Demo3c::EndGame()
 
 void Demo3c::Update(float ElapsedSeconds)
 {
-	if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsKeyDown(KEY_LEFT))
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
 	{
 		Shuffle();
 	}

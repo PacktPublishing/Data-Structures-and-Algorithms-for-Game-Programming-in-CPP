@@ -38,12 +38,13 @@ void Demo3d::Start()
 			PickedCardIDs[i] = i;
 		}
 
-		//Load card image
+		// Load directly: on Android these files are APK assets, so raylib's
+		// filesystem-only FileExists() cannot see them even though LoadTexture()
+		// can read them through AAssetManager.
 		sprintf_s(imageFile, IMAGE_FILENAME_BUFFER_SIZE, (Config.ResourcesBasePath + "textures/PokerDeckCards/%d.png").c_str(), i);
-		if (FileExists(imageFile))
-		{
-			CardImages[i] = LoadTextureForPlatform(imageFile);
-		}
+		CardImages[i] = LoadTextureForPlatform(imageFile);
+		if (CardImages[i].id == 0)
+			TraceLog(LOG_ERROR, "Demo3d: failed to load card texture: %s", imageFile);
 	}
 }
 
@@ -51,7 +52,8 @@ void Demo3d::EndGame()
 {
 	for (int i = 0; i < DECK_CARD_COUNT; ++i)
 	{
-		UnloadTexture(CardImages[i]);
+		if (CardImages[i].id != 0)
+			UnloadTexture(CardImages[i]);
 	}
 	__super::EndGame();
 }
@@ -59,12 +61,14 @@ void Demo3d::EndGame()
 
 void Demo3d::Update(float ElapsedSeconds)
 {
-	if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsKeyDown(KEY_LEFT))
+	// Primary is left-click on desktop and a tap on touch screens.
+	if (Input.PrimaryPointer().pressed || Input.IsKeyPressed(KEY_LEFT))
 	{
 		Shuffle();
 	}
 
-	if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) || IsKeyDown(KEY_RIGHT))
+	// Secondary is right-click on desktop and a long press on touch screens.
+	if (Input.SecondaryPointer().pressed || Input.IsKeyPressed(KEY_RIGHT))
 	{
 		SortDealtCards();
 	}
