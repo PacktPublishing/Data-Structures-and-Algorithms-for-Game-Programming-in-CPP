@@ -11,6 +11,7 @@ protected:
 	void Update(float ElapsedSeconds) override;
 	void DrawGUI() override;
 	void EndGame() override;
+	void OnConfigureInput() override;
 
 private:
 	void Shuffle();

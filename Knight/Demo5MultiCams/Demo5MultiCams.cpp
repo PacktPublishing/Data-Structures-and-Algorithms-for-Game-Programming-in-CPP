@@ -171,7 +171,6 @@ void Demo5MultiCams::OnConfigKnightApp()
 
 void Demo5MultiCams::OnConfigureInput()
 {
-	// WASD moves the player; the arrows pan the top-down camera.
+	// WASD moves the player; 
 	Input.AddKeyPad(TouchPad::Left, "Player", KEY_W, KEY_S, KEY_A, KEY_D);
-	Input.AddKeyPad(TouchPad::Right, "Camera Pan", KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT);
 }

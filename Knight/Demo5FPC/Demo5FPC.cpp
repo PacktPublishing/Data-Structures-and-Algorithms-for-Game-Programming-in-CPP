@@ -87,3 +87,10 @@ void Demo5FPC::OnCreateDefaultResources()
 	__super::OnCreateDefaultResources();
 	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 }
+
+void Demo5FPC::OnConfigureInput()
+{
+	// Keyboard: WASD or the arrows. Touch: the left pad.
+	InputAxis2D MoveAction = Input.MoveAxis();
+	Input.BindAxisTouchPad(MoveAction, TouchPad::Left);
+}

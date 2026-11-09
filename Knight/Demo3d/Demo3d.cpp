@@ -61,14 +61,12 @@ void Demo3d::EndGame()
 
 void Demo3d::Update(float ElapsedSeconds)
 {
-	// Primary is left-click on desktop and a tap on touch screens.
-	if (Input.PrimaryPointer().pressed || Input.IsKeyPressed(KEY_LEFT))
+	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) || IsKeyDown(KEY_LEFT))
 	{
 		Shuffle();
 	}
 
-	// Secondary is right-click on desktop and a long press on touch screens.
-	if (Input.SecondaryPointer().pressed || Input.IsKeyPressed(KEY_RIGHT))
+	if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT) || IsKeyDown(KEY_RIGHT))
 	{
 		SortDealtCards();
 	}
@@ -113,3 +111,8 @@ void Demo3d::SortDealtCards()
 		});
 }
 
+void Demo3d::OnConfigureInput()
+{
+	Input.AddKeyButton(KEY_LEFT, "Shuffle", TouchButtonAnchor::BottomRight);
+	Input.AddKeyButton(KEY_RIGHT, "Sort", TouchButtonAnchor::BottomRight);
+}

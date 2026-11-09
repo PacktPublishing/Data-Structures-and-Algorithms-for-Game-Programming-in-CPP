@@ -13,6 +13,7 @@ class Demo5FPC : public Knight
 
 		void DrawGUI() override;
 		void OnCreateDefaultResources() override;
+		void OnConfigureInput() override;
 };
 
 
