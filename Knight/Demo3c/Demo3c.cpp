@@ -59,7 +59,7 @@ void Demo3c::EndGame()
 
 void Demo3c::Update(float ElapsedSeconds)
 {
-	if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+	if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsKeyDown(KEY_LEFT))
 	{
 		Shuffle();
 	}

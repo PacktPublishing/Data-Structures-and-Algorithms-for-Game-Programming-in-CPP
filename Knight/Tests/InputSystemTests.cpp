@@ -281,10 +281,21 @@ namespace
         f.platform.Touch(1, LeftPadCenter.x, LeftPadCenter.y);
         f.platform.Frame(f.input);
         CHECK(!f.input.PrimaryPointer().down);
+        f.platform.Touch(1, LeftPadCenter.x + 40, LeftPadCenter.y);
+        f.platform.Frame(f.input);
+        CHECK(!f.input.SecondaryPointer().down);
+        CHECK(f.input.SecondaryPointer().delta.x == 0.0f);
+        CHECK(f.input.SecondaryPointer().delta.y == 0.0f);
         f.platform.Touch(2, OpenArea.x, OpenArea.y);
         f.platform.Frame(f.input);
         CHECK(f.input.PrimaryPointer().pressed);
         CHECK(f.input.PrimaryPointer().position.x == OpenArea.x);
+
+        // Only the free finger supplies camera delta while the pad remains held.
+        f.platform.Touch(2, OpenArea.x + 30, OpenArea.y + 10);
+        f.platform.Frame(f.input);
+        CHECK_NEAR(f.input.SecondaryPointer().delta.x, 30.0f, 1e-4f);
+        CHECK_NEAR(f.input.SecondaryPointer().delta.y, 10.0f, 1e-4f);
 
         // Dragging the pointer onto the right pad does not hand it to the pad.
         f.platform.Touch(2, RightPadCenter.x, RightPadCenter.y - PadRadius);

@@ -1,10 +1,88 @@
 #include "SceneCamera.h"
+#include "Knight.h"
 #include "Scene.h"
 #include "SceneActor.h"
 
 #include <algorithm> // For std::lower_bound
 
 #include "rlgl.h"
+#include "rcamera.h"
+
+namespace
+{
+constexpr float CameraMoveSpeed = 5.4f;
+constexpr float CameraRotationSpeed = 0.03f;
+constexpr float CameraMouseSensitivity = 0.003f;
+constexpr float CameraOrbitalSpeed = 0.5f;
+
+// raylib's UpdateCamera() reads raw mouse state. On Android raylib also maps
+// touches to that state, so a thumb captured by an on-screen control can move
+// the camera. Keep raylib's camera behavior, but source pointer, keys and zoom
+// from Knight's InputSystem so captured control touches are excluded.
+void UpdateCameraFromKnightInput(Camera3D* camera, CameraMode mode, float elapsedSeconds)
+{
+	const InputSystem& input = KnightInput();
+	const Vector2 pointerDelta = input.SecondaryPointer().delta;
+	const bool moveInWorldPlane = mode == CAMERA_FIRST_PERSON || mode == CAMERA_THIRD_PERSON;
+	const bool rotateAroundTarget = mode == CAMERA_THIRD_PERSON || mode == CAMERA_ORBITAL;
+	const bool lockView = mode != CAMERA_CUSTOM;
+	const float moveSpeed = CameraMoveSpeed * elapsedSeconds;
+	const float rotationSpeed = CameraRotationSpeed * elapsedSeconds;
+
+	if (mode == CAMERA_CUSTOM)
+		return;
+
+	if (mode == CAMERA_ORBITAL)
+	{
+		CameraYaw(camera, CameraOrbitalSpeed * elapsedSeconds, true);
+	}
+	else
+	{
+		if (input.IsKeyDown(KEY_DOWN)) CameraPitch(camera, -rotationSpeed, lockView, rotateAroundTarget, false);
+		if (input.IsKeyDown(KEY_UP)) CameraPitch(camera, rotationSpeed, lockView, rotateAroundTarget, false);
+		if (input.IsKeyDown(KEY_RIGHT)) CameraYaw(camera, -rotationSpeed, rotateAroundTarget);
+		if (input.IsKeyDown(KEY_LEFT)) CameraYaw(camera, rotationSpeed, rotateAroundTarget);
+		if (input.IsKeyDown(KEY_Q)) CameraRoll(camera, -rotationSpeed);
+		if (input.IsKeyDown(KEY_E)) CameraRoll(camera, rotationSpeed);
+
+		CameraYaw(camera, -pointerDelta.x * CameraMouseSensitivity, rotateAroundTarget);
+		CameraPitch(camera, -pointerDelta.y * CameraMouseSensitivity,
+			lockView, rotateAroundTarget, false);
+
+		if (input.IsKeyDown(KEY_W)) CameraMoveForward(camera, moveSpeed, moveInWorldPlane);
+		if (input.IsKeyDown(KEY_A)) CameraMoveRight(camera, -moveSpeed, moveInWorldPlane);
+		if (input.IsKeyDown(KEY_S)) CameraMoveForward(camera, -moveSpeed, moveInWorldPlane);
+		if (input.IsKeyDown(KEY_D)) CameraMoveRight(camera, moveSpeed, moveInWorldPlane);
+
+		// Hardware gamepads remain independent of touch ownership.
+		if (IsGamepadAvailable(0))
+		{
+			CameraYaw(camera, -(GetGamepadAxisMovement(0, GAMEPAD_AXIS_RIGHT_X) * 2.0f) *
+				CameraMouseSensitivity, rotateAroundTarget);
+			CameraPitch(camera, -(GetGamepadAxisMovement(0, GAMEPAD_AXIS_RIGHT_Y) * 2.0f) *
+				CameraMouseSensitivity, lockView, rotateAroundTarget, false);
+
+			if (GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_Y) <= -0.25f) CameraMoveForward(camera, moveSpeed, moveInWorldPlane);
+			if (GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_X) <= -0.25f) CameraMoveRight(camera, -moveSpeed, moveInWorldPlane);
+			if (GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_Y) >= 0.25f) CameraMoveForward(camera, -moveSpeed, moveInWorldPlane);
+			if (GetGamepadAxisMovement(0, GAMEPAD_AXIS_LEFT_X) >= 0.25f) CameraMoveRight(camera, moveSpeed, moveInWorldPlane);
+		}
+
+		if (mode == CAMERA_FREE)
+		{
+			if (input.IsKeyDown(KEY_SPACE)) CameraMoveUp(camera, moveSpeed);
+			if (input.IsKeyDown(KEY_LEFT_CONTROL)) CameraMoveUp(camera, -moveSpeed);
+		}
+	}
+
+	if (mode == CAMERA_THIRD_PERSON || mode == CAMERA_ORBITAL || mode == CAMERA_FREE)
+	{
+		CameraMoveToTarget(camera, -input.ZoomDelta());
+		if (input.IsKeyPressed(KEY_KP_SUBTRACT)) CameraMoveToTarget(camera, 2.0f);
+		if (input.IsKeyPressed(KEY_KP_ADD)) CameraMoveToTarget(camera, -2.0f);
+	}
+}
+}
 
 SceneCamera::SceneCamera(Scene* Scene, const char* Name, bool IsMainCamera) : 
 	SceneObject(Scene, Name)
@@ -32,7 +110,7 @@ bool SceneCamera::Update(float ElapsedSeconds)
 	}
 
 	if (CameraMode != CAMERA_CUSTOM)
-		UpdateCamera(&_Camera, CameraMode);
+		UpdateCameraFromKnightInput(&_Camera, CameraMode, ElapsedSeconds);
 
 	__super::Update(ElapsedSeconds); // Call base class update
 
