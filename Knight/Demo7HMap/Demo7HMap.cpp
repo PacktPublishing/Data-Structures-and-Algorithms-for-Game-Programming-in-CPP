@@ -55,7 +55,7 @@ void Demo7HMap::DrawGUI()
 {
 	__super::DrawGUI();
 	
-	DrawText("Use the mouse wheel to zoom camera.", 10, 50, 40, WHITE);
+	DrawText("Use the mouse wheel or two-finger pinch on touch screen to zoom camera.", 10, 50, 40, WHITE);
 }
 
 

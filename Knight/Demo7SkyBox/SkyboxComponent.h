@@ -28,7 +28,4 @@ public:
 
 	friend SceneActor;
 
-protected:
-	Mesh GenInwardCube(float size);
-
 };

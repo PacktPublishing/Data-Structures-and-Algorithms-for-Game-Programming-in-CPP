@@ -28,7 +28,11 @@ void Demo7Skybox::Start()
 
 	//pSkyBox = new SkyboxComponent();
 	pSkyBox = pMainCamera->CreateAndAddComponent<SkyboxComponent>();
-	pSkyBox->CreateFromFile((Config.ResourcesBasePath + "textures/skybox2.png").c_str(), CUBEMAP_LAYOUT_CROSS_FOUR_BY_THREE, 20.0f, false);
+	if (!pSkyBox->CreateFromFile((Config.ResourcesBasePath + "textures/skybox2.png").c_str(),
+		CUBEMAP_LAYOUT_CROSS_FOUR_BY_THREE, 20.0f, false))
+	{
+		TraceLog(LOG_ERROR, "Demo7SkyBox: skybox initialization failed");
+	}
 
 	//Place player
 	Actor = _Scene->CreateSceneObject<SceneActor>("Player");
@@ -42,7 +46,6 @@ void Demo7Skybox::Start()
 
 void Demo7Skybox::Update(float ElapsedSeconds)
 {
-	UpdateCamera(pMainCamera->GetCamera3D(), CAMERA_FREE);
 	if (IsKeyDown(KEY_W)) {
 		// Move player forward based on their rotation
 		Actor->Position.x += sinf(DegreesToRadians(Actor->Rotation.y)) * 0.1f;
