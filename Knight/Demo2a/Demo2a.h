@@ -21,6 +21,7 @@ class Demo2a : public Knight
 		void Update(float ElapsedSeconds) override;
 		void DrawFrame() override;
 		void DrawGUI() override;
+		void OnConfigureInput() override;
 
 	private:
 		void InitEntities();

@@ -91,6 +91,10 @@ void Demo2c::OnCreateDefaultResources()
 
 void Demo2c::OnConfigureInput()
 {
+	// Keyboard: WASD or the arrows. Touch: the left pad.
+	InputAxis2D MoveAction = Input.MoveAxis();
+	Input.BindAxisTouchPad(MoveAction, TouchPad::Left);
+
 	// 1/2/3 attack the matching enemy.
 	Input.AddKeyButton(KEY_ONE, "1", TouchButtonAnchor::BottomRight);
 	Input.AddKeyButton(KEY_TWO, "2", TouchButtonAnchor::BottomRight);

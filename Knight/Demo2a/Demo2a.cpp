@@ -90,3 +90,10 @@ void Demo2a::OnCreateDefaultResources()
 	//Loads a better TrueType font to display text information on the screen
 	_Font = LoadFontEx((Config.ResourcesBasePath + "fonts/sparky.ttf").c_str(), 32, 0, 0);
 }
+
+void Demo2a::OnConfigureInput()
+{
+	// Keyboard: WASD or the arrows. Touch: the left pad.
+	InputAxis2D MoveAction = Input.MoveAxis();
+	Input.BindAxisTouchPad(MoveAction, TouchPad::Left);
+}
