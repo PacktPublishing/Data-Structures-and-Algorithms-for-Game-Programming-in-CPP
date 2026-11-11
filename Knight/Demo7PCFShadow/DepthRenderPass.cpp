@@ -79,7 +79,13 @@ void DepthRenderPass::BeginShadowMap()
 	// to determine whether a given point is "visible" to the light
 	BeginTextureMode(shadowMap);
 	ClearBackground(WHITE);
+	// The scene is centered 100 units from the light camera. A tight depth
+	// range keeps the PCF bias from swallowing the robot's small shadow.
+	const double nearPlane = rlGetCullDistanceNear();
+	const double farPlane = rlGetCullDistanceFar();
+	rlSetClipPlanes(50.0f, 150.0f);
 	BeginMode3D(*pLight->GetCamera3D());
+	rlSetClipPlanes(nearPlane, farPlane);
 	pLight->lightView = rlGetMatrixModelview();
 	pLight->lightProj = rlGetMatrixProjection();
 }
