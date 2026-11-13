@@ -15,6 +15,7 @@ android/local.properties
 android/app/.cxx/
 android/app/build/
 android/smoke-results/
+web/smoke-results/
 
 #Ignore files
 *.log

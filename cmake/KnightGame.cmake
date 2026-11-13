@@ -110,6 +110,12 @@ function(knight_validate_selected_game)
     list(SORT registered_games)
     set_property(CACHE KNIGHT_GAME PROPERTY STRINGS ${registered_games})
 
+    # Keep a machine-readable inventory for platform smoke-test runners. This
+    # includes samples and games supplied through KNIGHT_GAMES_DIR.
+    string(JOIN "\n" registered_games_text ${registered_games})
+    file(WRITE "${CMAKE_BINARY_DIR}/knight-registered-games.txt"
+        "${registered_games_text}\n")
+
     if(NOT KNIGHT_BUILD_ALL_GAMES AND NOT KNIGHT_GAME IN_LIST registered_games)
         string(JOIN ", " valid_games ${registered_games})
         message(FATAL_ERROR
