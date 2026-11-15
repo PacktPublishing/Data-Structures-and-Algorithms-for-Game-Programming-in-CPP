@@ -78,6 +78,17 @@ function(knight_add_game)
 
     if(EMSCRIPTEN)
         set_target_properties(${GAME_NAME} PROPERTIES SUFFIX ".html")
+
+        # CMake sees --preload-file as a linker argument, not as an input
+        # dependency. Track the packaged files explicitly so shader, texture,
+        # model, and other resource edits cause the Web bundle to be relinked.
+        file(GLOB_RECURSE web_resource_files CONFIGURE_DEPENDS
+            LIST_DIRECTORIES false
+            "${PROJECT_SOURCE_DIR}/resources/*")
+        set_property(TARGET ${GAME_NAME} APPEND PROPERTY LINK_DEPENDS
+            "${PROJECT_SOURCE_DIR}/cmake/web/shell.html"
+            ${web_resource_files})
+
         target_link_options(${GAME_NAME} PRIVATE
             "--shell-file=${PROJECT_SOURCE_DIR}/cmake/web/shell.html"
             "-sALLOW_MEMORY_GROWTH=1"

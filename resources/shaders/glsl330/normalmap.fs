@@ -14,8 +14,7 @@ out vec4 color;
 
 // Values that stay constant for the whole mesh.
 uniform sampler2D texture0;
-uniform sampler2D texture1;
-//uniform sampler2D texture2;
+uniform sampler2D texture2;
 uniform mat4 matView;
 uniform mat4 matModel;
 uniform vec3 LightPosition_worldspace;
@@ -27,10 +26,8 @@ void main(){
 	// Material properties
 	vec3 MaterialDiffuseColor = texture( texture0, UV ).rgb;
 	vec3 MaterialAmbientColor = vec3(0.1,0.1,0.1) * MaterialDiffuseColor;
-	//vec3 MaterialSpecularColor = texture( texture2, UV ).rgb * 0.3;
-
 	// Local normal, in tangent space. V tex coordinate is inverted because normal map is in TGA (not in DDS) for better quality
-	vec3 TextureNormal_tangentspace = normalize(texture( texture1, vec2(UV.x, UV.y) ).rgb*2.0 - 1.0);
+	vec3 TextureNormal_tangentspace = normalize(texture( texture2, vec2(UV.x, UV.y) ).rgb*2.0 - 1.0);
 	
 	// Distance to the light
 	float distance = length( LightPosition_worldspace - Position_worldspace );

@@ -7,12 +7,12 @@ uniform mat4 matView;
 uniform mat4 matModel;
 uniform mat4 matProjection;
 uniform vec4 colDiffuse;
-uniform vec3 LightPosition_worldspace;
-varying vec4 vcolor;
-varying vec2 UV;
-varying vec3 Position_worldspace;
-varying vec3 LightDirection_tangentspace;
-varying vec3 EyeDirection_tangentspace;
+uniform mediump vec3 LightPosition_worldspace;
+varying mediump vec4 vcolor;
+varying mediump vec2 UV;
+varying mediump vec3 Position_worldspace;
+varying mediump vec3 LightDirection_tangentspace;
+varying mediump vec3 EyeDirection_tangentspace;
 void main() {
     Position_worldspace = (matModel*vec4(vertexPosition, 1.0)).xyz;
     vec3 cameraPosition = (matView*vec4(Position_worldspace, 1.0)).xyz;
