@@ -109,9 +109,6 @@ void BonusGameWorld01::Update(float ElapsedSeconds)
 {
 	double t = GetTime();
 
-	// Calculate the displacement of the target
-	Vector3 oldTarget = pDepthRenderer->pLight->GetCamera3D()->target;
-
 	for(int i=0;i< _Entities.size(); i++)
 	{
 		_Entities[i]->Update(ElapsedSeconds);
@@ -119,10 +116,6 @@ void BonusGameWorld01::Update(float ElapsedSeconds)
 	
 	Vector3 cameraPos = _Scene->GetMainCameraActor()->GetPosition();
 	SetShaderValue(pShadowMapRenderer->shadowShader, pShadowMapRenderer->shadowShader.locs[SHADER_LOC_VECTOR_VIEW], &cameraPos, SHADER_UNIFORM_VEC3);
-
-	sceneLight->lightDir = Vector3Normalize(sceneLight->lightDir);
-	pDepthRenderer->pLight->GetCamera3D()->position = Vector3Scale(sceneLight->lightDir, -50.0f);
-	SetShaderValue(pShadowMapRenderer->shadowShader, pShadowMapRenderer->lightDirLoc, &sceneLight->lightDir, SHADER_UNIFORM_VEC3);
 
 	//These are the controls for moving the light direction.
 	//Solely for debugging purpose.
@@ -189,10 +182,12 @@ void BonusGameWorld01::Update(float ElapsedSeconds)
 		LookAt.y -= 2.0f * ElapsedSeconds;
 	}
 
-	Vector3 targetDisplacement = Vector3Subtract(worldPos, oldTarget);
-	// Apply the exact same displacement to the camera's position
-	// This is the crucial step to keep the view direction constant!
-	pDepthRenderer->pLight->GetCamera3D()->position = Vector3Add(pDepthRenderer->pLight->GetCamera3D()->position, targetDisplacement);
+	// Center the shadow camera on the player and keep its direction aligned with the light.
+	sceneLight->lightDir = Vector3Normalize(sceneLight->lightDir);
+	Camera3D* lightCamera = sceneLight->GetCamera3D();
+	lightCamera->target = worldPos;
+	lightCamera->position = Vector3Subtract(worldPos, Vector3Scale(sceneLight->lightDir, 50.0f));
+	SetShaderValue(pShadowMapRenderer->shadowShader, pShadowMapRenderer->lightDirLoc, &sceneLight->lightDir, SHADER_UNIFORM_VEC3);
 
 	pMainCamera->SetLookAtPosition(worldPos);
 	pMainCamera->Update(0.001f);   //late update to adjust the camera position and look-at direction
