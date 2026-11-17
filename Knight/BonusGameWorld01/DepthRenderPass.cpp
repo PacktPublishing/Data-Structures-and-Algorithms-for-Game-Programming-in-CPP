@@ -15,7 +15,7 @@ bool DepthRenderPass::Create(Scene* sc)
 	__super::Create(sc);
 
 	depthShader = LoadShader((Knight::Instance->Config.ResourcesBasePath + KNIGHT_SHADER_DIRECTORY "kn-lit-depth.vs").c_str(), (Knight::Instance->Config.ResourcesBasePath + KNIGHT_SHADER_DIRECTORY "shadow_depth.fs").c_str());
-	alphaTestLoc = GetShaderLocation(depthShader, "alphaTest");
+	InitRenderPassUniforms(depthShader);
 
 	Hints.pOverrideShader = &depthShader;
 	Hints.pOverrideCamera = pLight;
@@ -29,11 +29,10 @@ bool DepthRenderPass::Create(Scene* sc)
 
 	// Use an orthographic projection for directional lights
 	lightCam->projection = CAMERA_ORTHOGRAPHIC;
-	lightCam->fovy = 100.0f;  
+	// Match BonusGameWorld02's tighter light frustum. This spends the fixed
+	// shadow-map resolution on the area around the player instead of distant terrain.
+	lightCam->fovy = 50.0f;
 	lightCam->up = Vector3{ 0.0f, 1.0f, 0.0f };
-
-	int alphaTestVal = 1;
-	SetShaderValue(depthShader, alphaTestLoc, &alphaTestVal, SHADER_UNIFORM_INT);
 
 	return true;
 }
@@ -46,6 +45,8 @@ void DepthRenderPass::Release()
 
 void DepthRenderPass::BeginScene(SceneCamera* pOverrideCamera)
 {
+	UpdateLightData(depthShader);
+
 	NumComponentsSkipped = 0;
 	pScene->_CurrentRenderPass = this;
 	if (Hints.pOverrideCamera != nullptr)
@@ -59,6 +60,23 @@ void DepthRenderPass::BeginScene(SceneCamera* pOverrideCamera)
 
 	//Override shader 
 	BeginShaderMode(depthShader);
+}
+
+void DepthRenderPass::InitRenderPassUniforms(const Shader& shader)
+{
+	__super::InitRenderPassUniforms(shader);
+}
+
+void DepthRenderPass::UpdateLightData(const Shader& shader)
+{
+	pScene->Lights[0].position = pLight->GetCamera3D()->position;
+	pScene->Lights[0].target = pLight->GetCamera3D()->target;
+	pScene->Lights[0].type = pLight->lightType;
+	pScene->Lights[0].color = pLight->lightColor;
+	pScene->Lights[0].enabled = true;
+	pScene->Lights[0].dirty = true;
+
+	__super::UpdateLightData(shader);
 }
 
 void DepthRenderPass::Render()

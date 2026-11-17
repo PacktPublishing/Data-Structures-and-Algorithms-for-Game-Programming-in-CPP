@@ -54,6 +54,9 @@ uniform sampler2D shadowMap;
 uniform int shadowMapResolution;
 
 uniform int receiveShadow;
+uniform float shadowSlopeBias;
+uniform float shadowMinBias;
+uniform float shadowConstantBias;
 
 void main()
 {
@@ -118,7 +121,7 @@ void main()
                     // A large slope bias erases nearby caster shadows on inclined
                     // terrain (peter-panning). Keep enough bias to suppress acne
                     // without detaching the character's lower-body shadow.
-                    float bias = max(0.0002f * (1.0 - dot(normal, l)), 0.00002f) + 0.00001f;
+                    float bias = max(shadowSlopeBias * (1.0f - dot(normal, l)), shadowMinBias) + shadowConstantBias;
                     int shadowCounter = 0;
                     const int numSamples = 9;
                     // PCF (percentage-closer filtering) algorithm:

@@ -609,22 +609,55 @@ void InputSystem::UpdateLayout()
 Rectangle InputSystem::ButtonBounds(const TouchButton& button) const
 {
     const Rectangle area = controlArea;
-    const float stride = buttonSize + buttonPadding;
     const int column = button.slot % 3;
     const int row = button.slot / 3;
+    const float width = ButtonWidth(button);
 
-    float x = area.x + controlMargin + column * stride;
-    float y = area.y + controlMargin + row * stride;
+    // Each column uses the widest caption assigned to it. This keeps the
+    // established three-column slot layout while allowing pill buttons to
+    // size themselves independently without overlapping their neighbours.
+    float columnWidths[3] = { buttonSize, buttonSize, buttonSize };
+    for (const TouchButton& candidate : buttons)
+    {
+        if (candidate.anchor != button.anchor)
+            continue;
+        const int candidateColumn = candidate.slot % 3;
+        columnWidths[candidateColumn] = std::max(
+            columnWidths[candidateColumn], ButtonWidth(candidate));
+    }
+
+    float columnOffset = 0.0f;
+    for (int i = 0; i < column; ++i)
+        columnOffset += columnWidths[i] + buttonPadding;
+    const float rowOffset = row * (buttonSize + buttonPadding);
+
+    float x = area.x + controlMargin + columnOffset;
+    float y = area.y + controlMargin + rowOffset;
 
     if (button.anchor == TouchButtonAnchor::TopRight ||
         button.anchor == TouchButtonAnchor::BottomRight)
-        x = area.x + area.width - controlMargin - buttonSize - column * stride;
+        x = area.x + area.width - controlMargin - width - columnOffset;
 
     if (button.anchor == TouchButtonAnchor::BottomLeft ||
         button.anchor == TouchButtonAnchor::BottomRight)
-        y = area.y + area.height - controlMargin - buttonSize - row * stride;
+        y = area.y + area.height - controlMargin - buttonSize - rowOffset;
 
-    return Rectangle{ x, y, buttonSize, buttonSize };
+    return Rectangle{ x, y, width, buttonSize };
+}
+
+float InputSystem::ButtonWidth(const TouchButton& button) const
+{
+    // Horizontal padding is deliberately generous enough for a thumb target,
+    // but the caption—not a fixed circle diameter—determines the width.
+    const float horizontalPadding = buttonSize * 0.32f;
+    return std::max(buttonSize,
+        static_cast<float>(MeasureText(button.label.c_str(), ButtonFontSize())) +
+        horizontalPadding * 2.0f);
+}
+
+int InputSystem::ButtonFontSize() const
+{
+    return std::max(10, static_cast<int>(buttonSize * 0.25f));
 }
 
 Rectangle InputSystem::PadBounds(TouchPad pad) const
@@ -768,7 +801,28 @@ void InputSystem::UpdateTouchPointers()
 
     secondaryPointer.position = primaryPointer.position;
     secondaryPointer.delta = primaryPointer.delta;
+    // A one-finger drag is also exposed through the secondary pointer so
+    // orbit-style controls work consistently with mouse right-drag.
     secondaryPointer.down = primaryPointer.down;
+
+#if defined(PLATFORM_WEB)
+    // A touch-capable browser can select the Touch profile even while a real
+    // mouse is in use. Keep its right button available as the secondary
+    // pointer instead of requiring mouse users to perform a long press.
+    if (backend->IsMouseButtonDown(MOUSE_BUTTON_RIGHT) ||
+        backend->IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) ||
+        backend->IsMouseButtonReleased(MOUSE_BUTTON_RIGHT))
+    {
+        secondaryPointer.position = backend->MousePosition();
+        secondaryPointer.delta = backend->MouseDelta();
+        secondaryPointer.pressed = secondaryPointer.pressed ||
+            backend->IsMouseButtonPressed(MOUSE_BUTTON_RIGHT);
+        secondaryPointer.down = secondaryPointer.down ||
+            backend->IsMouseButtonDown(MOUSE_BUTTON_RIGHT);
+        secondaryPointer.released = secondaryPointer.released ||
+            backend->IsMouseButtonReleased(MOUSE_BUTTON_RIGHT);
+    }
+#endif
 }
 
 void InputSystem::ReleasePrimaryTouch()
@@ -1019,9 +1073,11 @@ void InputSystem::DrawOverlay() const
             button.bounds.x + button.bounds.width * 0.5f,
             button.bounds.y + button.bounds.height * 0.5f
         };
-        DrawCircleV(center, button.bounds.width * 0.5f, fill);
-        DrawCircleLinesV(center, button.bounds.width * 0.5f, buttonOutline);
-        const int fontSize = std::max(10, static_cast<int>(button.bounds.width * 0.25f));
+        // A half-height corner radius produces a capsule/pill shape. Unlike
+        // the old circle, it grows horizontally with longer captions.
+        DrawRectangleRounded(button.bounds, 1.0f, 12, fill);
+        DrawRectangleRoundedLines(button.bounds, 1.0f, 12, buttonOutline);
+        const int fontSize = ButtonFontSize();
         const int textWidth = MeasureText(button.label.c_str(), fontSize);
         DrawText(button.label.c_str(),
             static_cast<int>(center.x - textWidth * 0.5f),

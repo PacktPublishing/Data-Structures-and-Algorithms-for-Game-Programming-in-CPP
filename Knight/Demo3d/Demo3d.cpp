@@ -61,12 +61,12 @@ void Demo3d::EndGame()
 
 void Demo3d::Update(float ElapsedSeconds)
 {
-	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) || IsKeyDown(KEY_LEFT))
+	if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsKeyPressed(KEY_LEFT))
 	{
 		Shuffle();
 	}
 
-	if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT) || IsKeyDown(KEY_RIGHT))
+	if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) || IsKeyPressed(KEY_RIGHT))
 	{
 		SortDealtCards();
 	}

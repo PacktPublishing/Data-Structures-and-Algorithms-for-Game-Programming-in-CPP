@@ -265,6 +265,8 @@ private:
     void UpdatePad(Vector2 position, TouchPad pad);
     void ResetTouchState();
     Rectangle ButtonBounds(const TouchButton& button) const;
+    float ButtonWidth(const TouchButton& button) const;
+    int ButtonFontSize() const;
     // Lowest slot in the corner not taken by a button of another action.
     int NextFreeSlot(TouchButtonAnchor anchor, int ignoredActionId) const;
     // Fixed position of the pad in its bottom corner.

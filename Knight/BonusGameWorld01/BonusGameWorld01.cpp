@@ -109,9 +109,6 @@ void BonusGameWorld01::Update(float ElapsedSeconds)
 {
 	double t = GetTime();
 
-	// Calculate the displacement of the target
-	Vector3 oldTarget = pDepthRenderer->pLight->GetCamera3D()->target;
-
 	for(int i=0;i< _Entities.size(); i++)
 	{
 		_Entities[i]->Update(ElapsedSeconds);
@@ -189,10 +186,13 @@ void BonusGameWorld01::Update(float ElapsedSeconds)
 		LookAt.y -= 2.0f * ElapsedSeconds;
 	}
 
-	Vector3 targetDisplacement = Vector3Subtract(worldPos, oldTarget);
-	// Apply the exact same displacement to the camera's position
-	// This is the crucial step to keep the view direction constant!
-	pDepthRenderer->pLight->GetCamera3D()->position = Vector3Add(pDepthRenderer->pLight->GetCamera3D()->position, targetDisplacement);
+	// Keep the light camera centered on the player exactly as BonusGameWorld02 does.
+	// Rebuilding both values avoids accumulated drift and stabilizes the robot and
+	// nearby terrain shadows on lower-precision Android GPUs.
+	pDepthRenderer->pLight->GetCamera3D()->target = worldPos;
+	pDepthRenderer->pLight->GetCamera3D()->position = Vector3Add(
+		worldPos, Vector3Scale(sceneLight->lightDir, -50.0f));
+	pDepthRenderer->pLight->Update(0.001f);
 
 	pMainCamera->SetLookAtPosition(worldPos);
 	pMainCamera->Update(0.001f);   //late update to adjust the camera position and look-at direction

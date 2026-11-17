@@ -15,14 +15,10 @@ bool ShadowMapRenderPass::Create(Scene *sc)
 {
 	__super::Create(sc);
 
-	shadowShader = LoadShader((Knight::Instance->Config.ResourcesBasePath + KNIGHT_SHADER_DIRECTORY "shadowmap.vs").c_str(), (Knight::Instance->Config.ResourcesBasePath + KNIGHT_SHADER_DIRECTORY "kn-lit-sm-pcf.fs").c_str());
-	lightDirLoc = GetShaderLocation(shadowShader, "lightDir");
-	lightColLoc = GetShaderLocation(shadowShader, "lightColor");
-	shadowShader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(shadowShader, "viewPos");
-	ambientLoc = GetShaderLocation(shadowShader, "ambient");
-	lightVPLoc = GetShaderLocation(shadowShader, "lightVP");
-	shadowMapLoc = GetShaderLocation(shadowShader, "shadowMap");
-	receiveShadowLoc = GetShaderLocation(shadowShader, "receiveShadow");
+	// Use the same PCF shader as BonusGameWorld02. Its GLES variant requests
+	// high precision when available; the platform bias is supplied below.
+	shadowShader = LoadShader((Knight::Instance->Config.ResourcesBasePath + KNIGHT_SHADER_DIRECTORY "shadowmap.vs").c_str(), (Knight::Instance->Config.ResourcesBasePath + KNIGHT_SHADER_DIRECTORY "kn-lit4-sm-pcf.fs").c_str());
+	InitRenderPassUniforms(shadowShader);
 
 	Hints.pOverrideShader = &shadowShader;
 
@@ -33,6 +29,21 @@ bool ShadowMapRenderPass::Create(Scene *sc)
 	SetShaderValue(shadowShader, lightColLoc, &lightColorNormalized, SHADER_UNIFORM_VEC4);
 	SetShaderValue(shadowShader, ambientLoc, &ambientColorNormalized, SHADER_UNIFORM_VEC4);
 	SetShaderValue(shadowShader, GetShaderLocation(shadowShader, "shadowMapResolution"), &shadowMapResolution, SHADER_UNIFORM_INT);
+
+	// Android needs a larger depth bias on mobile GPUs. WebGL uses the smaller
+	// desktop values to avoid detaching thin/lower-body shadows (peter-panning).
+#if defined(PLATFORM_ANDROID)
+	const float shadowSlopeBias = 0.0005f;
+	const float shadowMinBias = 0.0001f;
+	const float shadowConstantBias = 0.00005f;
+#else
+	const float shadowSlopeBias = 0.0002f;
+	const float shadowMinBias = 0.00002f;
+	const float shadowConstantBias = 0.00001f;
+#endif
+	SetShaderValue(shadowShader, GetShaderLocation(shadowShader, "shadowSlopeBias"), &shadowSlopeBias, SHADER_UNIFORM_FLOAT);
+	SetShaderValue(shadowShader, GetShaderLocation(shadowShader, "shadowMinBias"), &shadowMinBias, SHADER_UNIFORM_FLOAT);
+	SetShaderValue(shadowShader, GetShaderLocation(shadowShader, "shadowConstantBias"), &shadowConstantBias, SHADER_UNIFORM_FLOAT);
 
 	return true;
 }
@@ -75,6 +86,8 @@ bool ShadowMapRenderPass::OnAddToRender(Component* pSC, SceneObject* pSO)
 
 void ShadowMapRenderPass::BeginScene(SceneCamera* pOverrideCamera)
 {
+	UpdateLightData(shadowShader);
+
 	NumComponentsSkipped = 0;
 	pScene->_CurrentRenderPass = this;
 
@@ -98,6 +111,31 @@ void ShadowMapRenderPass::BeginScene(SceneCamera* pOverrideCamera)
 	Vector4 ambientColorNormalized = ColorNormalize(pLight->lightAmbient);
 	SetShaderValue(shadowShader, lightColLoc, &lightColorNormalized, SHADER_UNIFORM_VEC4);
 	SetShaderValue(shadowShader, ambientLoc, &ambientColorNormalized, SHADER_UNIFORM_VEC4);
+}
+
+void ShadowMapRenderPass::InitRenderPassUniforms(const Shader& shader)
+{
+	__super::InitRenderPassUniforms(shader);
+
+	lightDirLoc = GetShaderLocation(shadowShader, "lightDir");
+	lightColLoc = GetShaderLocation(shadowShader, "lightColor");
+	shadowShader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(shadowShader, "viewPos");
+	ambientLoc = GetShaderLocation(shadowShader, "ambient");
+	lightVPLoc = GetShaderLocation(shadowShader, "lightVP");
+	shadowMapLoc = GetShaderLocation(shadowShader, "shadowMap");
+	receiveShadowLoc = GetShaderLocation(shadowShader, "receiveShadow");
+}
+
+void ShadowMapRenderPass::UpdateLightData(const Shader& shader)
+{
+	pScene->Lights[0].position = pLight->GetCamera3D()->position;
+	pScene->Lights[0].target = pLight->GetCamera3D()->target;
+	pScene->Lights[0].type = pLight->lightType;
+	pScene->Lights[0].color = pLight->lightColor;
+	pScene->Lights[0].enabled = true;
+	pScene->Lights[0].dirty = true;
+
+	__super::UpdateLightData(shader);
 }
 
 void ShadowMapRenderPass::EndScene()

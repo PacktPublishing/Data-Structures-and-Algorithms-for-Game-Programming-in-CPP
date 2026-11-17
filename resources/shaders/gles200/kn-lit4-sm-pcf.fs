@@ -27,6 +27,9 @@ uniform mat4 lightVP;
 uniform sampler2D shadowMap;
 uniform int shadowMapResolution;
 uniform int receiveShadow;
+uniform float shadowSlopeBias;
+uniform float shadowMinBias;
+uniform float shadowConstantBias;
 void main() {
     vec4 texel = texture2D(texture0, fragTexCoord);
     if (alphaTest > 0 && texel.a < 0.51) discard;
@@ -51,9 +54,9 @@ void main() {
             vec3 shadowLight = -lightDir;
             vec4 lightSpace = lightVP*vec4(fragPosition, 1.0);
             vec3 projected = lightSpace.xyz/lightSpace.w*0.5 + 0.5;
-            // GLES2 depth buffers and mediump-only devices need a larger bias
-            // than desktop, but not enough to detach shadows on slopes.
-            float bias = max(0.0005*(1.0 - dot(normal, shadowLight)), 0.0001) + 0.00005;
+            // The host supplies a platform-tuned bias: Android needs more acne
+            // protection, while WebGL needs less to keep thin shadows attached.
+            float bias = max(shadowSlopeBias*(1.0 - dot(normal, shadowLight)), shadowMinBias) + shadowConstantBias;
             float shadow = 0.0;
             vec2 texelSize = vec2(1.0/float(shadowMapResolution));
 

@@ -37,6 +37,21 @@ bool ShadowMapRenderPass::Create(Scene *sc)
 	SetShaderValue(shadowShader, ambientLoc, &ambientColorNormalized, SHADER_UNIFORM_VEC4);
 	SetShaderValue(shadowShader, GetShaderLocation(shadowShader, "shadowMapResolution"), &shadowMapResolution, SHADER_UNIFORM_INT);
 
+	// Android needs a larger depth bias on mobile GPUs. WebGL uses the smaller
+	// desktop values to avoid detaching thin/lower-body shadows (peter-panning).
+#if defined(PLATFORM_ANDROID)
+	const float shadowSlopeBias = 0.0005f;
+	const float shadowMinBias = 0.0001f;
+	const float shadowConstantBias = 0.00005f;
+#else
+	const float shadowSlopeBias = 0.0002f;
+	const float shadowMinBias = 0.00002f;
+	const float shadowConstantBias = 0.00001f;
+#endif
+	SetShaderValue(shadowShader, GetShaderLocation(shadowShader, "shadowSlopeBias"), &shadowSlopeBias, SHADER_UNIFORM_FLOAT);
+	SetShaderValue(shadowShader, GetShaderLocation(shadowShader, "shadowMinBias"), &shadowMinBias, SHADER_UNIFORM_FLOAT);
+	SetShaderValue(shadowShader, GetShaderLocation(shadowShader, "shadowConstantBias"), &shadowConstantBias, SHADER_UNIFORM_FLOAT);
+
 	return true;
 }
 

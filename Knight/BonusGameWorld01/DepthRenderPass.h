@@ -6,7 +6,7 @@
 
 #define SHADOWMAP_RESOLUTION 2048
 
-class DepthRenderPass : public ForwardRenderPass
+class DepthRenderPass : public LitRenderPass
 {
 public:
 
@@ -32,6 +32,8 @@ public:
 	ShadowSceneLight* pLight = nullptr;
 
 protected:
+	void InitRenderPassUniforms(const Shader&) override;
+	void UpdateLightData(const Shader&) override;
 
 	RenderTexture2D LoadShadowmapRenderTexture(int width, int height);
 	void UnloadShadowmapRenderTexture(RenderTexture2D target);

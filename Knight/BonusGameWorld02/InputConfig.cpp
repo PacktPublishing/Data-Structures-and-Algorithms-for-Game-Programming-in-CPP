@@ -22,11 +22,11 @@ void BonusGameWorld02::OnConfigureInput()
 
     GameInput.LightUp = Input.RegisterAction("Light Up");
     Input.BindKey(GameInput.LightUp, KEY_O);
-    Input.AddTouchButton(GameInput.LightUp, "LIGHT+", TouchButtonAnchor::TopRight);
+    Input.AddTouchButton(GameInput.LightUp, "LIGHT UP", TouchButtonAnchor::TopRight);
 
     GameInput.LightDown = Input.RegisterAction("Light Down");
     Input.BindKey(GameInput.LightDown, KEY_P);
-    Input.AddTouchButton(GameInput.LightDown, "LIGHT-", TouchButtonAnchor::TopRight);
+    Input.AddTouchButton(GameInput.LightDown, "LIGHT DOWN", TouchButtonAnchor::TopRight);
 
     GameInput.ToggleTerrainBounds = Input.RegisterAction("Toggle Terrain Bounds");
     Input.BindKey(GameInput.ToggleTerrainBounds, KEY_B);
